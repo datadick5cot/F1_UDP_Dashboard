@@ -1,0 +1,117 @@
+.app-header {
+    height: 60px;
+    line-height: 60px;
+    border-bottom: thin lightgrey solid;
+
+}
+
+.app-header .app-header--title {
+    font-size: 12px;
+    padding-left: 5px;
+}
+
+.display {
+  position: relative;
+}
+
+
+.blink_me {
+  animation: blinker 2s linear infinite;
+          text-align: center;
+        padding-top : 0;
+        padding-right : 0;
+        padding-bottom : 0;
+        padding-left : 0;
+}
+
+@keyframes blinker {  
+  50% { opacity: 0; }
+}
+
+
+.no_signal {animation: blinker 5s linear infinite;
+            height : 100%;
+         
+            background-color: #9fa99a;
+            color: rgba(177, 118, 118, 0.88);
+            text-align: center;
+}
+
+.no_signal_border {
+            border: 1px solid #0e0400;
+            background-color: #9fa99a;
+            
+}
+
+.borders {border: 1px solid #82827d;
+        text-align: center;
+        padding-top : 0;
+        padding-right : 0;
+        padding-bottom : 0;
+        padding-left : 0;
+        }
+
+.borders_no_bottom {
+        border-top-style: 1px solid #82827d;;
+        border-right-style: 1px solid #82827d;;
+        border-bottom-style: hidden;
+        border-left-style: 1px solid #82827d;;
+        text-align: center;
+        padding-top : 0;
+        padding-right : 0;
+        padding-bottom : 0;
+        padding-left : 0;
+        }
+
+.borders_and_height {border: 1px solid #82827d;
+        text-align: center;
+        padding-top : 0;
+        padding-right : 0;
+        padding-bottom : 0;
+        padding-left : 0;
+        height : 120px}
+
+
+.center_image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  height : 120px;
+}
+
+.tyres_style {position : 'static';
+                width : 120px;
+                height : 120px;}
+
+
+.coooling_arrow {
+  border: solid rgb(22, 129, 236);
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.heating_arrow {
+  border: solid rgb(236, 115, 22);
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.up {
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+
+.down {
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+.no_change {
+          border: solid rgb(137, 143, 148);
+          border-width: 3px 0 3px 0;
+          display: inline-block;
+          padding: 0 5px 5px;
+
+}

@@ -1,0 +1,18 @@
+body {
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    background-color: black;
+    color: white;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: whitesmoke;
+    text-align: center;
+}
+
+.ThrottleWarning {color: whitesmoke;
+                background-color: red;
+            height: 100px;}
+
+.ThrottleNeutral{color:  whitesmoke;
+                background-color: whitesmoke;
+            height: 0px;}

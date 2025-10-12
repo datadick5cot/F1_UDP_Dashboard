@@ -1,0 +1,17 @@
+
+/* @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@100..900&display=swap'); */
+
+@import url('https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@100..900&display=swap');
+
+.gear_display {
+    font-size: 80px;
+    font-weight: 500;
+    color: rgb(255, 234, 0);
+    font-family: 'Bitcount Single';
+    text-align: center;
+    
+    
+    /* height: 200px; */
+
+}
