@@ -47,9 +47,9 @@ def display_udp_status(store_data):
 )
 def Wheel_Spin(store_data):
     
-    player_data = store_data["player"]
+   
     
-    if player_data['throttle'] > 0.6 and (player_data['WheelSplipRatio'][0] > 0.15 or player_data['WheelSplipRatio'][1] > 0.15):
+    if store_data['PlayerThrottle'] > 0.6 and (store_data['m_wheelSlipRatio'][0] > 0.15 or store_data['m_wheelSlipRatio'][1] > 0.15):
         # trigger_vibration("wheelspin")
         return "ThrottleWarning", 'Throttle Warning'
     
@@ -65,9 +65,9 @@ def Wheel_Spin(store_data):
 )
 def Lockup(store_data):
 
-    player_data = store_data["player"]
+    
 
-    if player_data['brake'] > 0.5 and (player_data['WheelSplipRatio'][2] < -0.15 or player_data['WheelSplipRatio'][3] < -0.15):
+    if store_data['PlayerBrake'] > 0.5 and (store_data['m_wheelSlipRatio'][2] < -0.15 or store_data['m_wheelSlipRatio'][3] < -0.15):
         # trigger_vibration("lockup")
         return "ThrottleWarning", 'Brake Warning'
     

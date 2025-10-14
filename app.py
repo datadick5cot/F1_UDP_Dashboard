@@ -9,57 +9,47 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from codeassets import dont_lock, create_loading_figure
-from UDP import udp_listener
+from UDP import udp_listener, get_latest_data
 from server import dashapp
 from dash.dependencies import Input, Output
 import dash.exceptions
 from collections import deque
 
 
-from UDP import ( 
-    history_lock,
-    motion_history,
-    motion_ex_history,
-    session_data,
-    lap_data_history,
-    event_data_history,
-    participants_data,
-    car_setups_data,
-    car_telemetry_history,
-    car_status_history,
-    classification_data,
-    lobby_info_data,
-    car_damage_history,
-    session_history_data,
-    tyre_sets_data,
-    time_trial_data
-)
+# from UDP import ( 
+#     history_lock,
+#     motion_history,
+#     motion_ex_history,
+#     session_data,
+#     lap_data_history,
+#     event_data_history,
+#     participants_data,
+#     car_setups_data,
+#     car_telemetry_history,
+#     car_status_history,
+#     classification_data,
+#     lobby_info_data,
+#     car_damage_history,
+#     session_history_data,
+#     tyre_sets_data,
+#     time_trial_data
+# )
 
 udp_thread = threading.Thread(target=udp_listener, daemon=True)
 udp_thread.start()
 
 
 @dashapp.callback(
-    Output("telemetry", "data"),
+    Output("telemetry", "data"), 
     Input("interval_component", "n_intervals")
-)
+    )
 
-def update_telemetry_store(n):
-    """
-    Collect current telemetry data from UDP listener shared memory.
-    """
-    with history_lock:
-        # Debug output to confirm packets are flowing
-        print(f"[Status] Motion={len(motion_history)}  Telemetry={len(car_telemetry_history)}  Lap={len(lap_data_history)}")
+def update_telemetry(n):
+    data = get_latest_data()
+    if not data:
+        raise dash.exceptions.PreventUpdate
+    return data
 
-        if not car_telemetry_history:
-            raise dash.exceptions.PreventUpdate
-
-        telemetry_snapshot = list(car_telemetry_history)[-500:]  # last 500 samples
-
-    # Convert deque to dict (serializable for dcc.Store)
-    return {"telemetry": telemetry_snapshot}
-    
     
     # with history_lock:
     #     if not player_history or not rival_history:

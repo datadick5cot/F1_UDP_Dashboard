@@ -896,134 +896,68 @@ import socket
 import threading
 from collections import deque
 from ctypes import sizeof
-# from UDP import AllPackets, PacketHeader, PacketMotionData
 
 
-# --- Global Lap Tracking ---
-current_lap_number = None
-latest_player_lap = None
-latest_rival_lap = None
-rival_car_index = None
 
-# --- Data Stores ---
-motion_history        = deque(maxlen=500)
-motion_ex_history     = deque(maxlen=500)
-session_data          = deque(maxlen=10)
-lap_data_history      = deque(maxlen=100)
-event_data_history    = deque(maxlen=100)
-participants_data     = deque(maxlen=1)
-car_setups_data       = deque(maxlen=100)
-car_telemetry_history = deque(maxlen=1000)
-car_status_history    = deque(maxlen=1000)
-classification_data   = deque(maxlen=1)
-lobby_info_data       = deque(maxlen=1)
-car_damage_history    = deque(maxlen=1000)
-session_history_data  = deque(maxlen=10)
-tyre_sets_data        = deque(maxlen=10)
-time_trial_data       = deque(maxlen=10)
-history_lock = threading.Lock()
-
+latest_data = {}  # This will always hold the latest values
+listener_running = True
 
 
 def udp_listener(UDP_IP="0.0.0.0", UDP_PORT=20777):
     """
-    Receive all F1 24 UDP packets and route them to proper histories.
+    Continuously listen for F1 telemetry packets and update latest_data dict.
+    Returns the most recent values from all packet types.
     """
-    global current_lap_number, latest_player_lap, latest_rival_lap, rival_car_index
-    
+    global latest_data
 
     print(f"[UDP] Listening on {UDP_IP}:{UDP_PORT}")
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_IP, UDP_PORT))
 
-    while True:
-        data, _ = sock.recvfrom(2048)
-        header = PacketHeader.from_buffer_copy(data)
-        packet_id = header.m_packetId
+    while listener_running:
+        try:
+            data, addr = sock.recvfrom(2048)
+            header = PacketHeader.from_buffer_copy(data)
+            packet_id = header.m_packetId
 
-        if packet_id < 0 or packet_id >= len(AllPackets):
-            continue
+            if packet_id < 0 or packet_id >= len(AllPackets):
+                continue
 
-        PacketClass = AllPackets[packet_id]
-        if len(data) < sizeof(PacketClass):
-            continue
+            PacketClass = AllPackets[packet_id]
+            if len(data) < sizeof(PacketClass):
+                continue
 
-        packet = PacketClass.from_buffer_copy(data)
-        player_car_index = header.m_playerCarIndex
+            packet = PacketClass.from_buffer_copy(data)
+            player_index = header.m_playerCarIndex
 
-        with history_lock:
+            # --- Assign latest values by packet type ---
+            if packet_id == 0:  # Motion
+                car = packet.m_carMotionData[player_index]
+                latest_data["Motion"] = {
+                    "wheelSpeed": list(car.m_wheelSpeed),
+                    "wheelSlipRatio": list(car.m_wheelSlipRatio),
+                    "wheelSlipAngle": list(car.m_wheelSlipAngle),
+                }
 
-            # --- 0: Motion ---
-            if packet_id == 0:
-                car_motion = packet.m_carMotionData[player_car_index]
-                motion_history.append({
-                    "wheelSpeed": list(car_motion.m_wheelSpeed),
-                    "wheelSlipRatio": list(car_motion.m_wheelSlipRatio),
-                    "wheelSlipAngle": list(car_motion.m_wheelSlipAngle),
-                    "wheelLat": list(car_motion.m_wheelLatForce),
-                    "wheelLong": list(car_motion.m_wheelLongForce),
-                })
-
-            # --- 1: Session ---
-            elif packet_id == 1:
-                session_data.clear()
-                session_data.append({
+            elif packet_id == 1:  # Session
+                latest_data["Session"] = {
                     "weather": packet.m_weather,
                     "trackLength": packet.m_trackLength,
                     "sessionType": packet.m_sessionType,
                     "trackId": packet.m_trackId,
-                    "aiDifficulty": packet.m_aiDifficulty,
-                })
+                }
 
-            # --- 2: Lap Data ---
-            elif packet_id == 2:
-                latest_player_lap = packet.m_lapData[player_car_index]
-                rival_car_index = packet.m_timeTrialRivalCarIdx
-                latest_rival_lap = packet.m_lapData[rival_car_index]
+            elif packet_id == 2:  # Lap Data
+                lap = packet.m_lapData[player_index]
+                latest_data["Lap"] = {
+                    "currentLap": lap.m_currentLapNum,
+                    "lapDistance": lap.m_lapDistance,
+                    "totalDistance": getattr(lap, "m_totalDistance", None),
+                }
 
-                lap_data_history.append({
-                    "playerLap": latest_player_lap.m_currentLapNum,
-                    "playerDistance": latest_player_lap.m_lapDistance,
-                    "rivalDistance": latest_rival_lap.m_lapDistance,
-                })
-
-                if current_lap_number is None:
-                    current_lap_number = latest_player_lap.m_currentLapNum
-
-                if latest_player_lap.m_currentLapNum != current_lap_number:
-                    print(f"[LAP] New lap {latest_player_lap.m_currentLapNum}")
-                    motion_history.clear()
-                    car_telemetry_history.clear()
-                    current_lap_number = latest_player_lap.m_currentLapNum
-
-            # --- 3: Event ---
-            elif packet_id == 3:
-                event_data_history.append({
-                    "eventCode": bytes(packet.m_eventStringCode).decode("utf-8", errors="ignore").strip("\x00")
-                })
-
-            # --- 4: Participants ---
-            elif packet_id == 4:
-                participants_data.clear()
-                participants_data.append({"numCars": packet.m_numActiveCars})
-
-            # --- 5: Car Setups ---
-            elif packet_id == 5:
-                setup = packet.m_carSetups[player_car_index]
-                car_setups_data.append({
-                    "frontWing": setup.m_frontWing,
-                    "rearWing": setup.m_rearWing,
-                    "onThrottle": setup.m_onThrottle,
-                    "offThrottle": setup.m_offThrottle,
-                })
-
-
-            # --- 6: Car Telemetry ---
-            elif packet_id == 6:
-                car = packet.m_carTelemetryData[player_car_index]
-
-                # Always record player data
-                telemetry_entry = {
+            elif packet_id == 6:  # Car Telemetry
+                car = packet.m_carTelemetryData[player_index]
+                latest_data["Telemetry"] = {
                     "speed": car.m_speed,
                     "throttle": car.m_throttle,
                     "brake": car.m_brake,
@@ -1031,206 +965,331 @@ def udp_listener(UDP_IP="0.0.0.0", UDP_PORT=20777):
                     "gear": car.m_gear,
                 }
 
-                # Record rival data if available
-                if rival_car_index is not None and rival_car_index < len(packet.m_carTelemetryData):
-                    rcar = packet.m_carTelemetryData[rival_car_index]
-                    telemetry_entry.update({
-                        "rspeed": rcar.m_speed,
-                        "rthrottle": rcar.m_throttle,
-                        "rbrake": rcar.m_brake,
-                        "rsteer": rcar.m_steer,
-                        "rgear": rcar.m_gear,
-                    })
-                else:
-                    telemetry_entry.update({
-                        "rspeed": None,
-                        "rthrottle": None,
-                        "rbrake": None,
-                        "rsteer": None,
-                        "rgear": None,
-                    })
-
-                car_telemetry_history.append(telemetry_entry)
-
-
-            # --- 7: Car Status ---
-            elif packet_id == 7:
-                status = packet.m_carStatusData[player_car_index]
-                car_status_history.append({
-                    "ersStore": status.m_ersStoreEnergy,
-                    "fuelRemaining": status.m_fuelRemainingLaps,
-                })
-
-            # --- 8: Final Classification ---
-            elif packet_id == 8:
-                classification_data.clear()
-                classification_data.append({
-                    "positions": [c.m_position for c in packet.m_classificationData],
-                    "bestLap": [c.m_bestLapTimeInMS for c in packet.m_classificationData],
-                })
-
-            # --- 9: Lobby Info ---
-            elif packet_id == 9:
-                lobby_info_data.clear()
-                lobby_info_data.append({"numPlayers": packet.m_numPlayers})
-
-            # --- 10: Car Damage (fixed) ---
-            elif packet_id == 10:
-                dmg = packet.m_carDamageData[player_car_index]
-                car_damage_history.append({
-                    "tyresWear": list(dmg.m_tyresWear),
-                    "tyresDamage": list(dmg.m_tyresDamage),
-                    "brakesDamage": list(dmg.m_brakesDamage),
-                    "frontLeftWingDamage": dmg.m_frontLeftWingDamage,
-                    "frontRightWingDamage": dmg.m_frontRightWingDamage,
+            elif packet_id == 10:  # Car Damage
+                dmg = packet.m_carDamageData[player_index]
+                latest_data["Damage"] = {
+                    "tyreWear": list(dmg.m_tyresWear),
+                    "frontWingDamage": dmg.m_frontLeftWingDamage,
                     "rearWingDamage": dmg.m_rearWingDamage,
-                    "floorDamage": dmg.m_floorDamage,
-                    "diffuserDamage": dmg.m_diffuserDamage,
-                    "sidepodDamage": dmg.m_sidepodDamage,
-                    "gearBoxDamage": dmg.m_gearBoxDamage,
                     "engineDamage": dmg.m_engineDamage,
-                })
+                }
 
-            # --- 11: Session History ---
-            elif packet_id == 11:
-                session_history_data.clear()
-                session_history_data.append({
-                    "numLaps": packet.m_numLaps,
-                    "bestLapNum": packet.m_bestLapTimeLapNum,
-                })
-
-            # --- 12: Tyre Sets ---
-
-            elif packet_id == 12:
-                # PacketTyreSetsData has: m_header, m_carIdx, m_tyreSetData (array of TyreSetData), m_fittedIdx
-                tyre_sets_data.clear()
-                # build a safe list from the array of TyreSetData
-                sets_list = []
-                try:
-                    for t in packet.m_tyreSetData:
-                        # TyreSetData fields in your file:
-                        # m_actualTyreCompound, m_visualTyreCompound, m_wear, m_available,
-                        # m_recommendedSession, m_lifeSpan, m_usableLife, m_lapDeltaTime, m_fitted
-                        sets_list.append({
-                            "actualCompound": getattr(t, "m_actualTyreCompound", 0),
-                            "visualCompound": getattr(t, "m_visualTyreCompound", 0),
-                            "wear": getattr(t, "m_wear", 0),
-                            "available": getattr(t, "m_available", 0),
-                            "recommendedSession": getattr(t, "m_recommendedSession", 0),
-                            "lifeSpan": getattr(t, "m_lifeSpan", 0),
-                            "usableLife": getattr(t, "m_usableLife", 0),
-                            "lapDeltaTime": getattr(t, "m_lapDeltaTime", 0),
-                            "fitted": getattr(t, "m_fitted", 0),
-                        })
-                except Exception:
-                    # defensive: if the array cannot be iterated, keep empty sets_list
-                    sets_list = []
-
-                tyre_sets_data.append({
-                    "carIndex": getattr(packet, "m_carIdx", None),
-                    "fittedIdx": getattr(packet, "m_fittedIdx", None),
-                    "sets": sets_list
-                })
+        except Exception as e:
+            print(f"[UDP ERROR] {e}")
 
 
-            # --- 13: Motion Ex ---
-            elif packet_id == 13:
-                motion_ex_history.append({
-                    "suspensionPos": list(packet.m_suspensionPosition),
-                    "suspensionVel": list(packet.m_suspensionVelocity),
-                })
+def get_latest_data():
+    """Return the most recent telemetry dictionary."""
+    return latest_data
 
 
-            # --- 14: Time Trial ---
-            elif packet_id == 14:
-                
-                
-                player_best = packet.m_playerSessionBestDataSet
-                personal_best = packet.m_personalBestDataSet
-                rival_data = packet.m_rivalDataSet
-                rival_car_index = rival_data.m_carIdx
- 
- 
-                with history_lock:
-                    time_trial_data.clear()
-                    time_trial_data.append({
-                        # --- Player Session Best ---
-                        "player_car_index": player_best.m_carIdx,
-                        "player_team_id": player_best.m_teamId,
-                        "player_lap_time_ms": player_best.m_lapTimeInMS,
-                        "player_sector1_ms": player_best.m_sector1TimeInMS,
-                        "player_sector2_ms": player_best.m_sector2TimeInMS,
-                        "player_sector3_ms": player_best.m_sector3TimeInMS,
-                        "player_tc": player_best.m_tractionControl,
-                        "player_abs": player_best.m_antiLockBrakes,
-                        "player_equal_perf": player_best.m_equalCarPerformance,
-                        "player_custom_setup": player_best.m_customSetup,
-                        "player_valid": player_best.m_valid,
-
-                        # --- Personal Best ---
-                        "personal_lap_time_ms": personal_best.m_lapTimeInMS,
-                        "personal_sector1_ms": personal_best.m_sector1TimeInMS,
-                        "personal_sector2_ms": personal_best.m_sector2TimeInMS,
-                        "personal_sector3_ms": personal_best.m_sector3TimeInMS,
-                        "personal_valid": personal_best.m_valid,
-
-                        # --- Rival Data ---
-                        "rival_car_index": rival_data.m_carIdx,
-                        "rival_team_id": rival_data.m_teamId,
-                        "rival_lap_time_ms": rival_data.m_lapTimeInMS,
-                        "rival_sector1_ms": rival_data.m_sector1TimeInMS,
-                        "rival_sector2_ms": rival_data.m_sector2TimeInMS,
-                        "rival_sector3_ms": rival_data.m_sector3TimeInMS,
-                        "rival_valid": rival_data.m_valid,
-                    })
-
-    # 
-
-import time
-
+# --- Example standalone test ---
 if __name__ == "__main__":
     t = threading.Thread(target=udp_listener, daemon=True)
     t.start()
 
-    telemetry = {}
-
+    import time
     while True:
-        time.sleep(1)
-        with history_lock:
-            # --- LAP DATA ---
-            if lap_data_history:
-                telemetry['PlayerDistance'] = lap_data_history[-1].get("playerDistance")
-                telemetry['RivalDistance'] = lap_data_history[-1].get("rivalDistance")
+        # time.sleep(1)
+        if latest_data:
+            try:
+                print(f'frontWingDamage = {latest_data['Damage']['frontWingDamage']}')
+            except:
+                pass
+        else:
+            print("[UDP] Waiting for data...")
 
-            # --- TELEMETRY ---
-            if car_telemetry_history:
-                latest = car_telemetry_history[-1]
-                telemetry['PlayerSpeed']     = latest.get('speed')
-                telemetry['RivalSpeed']      = latest.get('rspeed')
-                telemetry['PlayerThrottle']  = latest.get('throttle')
-                telemetry['RivalThrottle']   = latest.get('rthrottle')
-                telemetry['PlayerBrake']     = latest.get('brake')
-                telemetry['RivalBrake']      = latest.get('rbrake')
-                telemetry['PlayerGear']      = latest.get('gear')
-                telemetry['RivalGear']       = latest.get('rgear')
 
-            # --- PRINT IF WE HAVE ANYTHING ---
-            if telemetry:
-                print(
-                    f"Player: "
-                    f"Speed={telemetry.get('PlayerSpeed', 0)} "
-                    f"Throttle={telemetry.get('PlayerThrottle', 0):.2f} "
-                    f"Brake={telemetry.get('PlayerBrake', 0):.2f} "
-                    f"Gear={telemetry.get('PlayerGear', 0)} | "
-                    f"Rival: "
-                    f"Speed={telemetry.get('RivalSpeed', 0)} "
-                    f"Throttle={telemetry.get('RivalThrottle', 0):.2f} "
-                    f"Brake={telemetry.get('RivalBrake', 0):.2f} "
-                    f"Gear={telemetry.get('RivalGear', 0)}"
-                )
-            else:
-                print("No telemetry yet...")
 
+
+
+
+# # --- Global Lap Tracking ---
+# current_lap_number = None
+# latest_player_lap = None
+# latest_rival_lap = None
+# rival_car_index = None
+
+# # --- Data Stores ---
+# motion_history        = deque(maxlen=500)
+# motion_ex_history     = deque(maxlen=500)
+# session_data          = deque(maxlen=10)
+# lap_data_history      = deque(maxlen=100)
+# event_data_history    = deque(maxlen=100)
+# participants_data     = deque(maxlen=1)
+# car_setups_data       = deque(maxlen=100)
+# car_telemetry_history = deque(maxlen=1000)
+# car_status_history    = deque(maxlen=1000)
+# classification_data   = deque(maxlen=1)
+# lobby_info_data       = deque(maxlen=1)
+# car_damage_history    = deque(maxlen=1000)
+# session_history_data  = deque(maxlen=10)
+# tyre_sets_data        = deque(maxlen=10)
+# time_trial_data       = deque(maxlen=10)
+# history_lock = threading.Lock()
+
+
+# # def udp_listener(UDP_IP="192.168.1.227", UDP_PORT=20777):
+# def udp_listener(UDP_IP="0.0.0.0", UDP_PORT=20777):
+#     """
+#     Receive all F1 24 UDP packets and route them to proper histories.
+#     """
+#     global current_lap_number, latest_player_lap, latest_rival_lap, rival_car_index
+    
+
+#     print(f"[UDP] Listening on {UDP_IP}:{UDP_PORT}")
+#     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#     sock.bind((UDP_IP, UDP_PORT))
+
+#     while True:
+#         data, _ = sock.recvfrom(2048)
+#         header = PacketHeader.from_buffer_copy(data)
+#         packet_id = header.m_packetId
+
+#         if packet_id < 0 or packet_id >= len(AllPackets):
+#             continue
+
+#         PacketClass = AllPackets[packet_id]
+#         if len(data) < sizeof(PacketClass):
+#             continue
+
+#         packet = PacketClass.from_buffer_copy(data)
+#         player_car_index = header.m_playerCarIndex
+
+#         with history_lock:
+
+#             # --- 0: Motion ---
+#             if packet_id == 0:
+#                 car_motion = packet.PacketMotionExData[player_car_index]
+#                 motion_history.append({
+#                     "m_wheelSpeed": list(car_motion.m_wheelSpeed),
+#                     # "m_wheelSlipRatio": list(car_motion.m_wheelSlipRatio),
+#                     # "m_wheelSlipAngle": list(car_motion.m_wheelSlipAngle),
+#                     # "m_wheelLatForce": list(car_motion.m_wheelLatForce),
+#                     # "m_wheelLongForce": list(car_motion.m_wheelLongForce),
+#                 })
+
+#             # --- 1: Session ---
+#             elif packet_id == 1:
+#                 session_data.clear()
+#                 session_data.append({
+#                     "weather": packet.m_weather,
+#                     "trackLength": packet.m_trackLength,
+#                     "sessionType": packet.m_sessionType,
+#                     "trackId": packet.m_trackId,
+#                     "aiDifficulty": packet.m_aiDifficulty,
+#                 })
+
+#             # --- 2: Lap Data ---
+#             elif packet_id == 2:
+#                 latest_player_lap = packet.m_lapData[player_car_index]
+#                 rival_car_index = packet.m_timeTrialRivalCarIdx
+#                 latest_rival_lap = packet.m_lapData[rival_car_index]
+
+#                 lap_data_history.append({
+#                     "playerLap": latest_player_lap.m_currentLapNum,
+#                     "playerDistance": latest_player_lap.m_lapDistance,
+#                     "rivalDistance": latest_rival_lap.m_lapDistance,
+#                 })
+
+#                 # if current_lap_number is None:
+#                 #     current_lap_number = latest_player_lap.m_currentLapNum
+
+#                 # if latest_player_lap.m_currentLapNum != current_lap_number:
+#                 #     print(f"[LAP] New lap {latest_player_lap.m_currentLapNum}")
+#                 #     motion_history.clear()
+#                 #     car_telemetry_history.clear()
+#                 #     current_lap_number = latest_player_lap.m_currentLapNum
+
+#             # --- 3: Event ---
+#             elif packet_id == 3:
+#                 event_data_history.append({
+#                     "eventCode": bytes(packet.m_eventStringCode).decode("utf-8", errors="ignore").strip("\x00")
+#                 })
+
+#             # --- 4: Participants ---
+#             elif packet_id == 4:
+#                 participants_data.clear()
+#                 participants_data.append({"numCars": packet.m_numActiveCars})
+
+#             # --- 5: Car Setups ---
+#             elif packet_id == 5:
+#                 setup = packet.m_carSetups[player_car_index]
+#                 car_setups_data.append({
+#                     "frontWing": setup.m_frontWing,
+#                     "rearWing": setup.m_rearWing,
+#                     "onThrottle": setup.m_onThrottle,
+#                     "offThrottle": setup.m_offThrottle,
+#                 })
+
+
+#             # --- 6: Car Telemetry ---
+#             elif packet_id == 6:
+#                 car = packet.m_carTelemetryData[player_car_index]
+
+#                 # Always record player data
+#                 telemetry_entry = {
+#                     "speed": car.m_speed,
+#                     "throttle": car.m_throttle,
+#                     "brake": car.m_brake,
+#                     "steer": car.m_steer,
+#                     "gear": car.m_gear,
+#                 }
+
+#                 # Record rival data if available
+#                 if rival_car_index is not None and rival_car_index < len(packet.m_carTelemetryData):
+#                     rcar = packet.m_carTelemetryData[rival_car_index]
+#                     telemetry_entry.update({
+#                         "rspeed": rcar.m_speed,
+#                         "rthrottle": rcar.m_throttle,
+#                         "rbrake": rcar.m_brake,
+#                         "rsteer": rcar.m_steer,
+#                         "rgear": rcar.m_gear,
+#                     })
+#                 else:
+#                     telemetry_entry.update({
+#                         "rspeed": None,
+#                         "rthrottle": None,
+#                         "rbrake": None,
+#                         "rsteer": None,
+#                         "rgear": None,
+#                     })
+
+#                 car_telemetry_history.append(telemetry_entry)
+
+
+#             # --- 7: Car Status ---
+#             elif packet_id == 7:
+#                 status = packet.m_carStatusData[player_car_index]
+#                 car_status_history.append({
+#                     "ersStore": status.m_ersStoreEnergy,
+#                     "fuelRemaining": status.m_fuelRemainingLaps,
+#                 })
+
+#             # --- 8: Final Classification ---
+#             elif packet_id == 8:
+#                 classification_data.clear()
+#                 classification_data.append({
+#                     "positions": [c.m_position for c in packet.m_classificationData],
+#                     "bestLap": [c.m_bestLapTimeInMS for c in packet.m_classificationData],
+#                 })
+
+#             # --- 9: Lobby Info ---
+#             elif packet_id == 9:
+#                 lobby_info_data.clear()
+#                 lobby_info_data.append({"numPlayers": packet.m_numPlayers})
+
+#             # --- 10: Car Damage (fixed) ---
+#             elif packet_id == 10:
+#                 dmg = packet.m_carDamageData[player_car_index]
+#                 car_damage_history.append({
+#                     "tyresWear": list(dmg.m_tyresWear),
+#                     "tyresDamage": list(dmg.m_tyresDamage),
+#                     "brakesDamage": list(dmg.m_brakesDamage),
+#                     "frontLeftWingDamage": dmg.m_frontLeftWingDamage,
+#                     "frontRightWingDamage": dmg.m_frontRightWingDamage,
+#                     "rearWingDamage": dmg.m_rearWingDamage,
+#                     "floorDamage": dmg.m_floorDamage,
+#                     "diffuserDamage": dmg.m_diffuserDamage,
+#                     "sidepodDamage": dmg.m_sidepodDamage,
+#                     "gearBoxDamage": dmg.m_gearBoxDamage,
+#                     "engineDamage": dmg.m_engineDamage,
+#                 })
+
+#             # --- 11: Session History ---
+#             elif packet_id == 11:
+#                 session_history_data.clear()
+#                 session_history_data.append({
+#                     "numLaps": packet.m_numLaps,
+#                     "bestLapNum": packet.m_bestLapTimeLapNum,
+#                 })
+
+#             # --- 12: Tyre Sets ---
+
+#             elif packet_id == 12:
+#                 # PacketTyreSetsData has: m_header, m_carIdx, m_tyreSetData (array of TyreSetData), m_fittedIdx
+#                 tyre_sets_data.clear()
+#                 # build a safe list from the array of TyreSetData
+#                 sets_list = []
+#                 try:
+#                     for t in packet.m_tyreSetData:
+#                         # TyreSetData fields in your file:
+#                         # m_actualTyreCompound, m_visualTyreCompound, m_wear, m_available,
+#                         # m_recommendedSession, m_lifeSpan, m_usableLife, m_lapDeltaTime, m_fitted
+#                         sets_list.append({
+#                             "actualCompound": getattr(t, "m_actualTyreCompound", 0),
+#                             "visualCompound": getattr(t, "m_visualTyreCompound", 0),
+#                             "wear": getattr(t, "m_wear", 0),
+#                             "available": getattr(t, "m_available", 0),
+#                             "recommendedSession": getattr(t, "m_recommendedSession", 0),
+#                             "lifeSpan": getattr(t, "m_lifeSpan", 0),
+#                             "usableLife": getattr(t, "m_usableLife", 0),
+#                             "lapDeltaTime": getattr(t, "m_lapDeltaTime", 0),
+#                             "fitted": getattr(t, "m_fitted", 0),
+#                         })
+#                 except Exception:
+#                     # defensive: if the array cannot be iterated, keep empty sets_list
+#                     sets_list = []
+
+#                 tyre_sets_data.append({
+#                     "carIndex": getattr(packet, "m_carIdx", None),
+#                     "fittedIdx": getattr(packet, "m_fittedIdx", None),
+#                     "sets": sets_list
+#                 })
+
+
+#             # --- 13: Motion Ex ---
+#             elif packet_id == 13:
+#                 motion_ex_history.append({
+#                     "suspensionPos": list(packet.m_suspensionPosition),
+#                     "suspensionVel": list(packet.m_suspensionVelocity),
+#                 })
+
+
+#             # --- 14: Time Trial ---
+#             elif packet_id == 14:
+                
+                
+#                 player_best = packet.m_playerSessionBestDataSet
+#                 personal_best = packet.m_personalBestDataSet
+#                 rival_data = packet.m_rivalDataSet
+#                 rival_car_index = rival_data.m_carIdx
+ 
+ 
+#                 with history_lock:
+#                     time_trial_data.clear()
+#                     time_trial_data.append({
+#                         # --- Player Session Best ---
+#                         "player_car_index": player_best.m_carIdx,
+#                         "player_team_id": player_best.m_teamId,
+#                         "player_lap_time_ms": player_best.m_lapTimeInMS,
+#                         "player_sector1_ms": player_best.m_sector1TimeInMS,
+#                         "player_sector2_ms": player_best.m_sector2TimeInMS,
+#                         "player_sector3_ms": player_best.m_sector3TimeInMS,
+#                         "player_tc": player_best.m_tractionControl,
+#                         "player_abs": player_best.m_antiLockBrakes,
+#                         "player_equal_perf": player_best.m_equalCarPerformance,
+#                         "player_custom_setup": player_best.m_customSetup,
+#                         "player_valid": player_best.m_valid,
+
+#                         # --- Personal Best ---
+#                         "personal_lap_time_ms": personal_best.m_lapTimeInMS,
+#                         "personal_sector1_ms": personal_best.m_sector1TimeInMS,
+#                         "personal_sector2_ms": personal_best.m_sector2TimeInMS,
+#                         "personal_sector3_ms": personal_best.m_sector3TimeInMS,
+#                         "personal_valid": personal_best.m_valid,
+
+#                         # --- Rival Data ---
+#                         "rival_car_index": rival_data.m_carIdx,
+#                         "rival_team_id": rival_data.m_teamId,
+#                         "rival_lap_time_ms": rival_data.m_lapTimeInMS,
+#                         "rival_sector1_ms": rival_data.m_sector1TimeInMS,
+#                         "rival_sector2_ms": rival_data.m_sector2TimeInMS,
+#                         "rival_sector3_ms": rival_data.m_sector3TimeInMS,
+#                         "rival_valid": rival_data.m_valid,
+#                     })
+
+#     #
 
 # import time
  
@@ -1241,43 +1300,41 @@ if __name__ == "__main__":
 #     telemetry = {}
     
 #     while True:
-#         time.sleep(1)
+#         # time.sleep(0.2)
 #         with history_lock:
-            
-#             if lap_data_history:
-#                 telemetry['PlayerDistance'] = lap_data_history[-1]["playerDistance"]
-#                 telemetry['RivalDistance'] = lap_data_history[-1]["rivalDistance"]
-            
-        
-#             elif car_telemetry_history:
-#                 telemetry['PlayerSpeed'] = car_telemetry_history[-1]['speed']
-#                 telemetry['RivalSpeed'] = car_telemetry_history[-1]['rspeed']
-#                 telemetry['PlayerThrottle'] = car_telemetry_history[-1]['throttle']
-#                 telemetry['RivalThrottle'] = car_telemetry_history[-1]['rthrottle']
-#                 telemetry['PlayerBrake'] = car_telemetry_history[-1]['brake']
-#                 telemetry['RivalBrake'] = car_telemetry_history[-1]['rbrake']
-#                 telemetry['PlayerGear'] = car_telemetry_history[-1]['gear']
-#                 telemetry['RivalGear'] = car_telemetry_history[-1]['rgear']
-                
-#             else:
-#                 print('wrong one')
-            
-            
+#                 # --- LAP DATA ---
+#                 if lap_data_history:
+#                     telemetry['PlayerDistance'] = lap_data_history[-1].get("playerDistance", 0)
+#                     telemetry['RivalDistance'] = lap_data_history[-1].get("rivalDistance", 0)
+                    
+#                 if motion_history:
+#                     telemetry['m_wheelSlipRatio'] = motion_history[-1].get("m_wheelSlipRatio", 0)
+#                     # telemetry['m_wheelSlipRatio'] = motion_history[-1].get("m_wheelSlipRatio", 0)
+                    
 
+#                 # --- TELEMETRY ---
+#                 if car_telemetry_history:
+#                     latest = car_telemetry_history[-1]
+#                     telemetry['PlayerSpeed']     = latest.get('speed', 0)
+#                     telemetry['RivalSpeed']      = latest.get('rspeed', 0)
+#                     telemetry['PlayerThrottle']  = latest.get('throttle', 0)
+#                     telemetry['RivalThrottle']   = latest.get('rthrottle', 0)
+#                     telemetry['PlayerBrake']     = latest.get('brake', 0)
+#                     telemetry['RivalBrake']      = latest.get('rbrake', 0)
+#                     telemetry['PlayerGear']      = latest.get('gear', 0)
+#                     telemetry['RivalGear']       = latest.get('rgear', 0)
+
+         
+
+#         # Convert deque to dict (serializable for dcc.Store)
+#         try:
+#             print(f'slip{telemetry['m_wheelSlipRatio']}')
+#             print(f'PlayerDistance {telemetry['PlayerDistance']}')
+#         except:
+#             pass
+
+        
             
-            # if motion_history:
-            #     latest = motion_history[-1]
-            #     print(f"[Motion] Wheel Speeds: {latest['wheelSpeed']}")
-            # elif car_telemetry_history:
-            #     # latest = car_telemetry_history[-1]
-            #     print(car_telemetry_history[-1]['speed'])
-            #     # print(f"[Telemetry] Speed={latest['speed']} Gear={latest['gear']} Throttle={latest['throttle']:.2f}")
-            # else:
-            #     pass #No Warning Required, Wait until signal appears
-            
-            
-            print(telemetry)
-      
 
 
 # | ID | Packet Name          |
@@ -1297,3 +1354,39 @@ if __name__ == "__main__":
 # | 12 | Tyre Sets            |
 # | 13 | Motion Ex            |
 # | 14 | Time Trial           |
+
+
+# import socket
+# import threading
+
+# def udp_tester(UDP_IP="0.0.0.0", UDP_PORT=20777):
+#     """
+#     Basic UDP listener to verify whether F1 24 is sending telemetry packets.
+#     Prints True if any signal is received.
+#     """
+#     print(f"[UDP] Listening on {UDP_IP}:{UDP_PORT}")
+    
+#     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#     sock.bind((UDP_IP, UDP_PORT))
+#     sock.settimeout(5.0)  # Prevent blocking forever if no data
+
+#     packet_count = 0
+
+#     while True:
+#         try:
+#             data, addr = sock.recvfrom(4096)
+#             packet_count += 1
+#             print(f"[UDP] Packet #{packet_count} received from {addr}")
+#         except socket.timeout:
+#             print("[UDP] No signal received in the last 5 seconds...")
+#         except Exception as e:
+#             print(f"[UDP ERROR] {e}")
+
+# # --- Test run ---
+# if __name__ == "__main__":
+#     t = threading.Thread(target=udp_tester, daemon=True)
+#     t.start()
+
+#     import time
+#     while True:
+#         time.sleep(1)
