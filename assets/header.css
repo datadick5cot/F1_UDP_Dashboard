@@ -51,17 +51,17 @@
         padding-left : 0;
         }
 
-.borders_no_bottom {
-        border-top-style: 1px solid #82827d;;
-        border-right-style: 1px solid #82827d;;
-        border-bottom-style: hidden;
-        border-left-style: 1px solid #82827d;;
-        text-align: center;
-        padding-top : 0;
-        padding-right : 0;
-        padding-bottom : 0;
-        padding-left : 0;
-        }
+
+
+.borders_no_top_no_bottom {
+    border-top: none;
+    border-right: 1px solid #82827d;
+    border-bottom: none;
+    border-left: 1px solid #82827d;
+    text-align: center;
+    padding: 0;
+}
+
 
 .borders_and_height {border: 1px solid #82827d;
         text-align: center;

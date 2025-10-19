@@ -4,39 +4,35 @@ from PyQt6.QtWidgets import QMainWindow, QApplication, QToolBar
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtGui import QAction
-import dash
-from dash import html, dcc
-import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
-from codeassets import dont_lock, create_loading_figure
 from UDP import udp_listener, get_latest_data
 from server import dashapp
 from dash.dependencies import Input, Output
+from dash import Output, Input, clientside_callback
 import dash.exceptions
-from collections import deque
+from codeassets import dont_lock
+from dash import clientside_callback
+# --- Run listener thread ---
 
 
-# from UDP import ( 
-#     history_lock,
-#     motion_history,
-#     motion_ex_history,
-#     session_data,
-#     lap_data_history,
-#     event_data_history,
-#     participants_data,
-#     car_setups_data,
-#     car_telemetry_history,
-#     car_status_history,
-#     classification_data,
-#     lobby_info_data,
-#     car_damage_history,
-#     session_history_data,
-#     tyre_sets_data,
-#     time_trial_data
-# )
 
-udp_thread = threading.Thread(target=udp_listener, daemon=True)
-udp_thread.start()
+
+
+
+
+clientside_callback(
+    """
+    function(data) {
+        if (!data) {
+            return "No telemetry data";
+        }
+        // You can format this however you want
+        return JSON.stringify(data, null, 2);
+    }
+    """,
+    Output("telemetry_display", "children"),
+    Input("telemetry", "data")
+)
 
 
 @dashapp.callback(
@@ -51,21 +47,6 @@ def update_telemetry(n):
     return data
 
     
-    # with history_lock:
-    #     if not player_history or not rival_history:
-    #         raise dash.exceptions.PreventUpdate  # nothing to show yet
-
-    #     # Convert to regular lists for JSON serialization
-    #     player_data = list(player_history)
-    #     rival_data = list(rival_history)
-
-    # # Return as dict for Dash
-    # return {
-    #     "player": player_data,
-    #     "rival": rival_data
-    # }
-
-
 def run_dash():
     dashapp.run_server(port=8050, debug=False, use_reloader=False)
 
@@ -108,6 +89,7 @@ class MainWindow(QMainWindow):
         self.view.load(QUrl(f"http://127.0.0.1:8050/{page}"))
 
 # --- Start Background Threads ---
+threading.Thread(target=udp_listener, daemon=True).start()
 threading.Thread(target=run_dash, daemon=True).start()
 threading.Thread(target=dont_lock, daemon=True).start()
 

@@ -90,6 +90,7 @@ def telemetry_build_test_packet():
         pkt.m_carTelemetryData[i].m_speed = 320
         pkt.m_carTelemetryData[i].m_throttle = 0.8
         pkt.m_carTelemetryData[i].m_gear = 7
+        pkt.m_carTelemetryData[i].m_brake = 0.5
     pkt.m_suggestedGear = 6
     return bytes(pkt)
 

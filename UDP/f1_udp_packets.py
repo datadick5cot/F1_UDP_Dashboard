@@ -6,19 +6,36 @@ from ctypes import Array
 class PacketHeader(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
-        ("m_packetFormat", c_uint16),
-        ("m_gameYear", c_uint8),
-        ("m_gameMajorVersion", c_uint8),
-        ("m_gameMinorVersion", c_uint8),
-        ("m_packetVersion", c_uint8),
-        ("m_packetId", c_uint8),
-        ("m_sessionUID", c_uint64),
-        ("m_sessionTime", c_float),
-        ("m_frameIdentifier", c_uint32),
-        ("m_overallFrameIdentifier", c_uint32),
-        ("m_playerCarIndex", c_uint8),
-        ("m_secondaryPlayerCarIndex", c_uint8),
+        ('m_packetFormat', c_uint16),
+        ('m_gameYear', c_uint8),
+        ('m_gameMajorVersion', c_uint8),
+        ('m_gameMinorVersion', c_uint8),
+        ('m_packetVersion', c_uint8),
+        ('m_packetId', c_uint8),
+        ('m_sessionUID', c_uint64),
+        ('m_sessionTime', c_float),
+        ('m_frameIdentifier', c_uint32),
+        ('m_overallFrameIdentifier', c_uint32),
+        ('m_playerCarIndex', c_uint8),
+        ('m_secondaryPlayerCarIndex', c_uint8),
     ]
+
+# class PacketHeader(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ("m_packetFormat", c_uint16),
+#         ("m_gameYear", c_uint8),
+#         ("m_gameMajorVersion", c_uint8),
+#         ("m_gameMinorVersion", c_uint8),
+#         ("m_packetVersion", c_uint8),
+#         ("m_packetId", c_uint8),
+#         ("m_sessionUID", c_uint64),
+#         ("m_sessionTime", c_float),
+#         ("m_frameIdentifier", c_uint32),
+#         ("m_overallFrameIdentifier", c_uint32),
+#         ("m_playerCarIndex", c_uint8),
+#         ("m_secondaryPlayerCarIndex", c_uint8),
+#     ]
 
 # -------------------- Packet 0: Motion --------------------
 class CarMotionData(LittleEndianStructure):
@@ -561,29 +578,30 @@ class PacketSessionHistoryData(LittleEndianStructure):
 
 # -------------------- Packet 12: Tyre Sets--------------------
 
+
 class TyreSetData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
-        ('m_actualCompound', c_uint8),
-        ('m_visualCompound', c_uint8),
-        ('m_wear', c_uint8),
-        ('m_available', c_uint8),
-        ('m_recommendedSession', c_uint8),
-        ('m_lifeSpan', c_uint8),
-        ('m_usableLife', c_uint8),
-        ('m_lapDeltaTime', c_float),
-        ('m_fitted', c_uint8),
+        ('m_actualTyreCompound', c_uint8),   # 1
+        ('m_visualTyreCompound', c_uint8),   # 1
+        ('m_wear', c_uint8),                 # 1
+        ('m_available', c_uint8),            # 1
+        ('m_recommendedSession', c_uint8),   # 1
+        ('m_lifeSpan', c_uint8),             # 1
+        ('m_usableLife', c_uint8),           # 1
+        ('m_lapDeltaTime', c_int16),         # 2 (signed 16-bit)
+        ('m_fitted', c_uint8),               # 1
     ]
+    # total = 10 bytes per TyreSetData
 
 class PacketTyreSetsData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
-        ('m_header', PacketHeader),
-        ('m_carIdx', c_uint8),
-        ('m_tyreSetData', TyreSetData * 20),
-        ('m_fittedIdx', c_uint8),
+        ('m_header', PacketHeader),          # 29 bytes
+        ('m_carIdx', c_uint8),               # 1
+        ('m_tyreSetData', TyreSetData * 20), # 20 * 10 = 200
+        ('m_fittedIdx', c_uint8),            # 1
     ]
-
 
 # -------------------- Packet 13: Motion Ex --------------------
 
@@ -603,6 +621,7 @@ class PacketMotionExData(LittleEndianStructure):
         ('m_frontWheelsAngle', c_float),
         ('m_wheelSpeed', c_float * 4),
         ('m_wheelSlipRatio', c_float * 4),
+        ('m_wheelSlipAngle', c_float * 4)
     ]
 
 
@@ -652,6 +671,7 @@ PACKET_REGISTRY = {
 }
 
 
+
 def extract_fields(obj):
     """
     Recursively converts a ctypes structure into a JSON-serializable dictionary.
@@ -688,22 +708,6 @@ def convert_value(val):
     return str(val)
 
 
-
-# def convert_value(val):
-#     """
-#     Converts ctypes values to native Python types.
-#     """
-#     if isinstance(val, (c_uint8, c_int8, c_uint16, c_int16, c_uint32, c_float, c_double)):
-#         return val.value
-#     elif isinstance(val, bytes):
-#         return val.decode("utf-8", errors="ignore").strip("\x00")
-#     elif isinstance(val, c_char):
-#         return str(val.value.decode("utf-8", errors="ignore"))
-#     elif isinstance(val, c_uint64):
-#         return int(val.value)
-#     elif isinstance(val, int) or isinstance(val, float):
-#         return val
-#     return str(val)
 
 
 def parse_packet(data):
@@ -764,9 +768,43 @@ def extract_fields(obj):
 
 
 
-def start_udp_thread():
-    t = threading.Thread(target=udp_listener, daemon=True)
-    t.start()
+
+def calc_wheel_traction(data):
+    
+    car_data = data.get("Telemetry", {}).get("m_carTelemetryData", [])
+    surface_type = car_data[data.get('PlayerIndex', 0)].get("m_surfaceType", 0.0)
+    
+    motionex = data.get("MotionEx", {})
+    slip_ratio = motionex["m_wheelSlipRatio"]
+    slip_angle = motionex["m_wheelSlipAngle"]
+
+    surface_penalty_map = {
+        0: 0.0,  # tarmac
+        1: 0.1,  # rumble strip
+        2: 0.3,  # concrete
+        3: 0.4,  # grass
+        4: 0.5,  # gravel
+        5: 0.7,  # mud/sand
+        6: 0.5,  # cobbles
+        7: 0.2,  # painted
+    }
+
+    slip_ratio_limit = 0.12
+    slip_angle_limit = 6.0
+
+    traction = []
+    for i in range(4):
+        sr = abs(slip_ratio[i])
+        sa = abs(slip_angle[i])
+        penalty = surface_penalty_map.get(surface_type[i], 0.0)
+
+        t = 1.0 - (sr / slip_ratio_limit) - (sa / slip_angle_limit) - penalty
+        t = max(0.0, min(1.0, t))
+        traction.append(t)
+
+    return traction  # [RL, RR, FL, FR]
+
+
 
 
 def get_latest_data():
@@ -780,24 +818,23 @@ def print_telemetry():
         return
 
     try:
-        player_index = data["Telemetry"]["m_header"]["m_playerCarIndex"]
-        car = data["Telemetry"]["m_carTelemetryData"][player_index]
-
-        print(f"Speed: {car['m_speed']} km/h")
-        print(f"Throttle: {car['m_throttle']:.2f}")
-        print(f"Brake: {car['m_brake']:.2f}")
-        print(f"Gear: {car['m_gear']}")
-        print(f"Engine RPM: {car['m_engineRPM']}")
-        print(f"DRS: {'Enabled' if car['m_drs'] else 'Disabled'}")
+        # motionex = data.get("MotionEx", {})
         
-        time.sleep(1)
-
+        print(calc_wheel_traction(data))
+        
+        # slipratiolist = motionex.get("m_wheelSlipAngle", [0.0, 0.0, 0.0, 0.0])
+        
+        # slipratiolist = [ '%.2f' % elem for elem in slipratiolist ]
+        
+        # print(slipratiolist)
+       
     except Exception as e:
         print(f"[ERROR] Failed to extract telemetry: {e}")
 
 
 if __name__ == "__main__":
-    start_udp_thread()
+    t = threading.Thread(target=udp_listener, daemon=True)
+    t.start()
     while True:
         print_telemetry()
     
@@ -821,3 +858,4 @@ if __name__ == "__main__":
 # | 12 | Tyre Sets            |
 # | 13 | Motion Ex            |
 # | 14 | Time Trial           |
+

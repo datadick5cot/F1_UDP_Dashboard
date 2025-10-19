@@ -1,138 +1,106 @@
-
 import plotly.graph_objects as go
 import dash 
-from dash import dcc, Input, Output, callback
+# from dash import dcc, Input, Output, callback, html
+from dash.exceptions import PreventUpdate
+from dash_extensions.enrich import DashProxy, dcc, html, Input, Output, ClientsideFunction, clientside_callback
 import dash_bootstrap_components as dbc
-
-import threading
 from collections import deque
-from codeassets import graph_config, graph_backgrounds, create_loading_figure
+from codeassets import graph_config, graph_backgrounds
+from dash import callback
+from dash.dependencies import Input, Output
 
-HISTORY_LIMIT = 100  # store N data points
-telemetry_history = deque(maxlen=HISTORY_LIMIT)
-history_lock = threading.Lock()
+
+
+# Placeholder gauge
+def placeholder_figure(title):
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=0,
+        title={"text": title},
+        gauge={"axis": {"range": [0.0, 5.0]}}
+    ))
+    fig.update_layout(margin=dict(t=30, b=0, l=0, r=0), **graph_backgrounds)
+    return fig
 
 
 dash.register_page(__name__, name='trailbrake', path='/trailbrake')
-# Dash.register_page(__name__, path='/')
+
 
 layout = dbc.Container([
-
-
+    
+    
+    dbc.Row([dbc.Col([html.Div(id='speed', style={'font-size': '30px', 
+                                                  'text-align': 'center'})])]),
     dbc.Row([
-        dbc.Col([
-            dcc.Graph(id='x_y_graph', config=graph_config, style={"height": "300px"}),
-         ], width=5),
-        
+
+        dbc.Col([dcc.Graph(id='FL_Slip', figure=placeholder_figure("Front Left"), config=graph_config, style={"height": "250px"})], width=6, class_name='borders'),
+        dbc.Col([dcc.Graph(id='FR_Slip', figure=placeholder_figure("Front Right"), config=graph_config, style={"height": "250px"})], width=6, class_name='borders')
     ]),
     dbc.Row([
-        dbc.Col([
-            dcc.Graph(id='bar_graph', config=graph_config, style={"height": "300px"}),
-         ], width=4),
-        
-        dbc.Col([
-            dcc.Graph(id='line_graph', config=graph_config, style={"height": "300px"}),
-        ], width=8),
+
+        dbc.Col([dcc.Graph(id='RL_Slip', figure=placeholder_figure("Rear Left"), config=graph_config, style={"height": "250px"})], width=6, class_name='borders'),
+        dbc.Col([dcc.Graph(id='RR_Slip', figure=placeholder_figure("Rear Right"), config=graph_config, style={"height": "250px"})], width=6, class_name='borders')
     ]),
+   
 ])
 
 
-
-# --- Dash Callback to Update Graph ---
 @callback(
-    Output('x_y_graph', 'figure'),
-    Output('line_graph', 'figure'),
-    Output('bar_graph', 'figure'),
-    Input('interval_component', 'n_intervals')
+    Output('RL_Slip', 'figure'),
+    Output('RR_Slip', 'figure'),
+    Output('FL_Slip', 'figure'),
+    Output('FR_Slip', 'figure'),
+    Output('speed', 'children'),
+    Input("telemetry", "data")
 )
-def update_graph(n_intervals):
-    """
-    Plot the entire telemetry history instead of just the latest point.
-    """
-    with history_lock:
-        if not telemetry_history:
-            # raise PreventUpdate
-            loading_figure = create_loading_figure()
-            return loading_figure, loading_figure, loading_figure
+def Wheel_Spin(store_data):
+    
+    if not store_data or "MotionEx" not in store_data:
+        raise PreventUpdate
+
+    try:
+        telemetry = store_data.get("Telemetry", {})
+        car_data = telemetry.get("m_carTelemetryData", [])
+        player_index = store_data.get('PlayerIndex', 0)
+        player_data = car_data[player_index]
+            
+        motionex = store_data.get("MotionEx", {})
         
-        # Extract data
-        y_vals = [item["acceleration_grip"] for item in telemetry_history]
-        x_vals = [item["steer"] for item in telemetry_history]
-        throttle_y = [item["throttle"] for item in telemetry_history]
-        brake_y = [item["brake"] for item in telemetry_history]
+        # Ratio of slip (difference between tyre linear speed & car speed)
+        wheelslipratio = motionex.get("m_wheelSlipRatio", [0.0, 0.0, 0.0, 0.0])
+        
+        # Lateral slip angle
+        slipAngle = motionex.get("m_wheelSlipAngle", [0.0, 0.0, 0.0, 0.0])
+        
+        wheelspeed = motionex.get("m_wheelSpeed", [0.0, 0.0, 0.0, 0.0])
+   
+        def wheelGraph(title, value, wheelspeed): 
+            
+            if wheelspeed < 0:
+                wheelspeed = 0
+            else:
+                wheelspeed = round(wheelspeed, 2)
+            
+            title = f'{title} = {wheelspeed} KPH'
+            
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=value,
+                title={"text": title},
+                gauge={"axis": {"range": [0.0, 1.0]}}
+            ))
+            fig.update_layout(margin=dict(t=30, b=0, l=0, r=0), **graph_backgrounds)
+            
+            return fig
 
-    fig_b_a = go.Figure()
 
-    fig_b_a.add_scatter(y=throttle_y, 
-                        x=list(range(0,HISTORY_LIMIT)),
-                        line=dict(color='green', width=4),
-                        name='throttle')
-    
+        RL = wheelGraph('Rear Left', slipAngle[0], wheelspeed[0])
+        RR = wheelGraph('Rear Right', slipAngle[1], wheelspeed[1])
+        FL = wheelGraph('Front Left', slipAngle[2], wheelspeed[2])
+        FR = wheelGraph('Front Left', slipAngle[3], wheelspeed[3])
+        
+    except Exception as e:
+        print(f"[ERROR] Failed to build telemetry graphs: {e}")
 
-    fig_b_a.add_scatter(y=brake_y, 
-                        x=list(range(0,HISTORY_LIMIT)),
-                        line=dict(color='red', width=4),
-                        name='brakes')
-    
-    
-
-    fig_b_a.update_layout(
-                    # yaxis=dict(visible=False),
-                    xaxis=dict(visible=False),
-                    margin=dict(l=20, r=20, t=20, b=20), 
-                    autosize=True, **graph_backgrounds,
-                    )
-    fig_b_a.update_yaxes(range=[0,1], title="Throttle - Brake)")
-    
-    fig_b_a.update_xaxes(range=[0,100], title="Time")
-
-    fig = go.Figure()
-
-    # Show full trail
-    fig.add_scatter(
-        x=x_vals,
-        y=y_vals,
-        mode='lines+markers',
-        line=dict(color='blue', width=2),
-        marker=dict(size=5, color='red'),
-        name="Telemetry Trail"
-    )
-
-    # Add latest point highlighted
-    fig.add_scatter(
-        x=[x_vals[-1]],
-        y=[y_vals[-1]],
-        mode='markers',
-        marker=dict(size=20, color='orange'),
-        name="Latest Point"
-    )
-
-    # Keep ranges fixed for better visibility
-    fig.update_yaxes(range=[-1, 1],)
-    fig.update_xaxes(range=[-1, 1],)
-
-    
-    fig.update_layout(title="Real-Time Car Telemetry", 
-                    autosize=True, **graph_backgrounds,
-                    )
-    
-    
-    fig_bar = go.Figure()
-    
-    xNamesvalue = ['Throttle', 'Brake']
-
-    
-    fig_bar = go.Figure(data=[
-                go.Bar(name='Throttle', x=xNamesvalue, y=[throttle_y[-1]], marker_color='Green', showlegend=False),
-                go.Bar(name='Brake', x=xNamesvalue, y=[brake_y[-1]], marker_color='Red', showlegend=False)
-            ])
-    
-    fig_bar.update_yaxes(range=[0, 1])
-    
-    fig_bar.update_layout(
-                    **graph_backgrounds,
-                    )
-
-    return fig, fig_b_a, fig_bar
-
+    return RL, RR, FL, FR, f'{player_data.get('m_speed', 0)} KPH'
 
