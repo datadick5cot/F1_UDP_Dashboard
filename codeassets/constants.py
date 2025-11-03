@@ -35,16 +35,3 @@ tyres_style = {'position': 'absolute',
                 'width': '120px',
                 'height': '120px'}
 
-
-# Graph config
-graph_config = {
-    'staticPlot': True,
-    'scrollZoom': False,
-    'doubleClick': 'reset',
-    'displayModeBar': False,
-    'displaylogo': False,
-    'modeBarButtonsToRemove': ['lasso2d', 'select', 'zoomIn', 'zoomOut', 'autoScale'],
-}
-
-
-graph_backgrounds = dict(paper_bgcolor='black', plot_bgcolor='rgba(0,0,0,0)')

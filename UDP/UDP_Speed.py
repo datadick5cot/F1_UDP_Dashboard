@@ -324,6 +324,8 @@ class EventDataDetails(Union):
         ('Collision', Collision),
     ]
 
+
+
 class PacketEventData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
@@ -716,6 +718,12 @@ data_queue = asyncio.Queue(maxsize=100)
 latest_data = {}
 
 PACKET_HANDLERS = {
+        0: lambda pkt, hdr: {
+        # Motion
+        
+    },
+    
+    
     1: lambda pkt, hdr: {  #Session Data
         'm_weather': pkt.m_weather,
         'm_trackTemperature': pkt.m_trackTemperature,
@@ -734,13 +742,18 @@ PACKET_HANDLERS = {
         "m_totalDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_totalDistance,
         "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
         "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
+        "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
+        
         
     },
 
     3: lambda pkt, hdr: {
         # Event packet — often needs decoding from event string
         # 'eventStringCode': pkt.m_eventStringCode.decode('utf-8'),
-        'eventStringCode': bytes(pkt.m_eventStringCode).decode('utf-8').strip('\x00'),
+        'm_eventStringCode': bytes(pkt.m_eventStringCode).decode('utf-8').strip('\x00'), 
+        'm_eventDetails' : pkt.m_eventDetails
+        
+        
     },
 
     4: lambda pkt, hdr: {
@@ -751,7 +764,7 @@ PACKET_HANDLERS = {
     5: lambda pkt, hdr: {
         # Setup data
         
-        pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
+        'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
     },
 
     6: lambda pkt, hdr: (
@@ -761,7 +774,8 @@ PACKET_HANDLERS = {
             'm_brake': car.m_brake,
             'm_gear': car.m_gear,
             'm_drs': car.m_drs,
-            'm_revLightsBitValue': car.m_revLightsBitValue,
+            'm_revLightsPercent': car.m_revLightsPercent,
+            'm_revLightsBitValue' : car.m_revLightsBitValue,
             'm_brakesTemperature': list(car.m_brakesTemperature),
             'm_tyresSurfaceTemperature': list(car.m_tyresSurfaceTemperature),
             'm_tyresInnerTemperature': list(car.m_tyresInnerTemperature),
@@ -883,7 +897,35 @@ if __name__ == "__main__":
     start_udp_background()
 
     # Example: continuously print updated dictionary
-    import time
+
     while True:
-        print(get_latest_data())
-        time.sleep(1)
+        data = get_latest_data()
+        
+        
+        # print(data)
+        # if data is not None:
+        try:
+            print(data['m_revLightsPercent'])
+        except:
+            pass
+        
+
+
+
+# | ID | Packet Name          |
+# | -- | -------------------- |
+# | 0  | Motion               |
+# | 1  | Session              |
+# | 2  | Lap Data             |
+# | 3  | Event                |
+# | 4  | Participants         |
+# | 5  | Car Setups           |
+# | 6  | Car Telemetry        |
+# | 7  | Car Status           |
+# | 8  | Final Classification |
+# | 9  | Lobby Info           |
+# | 10 | Car Damage           |
+# | 11 | Session History      |
+# | 12 | Tyre Sets            |
+# | 13 | Motion Ex            |
+# | 14 | Time Trial           |
