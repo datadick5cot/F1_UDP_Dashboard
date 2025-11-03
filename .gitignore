@@ -2,5 +2,5 @@
 *pyc
 *ipynb
 *txt
-
+*.DS_Store
 
