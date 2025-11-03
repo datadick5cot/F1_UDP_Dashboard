@@ -1,0 +1,6 @@
+#Ignore File types
+*pyc
+*ipynb
+*txt
+
+
