@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 from UDP.UDP_Speed import get_latest_data
-from F1_Dashboard.Sim_Dashboard.variables.ip_address import get_local_ip
+
 
 # ------------------ FASTAPI SETUP ------------------
 

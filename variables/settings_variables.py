@@ -3,9 +3,8 @@ import json
 # from ip_address import get_local_ip
 import socket
 
-def get_local_ip():
-    global ip
-    
+
+def get_local_ip():    
     try:
         # Connect to a public server (Google DNS, for example)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -15,7 +14,6 @@ def get_local_ip():
         return ip
     except Exception:
         pass
-
 
 class ConfigureVariables:
     """
@@ -44,19 +42,8 @@ class ConfigureVariables:
         # If the files doesnt exist already
         self.set_IP()
  
-    def save_config(self, config):
+    def save_config(self):
         path = self.get_config_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as f:
-            json.dump(config, f)
-            
-
-
- 
-
-
-c = ConfigureVariables()
-
-c.load_config()
-
-print(c.config)
+            json.dump(self.config, f)

@@ -5,12 +5,18 @@ from UDP.fastapi_server import run_listening
 from UDP.UDP_Speed import start_udp_background
 from UI.Browser import BorderlessBrowser
 from PyQt6.QtWidgets import QApplication
+from variables.settings_variables import ConfigureVariables
 
 
-from UDP.fastapi_server import ip
 
 
-print(f"connect to {ip}")
+#Load Config and save the Current IP Address
+c = ConfigureVariables()
+c.load_config()
+c.save_config()
+
+
+
 
 # ------------------ MAIN ENTRY POINT ------------------
 if __name__ == "__main__":
