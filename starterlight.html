@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>F1 Starter Light — Single</title>
+<style>
+  :root{
+    --size: 50px;                 /* change this to scale the light */
+    --border-width: 6px;
+    --off-center: 30% 30%;
+    --off-inner:#e6e6e6;
+    --off-mid:#bdbdbd;
+    --off-edge:#6b6b6b;
+    --on-core: #e3d585;           /* bright center */
+    --on-mid:  #e71d1d;           
+    --on-edge: #a32300;
+    --glow-color: rgba(255, 88, 55, 0.75);
+    --shadow-outer: rgba(0,0,0,0.4);
+    --inset-dark: rgba(0,0,0,0.55);
+    --inset-light: rgba(255,255,255,0.15);
+  }
+
+  /* container to center demo on screen (not required) */
+  body{
+    min-height:100vh;
+    margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:20px;
+    font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background: #111;
+    color:#eee;
+  }
+
+  /* The single light */
+  .starter {
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    border: var(--border-width) solid #000; /* black border */
+    box-sizing: border-box;
+    /* default (off) shaded, inner highlight to suggest convex surface */
+    background:
+      radial-gradient(circle at var(--off-center),
+        var(--off-inner) 0%,
+        var(--off-mid) 40%,
+        var(--off-edge) 100%);
+    /* 3D feel: inner shadows and slight external shadow */
+    box-shadow:
+      inset -12px -14px 22px var(--inset-dark),
+      inset 8px 10px 18px var(--inset-light),
+      0 10px 24px var(--shadow-outer);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    user-select:none;
+    transition: box-shadow 300ms ease, background 300ms ease, transform 200ms ease;
+    /* single element — ensure no extra children shown */
+    position:relative;
+    outline: none;
+  }
+
+  /* a subtle press effect */
+  .starter:active { transform: translateY(2px) scale(0.995); }
+
+  /* ON state: bright core, warm mid, outer burn, plus glow */
+  .starter.on{
+    background:
+      radial-gradient(circle at 40% 35%,
+        var(--on-core) 0%,
+        var(--on-mid) 40%,
+        var(--on-edge) 100%);
+    box-shadow:
+      inset -6px -8px 18px rgba(0,0,0,0.35),
+      inset 6px 8px 12px rgba(255,255,255,0.08),
+      0 10px 30px rgba(0,0,0,0.45),
+      /* outer glow (makes it look lit) */
+      0 0 28px 8px var(--glow-color);
+  }
+
+  /* small subtle flicker animation when on */
+  @media (prefers-reduced-motion: no-preference) {
+    .starter.on::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      box-shadow: 0 0 60px 10px rgba(255,180,40,0.08);
+      animation: tinyFlicker 900ms infinite;
+    }
+    @keyframes tinyFlicker {
+      0%   { filter: brightness(1); transform: scale(1); opacity: 1; }
+      50%  { filter: brightness(0.95); transform: scale(0.998); opacity: 0.96; }
+      100% { filter: brightness(1); transform: scale(1); opacity: 1; }
+    }
+  }
+
+  /* accessible focus ring */
+  .starter:focus-visible{
+    box-shadow:
+      0 0 0 4px rgba(255,195,55,0.12),
+      inset -8px -8px 18px var(--inset-dark);
+  }
+
+  /* label / small helper styles */
+  .controls {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:center;
+    font-size:14px;
+  }
+  .btn {
+    background:#222;
+    color:#fff;
+    border:1px solid #333;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .hint { font-size:12px; color:#bbb; }
+</style>
+</head>
+<body>
+  <!-- Only a single .starter element is present -->
+  <div class="starter" id="one-light"
+       role="switch" aria-checked="false" tabindex="0"
+       title=""></div>
+
+  <div class="starter" id="two-lights"
+       role="switch" aria-checked="false" tabindex="0"
+       title=""></div>
+
+
+  <div class="starter" id="three-lights"
+       role="switch" aria-checked="false" tabindex="0"
+       title=""></div>
+
+
+  <div class="starter" id="four-lights"
+       role="switch" aria-checked="false" tabindex="0"
+       title=""></div> 
+
+
+  <div class="starter" id="five-lights"
+       role="switch" aria-checked="false" tabindex="0"
+       title=""></div>
+
+
+  <div class="controls" aria-hidden="false">
+    <button class="btn" id="toggleBtn">Turn on</button>
+    
+  </div>
+
+<script>
+  // Simple toggle behavior (no frameworks). Keeps aria state in sync.
+  (function(){
+    const ol = document.getElementById('one-light');
+    const tl = document.getElementById('two-lights');
+    const ttl = document.getElementById('three-lights');
+    const fl = document.getElementById('four-lights');
+    const el = document.getElementById('five-lights');
+    const btn = document.getElementById('toggleBtn');
+
+    function setOn(on){
+      if(on){
+        ol.classList.add('on');
+        ol.setAttribute('aria-checked','true');
+        btn.textContent = 'Turn off';
+      } else {
+        ol.classList.remove('on');
+        ol.setAttribute('aria-checked','false');
+        btn.textContent = 'Turn on';
+      }
+    }
+
+    // start off
+    let isOn = true;
+    setOn(isOn);
+
+    function toggle(){
+      isOn = !isOn;
+      setOn(isOn);
+    }
+
+    el.addEventListener('click', toggle);
+    btn.addEventListener('click', toggle);
+
+    // keyboard: Space or Enter toggles when focused
+    el.addEventListener('keydown', function(e){
+      if(e.code === 'Space' || e.code === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        toggle();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
