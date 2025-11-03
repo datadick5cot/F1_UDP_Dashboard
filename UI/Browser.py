@@ -1,10 +1,8 @@
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-
 from PyQt6.QtWidgets import QToolBar
 from PyQt6.QtGui import QAction
-
 
 
 # ------------------ PYQT SETUP ------------------
@@ -25,7 +23,6 @@ class BorderlessBrowser(QMainWindow):
         Button1 = QAction("Dashboard", self)
         Button1.triggered.connect(lambda: self.load_page("index"))
         toolbar.addAction(Button1)
-        
         
         # Toolbar button
         Button2 = QAction("Telemetry", self)
@@ -59,7 +56,7 @@ class BorderlessBrowser(QMainWindow):
         layout.addWidget(self.webview)
         self.setCentralWidget(central_widget)
 
-        # Load HTML served from FastAPI instead of file://
+        # Load HTML served from FastAPI
         self.webview.load(QUrl("http://localhost:8000/dashboard"))
 
 

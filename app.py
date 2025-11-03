@@ -6,6 +6,12 @@ from UDP.UDP_Speed import start_udp_background
 from UI.Browser import BorderlessBrowser
 from PyQt6.QtWidgets import QApplication
 
+
+from UDP.fastapi_server import ip
+
+
+print(f"connect to {ip}")
+
 # ------------------ MAIN ENTRY POINT ------------------
 if __name__ == "__main__":
     # Start UDP telemetry collection

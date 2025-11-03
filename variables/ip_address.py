@@ -1,6 +1,10 @@
 import socket
 
+
+
 def get_local_ip():
+    global ip
+    
     try:
         # Connect to a public server (Google DNS, for example)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -9,6 +13,6 @@ def get_local_ip():
         s.close()
         return ip
     except Exception:
-        return "Unable to determine IP"
+        pass
 
-print("🌐 Local IP Address:", get_local_ip())
+# print("🌐 Local IP Address:", get_local_ip())

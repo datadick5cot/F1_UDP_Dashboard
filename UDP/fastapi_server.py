@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 from UDP.UDP_Speed import get_latest_data
+from F1_Dashboard.Sim_Dashboard.variables.ip_address import get_local_ip
 
 # ------------------ FASTAPI SETUP ------------------
 
@@ -16,8 +17,6 @@ tel_app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 
 # Serve static HTML dashboard files
 html_dir = os.path.abspath("F1_Dashboard/Sim_Dashboard/page")
