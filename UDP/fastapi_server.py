@@ -4,7 +4,21 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 from UDP.UDP_Speed import get_latest_data
+import json
+import socket
 
+
+
+def get_local_ip():    
+    try:
+        # Connect to a public server (Google DNS, for example)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # We never actually send data
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        pass
 
 # ------------------ FASTAPI SETUP ------------------
 
@@ -29,6 +43,16 @@ tel_app.mount("/dashboard", StaticFiles(directory=html_dir, html=True), name="da
 def telemetry():
     """Return the latest telemetry data."""
     return get_latest_data()
+
+
+@tel_app.get("/config")
+def get_config():
+    """Serve the sim_racing_dash.json config file."""
+    config_path = os.path.expanduser("~/.config/sim_racing_dash.json")
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            return json.load(f)
+    return {'IPaddress' : get_local_ip()}
 
 
 def run_listening():

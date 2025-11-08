@@ -10,16 +10,16 @@ from variables.settings_variables import ConfigureVariables
 
 
 
-#Load Config and save the Current IP Address
-c = ConfigureVariables()
-c.load_config()
-c.save_config()
-
-
-
-
 # ------------------ MAIN ENTRY POINT ------------------
 if __name__ == "__main__":
+    #Load Config and save the Current IP Address
+    c = ConfigureVariables()
+    #Load Variables at prior to Start
+    c.load_config()
+    # Set current ip address and save to config file
+    c.save_config()
+    
+    
     # Start UDP telemetry collection
     start_udp_background()
 
