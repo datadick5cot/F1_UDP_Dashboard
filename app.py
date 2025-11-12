@@ -8,8 +8,6 @@ from PyQt6.QtWidgets import QApplication
 from variables.settings_variables import ConfigureVariables
 
 
-
-
 # ------------------ MAIN ENTRY POINT ------------------
 if __name__ == "__main__":
     #Load Config and save the Current IP Address
@@ -18,7 +16,6 @@ if __name__ == "__main__":
     c.load_config()
     # Set current ip address and save to config file
     c.save_config()
-    
     
     # Start UDP telemetry collection
     start_udp_background()

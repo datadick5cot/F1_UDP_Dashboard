@@ -88,28 +88,28 @@ function getTextColor(bgColor) {
 }
 
 
-    function renderRpmLights(percent) {
-      const rpmBar = document.getElementById("rpmBar");
-      rpmBar.innerHTML = "";
+  function renderRpmLights(percent) {
+    const rpmBar = document.getElementById("rpmBar");
+    rpmBar.innerHTML = "";
 
-      const activeLights = Math.min(15, Math.ceil(percent / (100 / 15)));
+    const activeLights = Math.min(15, Math.ceil(percent / (100 / 15)));
 
-      for (let i = 1; i <= 15; i++) {
-        let color;
-        if (i <= 5) {
-          color = i <= activeLights ? '#00BFFF' : '#1E1E1E'; // Blue
-        } else if (i <= 10) {
-          color = i <= activeLights ? '#FFA500' : '#1E1E1E'; // Amber
-        } else {
-          color = i <= activeLights ? '#FF0000' : '#1E1E1E'; // Red
-        }
-
-        const light = document.createElement("div");
-        light.className = "rpm-light";
-        light.style.backgroundColor = color;
-        rpmBar.appendChild(light);
+    for (let i = 1; i <= 15; i++) {
+      let color;
+      if (i <= 5) {
+        color = i <= activeLights ? '#00BFFF' : '#1E1E1E'; // Blue
+      } else if (i <= 10) {
+        color = i <= activeLights ? '#FFA500' : '#1E1E1E'; // Amber
+      } else {
+        color = i <= activeLights ? '#FF0000' : '#1E1E1E'; // Red
       }
+
+      const light = document.createElement("div");
+      light.className = "rpm-light";
+      light.style.backgroundColor = color;
+      rpmBar.appendChild(light);
     }
+  }
 
 
 
@@ -184,7 +184,5 @@ async function fetchTelemetry() {
     console.error("Failed to fetch telemetry:", err);
   }
 }
-
-
 
     setInterval(fetchTelemetry, 100); // Poll every 100ms

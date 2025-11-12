@@ -1,0 +1,244 @@
+
+
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .item {
+    background-color: #444;
+    color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+    font-size: 150%;
+  }
+  .mobile-only {
+    display: block;
+  }
+  .desktop-only {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .mobile-only {
+      display: none;
+    }
+    .desktop-only {
+      display: block;
+    }
+    
+    .item-1 {
+      grid-column: 1 / span 3;
+      grid-row: 1;
+    }
+    
+    .item-1 {
+      grid-column: 1 / span 3;
+      grid-row: 1;
+    }
+    
+    .item-2 {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    
+    .item-3 {
+      grid-column: 2;
+      grid-row: 2 / span 2;
+    }
+    
+    .item-4 {
+      grid-column: 3;
+      grid-row: 2;
+    }
+    
+    .item-5 {
+      grid-column: 3;
+      grid-row: 3;
+    }
+    
+    .item-6 {
+      grid-column: 1;
+      grid-row: 3;
+    }
+    
+  }
+
+
+
+
+.centre_console {
+  grid-row: 3;      /* middle row in your 5-row grid */
+  grid-column: 4;   /* middle column in your 7-column grid */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative; /* keep relative so children can be layered */
+  z-index: 1;        /* base layer */
+}
+
+
+
+
+/* === Side bar containers === */
+.side {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 300px;
+  width: 110px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.bar-container-left {
+  left: -10px;
+  border-radius: 50% 0% 0% 50%;
+  transform: rotate(0deg);
+  z-index: 1;
+}
+
+.bar-container-right {
+  right: -10px;
+  border-radius: 0% 50% 50% 0%;
+  transform: rotate(0deg);
+   z-index: 1;
+}
+
+.oval.center {
+  z-index: 2; /* above bars */
+}
+
+
+/* === Individual bar segments === */
+.bar-segment {
+  flex: 1;
+  width: 100%;
+  margin: 1px 0;
+  background-color: #ffffff;
+  border-radius: 5px;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.bar-segment.accel {
+  background: linear-gradient(to top, #ffbb00, #707a00);
+  box-shadow: 0 0 8px rgba(255, 179, 0, 0.8);
+}
+
+.bar-segment.filled.brake {
+  background: linear-gradient(to top, #ff0000, #7a1000);
+  box-shadow: 0 0 8px rgba(255, 0, 38, 0.8);
+}
+
+
+.bar-segment.blankfilled {
+  background: linear-gradient(to top, #00ffb31b, #000403);
+  box-shadow: 0 0 8px rgba(255, 179, 0, 0.8);
+}
+
+/* Optional glow animation for filled bars */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+
+
+.subgrid {
+  display: flex;
+  flex-direction: column; /* stack children vertically */
+  justify-content: space-between; /* push first to top, last to bottom */
+  height: 100%; /* or any fixed height */
+}
+
+
+.subpanel:first-child {
+  grid-row: 1; /* FL goes to the top row */
+}
+
+.subpanel:last-child {
+  grid-row: 2; /* RL goes to the bottom row */
+}
+
+.sublook {
+  background-color: #1E1E1E;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 10px;
+  text-align: center;
+}
+
+
+.toptyre{
+column-gap: 5rem;
+
+}
+
+.panel {
+  background-color: #2C2C2C;
+  border: 2px solid #444;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 10px;
+  text-align: center;
+ 
+    }
+
+.oval.center {
+  position: absolute;
+  width: 140px;
+  height: 300px;
+  background: radial-gradient(ellipse at center, #ababab 0%, #111 80%);
+  border: 3px solid #0a0a0a;
+  border-radius: 30% 30% 60% 60%;
+  box-shadow: 0 0 25px rgba(252, 252, 252, 0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+
+.tyre_left {grid-column: 3;
+  grid-row: 3;}
+
+.tyre_right {grid-column: 5;
+  grid-row: 3;}
+
+.tyres_display {
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    background-color: #2C2C2C;
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px;
+    text-align: center;
+    
+}
+
+
+
+.oval.center .label {
+  font-size: 1rem;
+  color: #00000074;
+}
+
+.oval.center .gear_value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #f2e200;
+  text-shadow: 0 0 10px #f2ff00;
+}

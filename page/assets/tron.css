@@ -1,15 +1,81 @@
 /* === General layout === */
-body {
+html, body {
+  width: 100%;
+  height: 100%;
   margin: 0;
-  background-color: #0a0a0a;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+
+/* Make container take the full viewport */
+.container {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-rows: 1fr 3fr 10fr 3fr 1fr;
+  grid-template-columns: 2fr 4fr 2fr 3fr 2fr 4fr 3fr;
+  gap: 5px;
+  background-color: #000000;
+  box-sizing: border-box;
+}
+
+/* Each grid cell */
+.cells {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
-  color: #fff;
-  overflow: hidden;
+  color: #2d947a;
+  /* background-color: #7a7878; */
+  font-weight: bold;
+  font-size: 1.2rem;
 }
+
+
+
+.oval.center {
+  position: relative; /* sits naturally in flex center */
+}
+
+
+.centre_console {
+    z-index: 0;
+    grid-column: 4;
+    grid-row: 2 / span 4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    position: absolute;
+}
+
+
+
+.centre_FL {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    position: relative;
+}
+
+
+
+.panel {
+    background-color: #2C2C2C;
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px;
+    text-align: center;
+    width: 100%;
+}
+
 
 .wrapper {
   position: relative;
@@ -19,13 +85,18 @@ body {
 }
 
 /* === Center oval (gear display) === */
+
+
+
+
+
 .oval.center {
-  position: fixed;
+  position: absolute;
   width: 140px;
   height: 300px;
   background: radial-gradient(ellipse at center, #1b1b1b 0%, #111 80%);
   border: 3px solid #444;
-  border-radius: 40% 40% 40% 40%;
+  border-radius: 30% 30% 60% 60%;
   box-shadow: 0 0 25px rgba(252, 252, 252, 0.4);
   display: flex;
   flex-direction: column;
@@ -33,6 +104,9 @@ body {
   align-items: center;
   z-index: 2;
 }
+
+
+
 
 .oval.center .label {
   font-size: 1rem;
@@ -42,8 +116,8 @@ body {
 .oval.center .gear_value {
   font-size: 2.5rem;
   font-weight: bold;
-  color: #00ffb3;
-  text-shadow: 0 0 10px #00ffb3;
+  color: #f2ff00;
+  text-shadow: 0 0 10px #f2ff00;
 }
 
 /* === Side bar containers === */
@@ -55,19 +129,23 @@ body {
   height: 300px;
   width: 110px;
   overflow: hidden;
-  z-index: 1
+  z-index: 1;
 }
+
+
 
 .bar-container-left {
   left: -100px;
   border-radius: 50% 0% 0% 50%;
   transform: rotate(0deg);
+  z-index: 1;
 }
 
 .bar-container-right {
   right: -100px;
   border-radius: 0% 50% 50% 0%;
   transform: rotate(0deg);
+   z-index: 1;
 }
 
 /* === Individual bar segments === */
@@ -75,19 +153,25 @@ body {
   flex: 1;
   width: 100%;
   margin: 1px 0;
-  background-color: #222;
+  background-color: #ffffff;
   border-radius: 5px;
   transition: background-color 0.3s, box-shadow 0.3s;
 }
 
-.bar-segment.filled {
-  background: linear-gradient(to top, #00ffb3, #007a58);
-  box-shadow: 0 0 8px rgba(0, 255, 179, 0.8);
+.bar-segment.accel {
+  background: linear-gradient(to top, #ffbb00, #707a00);
+  box-shadow: 0 0 8px rgba(255, 179, 0, 0.8);
 }
+
+.bar-segment.filled.brake {
+  background: linear-gradient(to top, #ff0000, #7a1000);
+  box-shadow: 0 0 8px rgba(255, 0, 38, 0.8);
+}
+
 
 .bar-segment.blankfilled {
   background: linear-gradient(to top, #00ffb31b, #000403);
-  box-shadow: 0 0 8px rgba(0, 255, 179, 0.8);
+  box-shadow: 0 0 8px rgba(255, 179, 0, 0.8);
 }
 
 /* Optional glow animation for filled bars */
