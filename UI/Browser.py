@@ -39,6 +39,11 @@ class BorderlessBrowser(QMainWindow):
         Button4.triggered.connect(lambda: self.load_page("settings"))
         toolbar.addAction(Button4)
         
+        Button5 = QAction("Centre", self)
+        Button5.triggered.connect(lambda: self.load_page("centre_display"))
+        toolbar.addAction(Button5)
+        
+        
         toolbar.addSeparator()
 
         exit_action = QAction("Exit", self)

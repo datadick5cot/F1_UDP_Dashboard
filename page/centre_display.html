@@ -3,28 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/centre_display-copy.css">
-    <script src="assets/centre_display.js"></script>
+    <link rel="stylesheet" href="assets/centre_display.css">
+    
 
-    <title>Dashboard</title>
-</head>
+  <title>Dashboard</title>
+  </head>
    <body>
     <div class="grid">
     <div class="item messages">lights+mesages</div>
-    <div class="item rev_lights">revs</div>
+    <div class="item rev_lights">
+    <div class="rev_panel">
+    <div class="rpm-light-bar" id="rpmBar"></div>
+    </div></div>
     <div class="item centre_disp">
           
+      
     <!-- brake graph -->
-    <div class="bar-container-left side left" id="brakeBar"></div>
+    <div class="bar-container bar-left side" id="brakeBar"></div>
 
     <!-- Gear read out -->
       <div class="oval center">
-        <div class="label">Gear</div>
-        <div class="gear_value" id="gear">--</div>
+        
+        
+        <!-- <div class="gear_value" id="gear">--</div> -->
+        <div class="gear-wheel">
+          <div class="gear-cylinder" id="gearCylinder">
+            <div class="gear-item">R</div>
+            <div class="gear-item">N</div>
+            <div class="gear-item">1</div>
+            <div class="gear-item">2</div>
+            <div class="gear-item">3</div>
+            <div class="gear-item">4</div>
+            <div class="gear-item">5</div>
+            <div class="gear-item">6</div>
+            <div class="gear-item">7</div>
+            <div class="gear-item">8</div>
+            <div class="gear-item"></div>
+          </div>
+        </div>
+
+
+
+
       </div>
 
 
-<div class="bar-container-right side right" id="throttleBar"></div>
+    <div class="bar-container bar-right side" id="throttleBar"></div>
 
 
 
@@ -43,7 +67,8 @@
   </div>
   
   
-
+<script src="assets/centre_display.js"></script>
+<script src="assets/script.js"></script>
 </body>
 
 
