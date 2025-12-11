@@ -31,7 +31,7 @@ class os_no_lock:
         if self.platform == 'darwin': #macos
             self.run_mac()
             
-        elif sys.platfrom == 'linux':
+        elif sys.platform == 'linux':
             self.run_linux()
             
         else:
