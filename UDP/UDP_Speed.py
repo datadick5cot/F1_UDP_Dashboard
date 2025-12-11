@@ -795,9 +795,12 @@ PACKET_HANDLERS = {
         # Lobby info
     },
 
-    10: lambda pkt, hdr: {
+    10: lambda pkt, hdr: (
         # Damage data
-    },
+        lambda car_damage : {'m_tyresWear' : list(car_damage.m_tyresWear)}
+        )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
+        
+
 
     11: lambda pkt, hdr: {
         # Session history
@@ -909,6 +912,7 @@ if __name__ == "__main__":
         except:
             pass
         
+
 
 
 

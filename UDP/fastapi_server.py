@@ -32,8 +32,11 @@ tel_app.add_middleware(
     allow_headers=["*"],
 )
 
+cwd = os.getcwd()
+
+
 # Serve static HTML dashboard files
-html_dir = os.path.abspath("F1_Dashboard/Sim_Dashboard/page")
+html_dir = os.path.abspath(f"{cwd}/Documents/F1_UDP_Dashboard/page")
 
 # print("Serving HTML from:", html_dir)
 

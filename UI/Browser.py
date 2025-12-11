@@ -1,11 +1,8 @@
 from PyQt6.QtCore import QUrl, Qt
-from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QToolBar, QSplashScreen
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWidgets import QToolBar
-from PyQt6.QtGui import QAction
-
-
-# ------------------ PYQT SETUP ------------------
+from PyQt6.QtGui import QAction, QPixmap
+import sys
 
 class BorderlessBrowser(QMainWindow):
     def __init__(self):
@@ -15,41 +12,35 @@ class BorderlessBrowser(QMainWindow):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.showMaximized()
         
-        toolbar = QToolBar("--Toolbar--")
-        toolbar.setOrientation(Qt.Orientation.Vertical)
-        self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+        menu = self.menuBar()
 
-        # Toolbar button
-        Button1 = QAction("Dashboard", self)
+        file_menu = menu.addMenu("&Options")
+        
+        Button1 = QAction("Dashboard 1", self)
         Button1.triggered.connect(lambda: self.load_page("index"))
-        toolbar.addAction(Button1)
-        
-        # Toolbar button
-        Button2 = QAction("Telemetry", self)
-        Button2.triggered.connect(lambda: self.load_page("telemetry"))
-        toolbar.addAction(Button2)
-        
-        # Toolbar button
-        Button3 = QAction("Vs Rival", self)
-        Button3.triggered.connect(lambda: self.load_page("rival"))
-        toolbar.addAction(Button3)
-        
-        # Toolbar button
-        Button4 = QAction("Settings", self)
-        Button4.triggered.connect(lambda: self.load_page("settings"))
-        toolbar.addAction(Button4)
-        
-        Button5 = QAction("Centre", self)
-        Button5.triggered.connect(lambda: self.load_page("centre_display"))
-        toolbar.addAction(Button5)
         
         
-        toolbar.addSeparator()
-
-        exit_action = QAction("Exit", self)
-        exit_action.triggered.connect(self.close)
-        toolbar.addAction(exit_action)
-
+        Button2 = QAction("Dashboard 2", self)
+        Button2.triggered.connect(lambda: self.load_page("centre_display"))
+        
+        
+        Telemetry = QAction("Telemetry", self)
+        Telemetry.triggered.connect(lambda: self.load_page("telemetry"))
+        
+        Settings = QAction("Settings", self)
+        Settings.triggered.connect(lambda: self.load_page("settings"))
+        
+        
+        rivalsdashboard = QAction("Rival Dashboard", self)
+        rivalsdashboard.triggered.connect(lambda: self.load_page("rival"))
+        
+        file_menu.addAction(Button1)
+        file_menu.addAction(Button2)
+        file_menu.addSeparator()
+        file_menu.addAction(Telemetry)
+        file_menu.addAction(Settings)
+        file_menu.addAction(rivalsdashboard)
+        
 
         # Central widget and layout
         central_widget = QWidget(self)
@@ -63,6 +54,7 @@ class BorderlessBrowser(QMainWindow):
 
         # Load HTML served from FastAPI
         self.webview.load(QUrl("http://localhost:8000/dashboard"))
+        
 
 
     def load_page(self, page_name):
