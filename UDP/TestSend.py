@@ -2,7 +2,7 @@ import time
 import socket
 
 
-from f1_udp_packets import (
+from UDP_Speed import (
     PacketMotionData,
     PacketSessionData,
     PacketLapData,

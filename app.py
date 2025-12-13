@@ -13,10 +13,6 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QGuiApplication
 
 
-from no_lock import os_no_lock
-nolock = os_no_lock()
-
-nolock.run()
 
 # ------------------ MAIN ENTRY POINT ------------------
 if __name__ == "__main__":
