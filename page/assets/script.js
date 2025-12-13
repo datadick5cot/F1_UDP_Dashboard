@@ -1,4 +1,24 @@
+// ===============================
+// Telemetry Dashboard Script
+// ===============================
 
+// Cache last values to prevent flicker
+const lastTelemetry = {
+  speed: null,
+  gear: null,
+  throttle: null,
+  brake: null,
+  rpm: null,
+  eventCode: null,
+  starterLights: 0
+};
+
+// Shared telemetry snapshot
+let telemetryState = null;
+
+// ===============================
+// Alert Bar
+// ===============================
 function renderAlertBar(eventCodeList) {
   const eventcodes = {
     'SSTA': 'Session Started',
@@ -48,38 +68,35 @@ function renderAlertBar(eventCodeList) {
     'COLL': '#FF0000'
   };
 
-
-  
-
   const container = document.getElementById("alertBarContainer");
-  container.innerHTML = ""; // Clear previous alerts
 
   eventCodeList.forEach(code => {
-    const text = eventcodes[code] || "";
-    const bgColor = eventcolours[code] || "#444";
-    const textColor = getTextColor(bgColor);
+    if (!code) return;
 
-    const div = document.createElement("div");
-    div.textContent = text;
-    div.style.backgroundColor = bgColor;
-    div.style.color = textColor;
-    div.style.padding = "10px";
-    div.style.margin = "5px";
-    div.style.borderRadius = "5px";
-    div.style.fontWeight = "bold";
-    div.style.textAlign = "center";
+    // Avoid duplicates
+    if (!container.querySelector(`[data-code="${code}"]`)) {
+      const text = eventcodes[code] || "";
+      const bgColor = eventcolours[code] || "#444";
+      const textColor = getTextColor(bgColor);
 
-    container.appendChild(div);
+      const div = document.createElement("div");
+      div.textContent = text;
+      div.style.backgroundColor = bgColor;
+      div.style.color = textColor;
+      div.style.padding = "10px";
+      div.style.margin = "5px";
+      div.style.borderRadius = "5px";
+      div.style.fontWeight = "bold";
+      div.style.textAlign = "center";
+      div.setAttribute("data-code", code);
 
-
-
-    
+      container.appendChild(div);
+    }
   });
 }
 
 // Utility to determine readable text color
 function getTextColor(bgColor) {
-  // Convert hex to RGB
   const r = parseInt(bgColor.substr(1, 2), 16);
   const g = parseInt(bgColor.substr(3, 2), 16);
   const b = parseInt(bgColor.substr(5, 2), 16);
@@ -87,36 +104,40 @@ function getTextColor(bgColor) {
   return brightness > 125 ? "#000000" : "#FFFFFF";
 }
 
+// ===============================
+// RPM Lights (pre-created)
+// ===============================
+const rpmBar = document.getElementById("rpmBar");
+const rpmLights = [];
 
-  function renderRpmLights(percent) {
-    const rpmBar = document.getElementById("rpmBar");
-    rpmBar.innerHTML = "";
+for (let i = 0; i < 15; i++) {
+  const light = document.createElement("div");
+  light.className = "rpm-light";
+  rpmBar.appendChild(light);
+  rpmLights.push(light);
+}
 
-    const activeLights = Math.min(15, Math.ceil(percent / (100 / 15)));
+function renderRpmLights(percent) {
+  const activeLights = Math.min(15, Math.ceil(percent / (100 / 15)));
 
-    for (let i = 1; i <= 15; i++) {
-      let color;
-      if (i <= 5) {
-        color = i <= activeLights ? '#00BFFF' : '#1E1E1E'; // Blue
-      } else if (i <= 10) {
-        color = i <= activeLights ? '#FFA500' : '#1E1E1E'; // Amber
-      } else {
-        color = i <= activeLights ? '#FF0000' : '#1E1E1E'; // Red
-      }
+  rpmLights.forEach((light, i) => {
+    let color;
+    if (i < 5) color = i < activeLights ? '#00BFFF' : '#1E1E1E'; // Blue
+    else if (i < 10) color = i < activeLights ? '#FFA500' : '#1E1E1E'; // Amber
+    else color = i < activeLights ? '#FF0000' : '#1E1E1E'; // Red
 
-      const light = document.createElement("div");
-      light.className = "rpm-light";
+    if (light.style.backgroundColor !== color) {
       light.style.backgroundColor = color;
-      rpmBar.appendChild(light);
     }
-  }
+  });
+}
 
-
-
+// ===============================
+// Starter Lights
+// ===============================
 function starterlights(count) {
   const panel = document.getElementById("starterlightsPanel");
 
-  // Toggle panel visibility
   if (count > 0) {
     panel.classList.remove("starterlights_panel-off");
     panel.classList.add("starterlights_panel-on");
@@ -125,7 +146,6 @@ function starterlights(count) {
     panel.classList.add("starterlights_panel-off");
   }
 
-  // Illuminate individual lights
   for (let i = 1; i <= 5; i++) {
     const light = document.getElementById(`starter-light-${i}`);
     if (light) {
@@ -140,47 +160,78 @@ function starterlights(count) {
   }
 }
 
-
-
-
-
-
+// ===============================
+// Fetch Telemetry (polling only)
+// ===============================
 async function fetchTelemetry() {
   try {
     const res = await fetch("http://localhost:8000/telemetry");
     const data = await res.json();
-
-    document.getElementById("speed").textContent = data.m_speed ?? "--";
-    document.getElementById("gear").textContent = data.m_gear ?? "--";
-
-
-    const throttlePercent = Math.round((data.m_throttle ?? 0) * 100);
-    const brakePercent = Math.round((data.m_brake ?? 0) * 100);
-
-    document.getElementById("Throttle").textContent = `${throttlePercent}%`;
-    document.getElementById("Brake").textContent = `${brakePercent}%`;
-
- 
-    const eventCode = data.m_eventStringCode;
-
-    if (eventCode === "STLG" && data.m_eventDetails && typeof data.m_eventDetails.numLights === "number") {
-      starterlights(data.m_eventDetails.numLights);
-    } else {
-      starterlights(0); // fallback or hide lights
-    }
-
-
-    const rpmPercent = data.m_revLightsPercent ?? 0;
-    renderRpmLights(rpmPercent);
-
-    const eventCodes = Array.isArray(data.m_eventStringCode)
-      ? data.m_eventStringCode
-      : [data.m_eventStringCode];
-
-    renderAlertBar(eventCodes);
+    telemetryState = data;
   } catch (err) {
     console.error("Failed to fetch telemetry:", err);
   }
 }
 
-    setInterval(fetchTelemetry, 100); // Poll every 100ms
+// ===============================
+// Render From State (decoupled)
+// ===============================
+function renderFromState() {
+  if (!telemetryState) return;
+
+  // Speed
+  if (telemetryState.m_speed != null && telemetryState.m_speed !== lastTelemetry.speed) {
+    document.getElementById("speed").textContent = telemetryState.m_speed;
+    lastTelemetry.speed = telemetryState.m_speed;
+  }
+
+  // Gear
+  if (telemetryState.m_gear != null && telemetryState.m_gear !== lastTelemetry.gear) {
+    document.getElementById("gear").textContent = telemetryState.m_gear;
+    lastTelemetry.gear = telemetryState.m_gear;
+  }
+
+  // Throttle
+  const throttlePercent = telemetryState.m_throttle != null ? Math.round(telemetryState.m_throttle * 100) : null;
+  if (throttlePercent != null && throttlePercent !== lastTelemetry.throttle) {
+    document.getElementById("Throttle").textContent = `${throttlePercent}%`;
+    lastTelemetry.throttle = throttlePercent;
+  }
+
+  // Brake
+  const brakePercent = telemetryState.m_brake != null ? Math.round(telemetryState.m_brake * 100) : null;
+  if (brakePercent != null && brakePercent !== lastTelemetry.brake) {
+    document.getElementById("Brake").textContent = `${brakePercent}%`;
+    lastTelemetry.brake = brakePercent;
+  }
+
+  // Starter lights – prevent unnecessary toggles
+  const numLights = telemetryState.m_eventDetails?.numLights ?? 0;
+  if (numLights !== lastTelemetry.starterLights) {
+    starterlights(numLights);
+    lastTelemetry.starterLights = numLights;
+  }
+
+  // RPM lights
+  if (telemetryState.m_revLightsPercent != null && telemetryState.m_revLightsPercent !== lastTelemetry.rpm) {
+    renderRpmLights(telemetryState.m_revLightsPercent);
+    lastTelemetry.rpm = telemetryState.m_revLightsPercent;
+  }
+
+  // Event codes
+  const eventCodes = Array.isArray(telemetryState.m_eventStringCode)
+    ? telemetryState.m_eventStringCode
+    : [telemetryState.m_eventStringCode];
+
+  const eventCodeStr = eventCodes.filter(c => c != null).join(",");
+  if (eventCodeStr && eventCodeStr !== lastTelemetry.eventCode) {
+    renderAlertBar(eventCodes);
+    lastTelemetry.eventCode = eventCodeStr;
+  }
+}
+
+// ===============================
+// Loop Control
+// ===============================
+setInterval(fetchTelemetry, 100);   // 10 Hz polling
+setInterval(renderFromState, 250); // 4 Hz rendering
