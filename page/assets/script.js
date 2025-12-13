@@ -170,8 +170,6 @@ async function fetchTelemetry() {
     }
 
 
-
-
     const rpmPercent = data.m_revLightsPercent ?? 0;
     renderRpmLights(rpmPercent);
 

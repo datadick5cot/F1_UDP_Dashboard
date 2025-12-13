@@ -1,19 +1,14 @@
 import asyncio
-import struct
-import queue
-
-
-
+# import struct
+# import queue
+# from ctypes import Array
+# import time
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
-from ctypes import LittleEndianStructure, Union, c_uint8, c_int8, c_uint16, c_int16, c_uint32, c_uint64, c_float, c_double, c_char
+from ctypes import LittleEndianStructure, Union, c_uint8, c_int8
+from ctypes import c_uint16, c_int16, c_uint32, c_uint64, c_float, c_double, c_char
 
-
-
-
-import time
-from ctypes import Array
 # -------------------- Packet Header --------------------
 class PacketHeader(LittleEndianStructure):
     _pack_ = 1
@@ -749,7 +744,6 @@ PACKET_HANDLERS = {
 
     3: lambda pkt, hdr: {
         # Event packet — often needs decoding from event string
-        # 'eventStringCode': pkt.m_eventStringCode.decode('utf-8'),
         'm_eventStringCode': bytes(pkt.m_eventStringCode).decode('utf-8').strip('\x00'), 
         'm_eventDetails' : pkt.m_eventDetails
         
@@ -763,7 +757,6 @@ PACKET_HANDLERS = {
 
     5: lambda pkt, hdr: {
         # Setup data
-        
         'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
     },
 
@@ -779,7 +772,7 @@ PACKET_HANDLERS = {
             'm_brakesTemperature': list(car.m_brakesTemperature),
             'm_tyresSurfaceTemperature': list(car.m_tyresSurfaceTemperature),
             'm_tyresInnerTemperature': list(car.m_tyresInnerTemperature),
-            'm_surfaceType': list(car.m_surfaceType),
+            # 'm_surfaceType': list(car.m_surfaceType),
         }
     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
 
