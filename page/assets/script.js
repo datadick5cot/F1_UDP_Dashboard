@@ -4,7 +4,14 @@
 
 // Cache last values to prevent flicker
 const lastTelemetry = {
-  speed: null,
+  tyrewear : [null, null, null, null],
+  tyreinnertemp : [null, null, null, null],
+  tyresurfacetemp : [null, null, null, null],
+  braketemp : [null, null, null, null],
+  slipsngle: [null, null, null, null],
+  drs : null,
+  brakebias: null,
+  fuelremaining : null,
   gear: null,
   throttle: null,
   brake: null,
@@ -226,15 +233,9 @@ async function fetchTelemetry() {
 function renderFromState() {
   if (!telemetryState) return;
 
-  // Speed
-  if (telemetryState.m_speed != null && telemetryState.m_speed !== lastTelemetry.speed) {
-    document.getElementById("speed").textContent = telemetryState.m_speed;
-    lastTelemetry.speed = telemetryState.m_speed;
-  }
 
   // Gear
   const gearValue = telemetryState.m_gear ?? lastTelemetry.gear ?? "0";
-
         if (gearMap.hasOwnProperty(gearValue)) {
         currentIndex = gearMap[gearValue];
         rotateWheel();
