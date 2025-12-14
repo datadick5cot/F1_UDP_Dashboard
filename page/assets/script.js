@@ -16,6 +16,53 @@ const lastTelemetry = {
 // Shared telemetry snapshot
 let telemetryState = null;
 
+
+const gearMap = {
+  "R": 0,
+  "N": 1,
+  "1": 2,
+  "2": 3,
+  "3": 4,
+  "4": 5,
+  "5": 6,
+  "6": 7,
+  "7": 8,
+  "8": 9
+};
+
+
+const cylinder = document.getElementById('gearCylinder');
+const items = cylinder.querySelectorAll('.gear-item');
+const itemCount = items.length;
+const angleStep = 360 / itemCount;
+let currentIndex = 3; // start at "4"
+let rotation = 0;
+
+// Position items around the Y-axis
+items.forEach((item, i) => {
+  const angle = i * angleStep;
+  // item.style.transform = `rotateY(${angle}deg) translateZ(100px)`;
+  item.style.transform = `translate(-50%, -50%) rotateY(${angle}deg) translateZ(100px)`;
+
+});
+
+// Update active highlight
+function updateActive() {
+  items.forEach((item, i) => {
+    item.classList.toggle('active', i === currentIndex);
+  });
+}
+
+// Rotate cylinder so active item is centered
+function rotateWheel() {
+  rotation = -currentIndex * angleStep;
+  cylinder.style.transform = `rotateY(${rotation}deg)`;
+  updateActive();
+}
+
+
+
+
 // ===============================
 // Alert Bar
 // ===============================
@@ -186,10 +233,18 @@ function renderFromState() {
   }
 
   // Gear
-  if (telemetryState.m_gear != null && telemetryState.m_gear !== lastTelemetry.gear) {
-    document.getElementById("gear").textContent = telemetryState.m_gear;
-    lastTelemetry.gear = telemetryState.m_gear;
-  }
+  const gearValue = telemetryState.m_gear ?? lastTelemetry.gear ?? "0";
+
+        if (gearMap.hasOwnProperty(gearValue)) {
+        currentIndex = gearMap[gearValue];
+        rotateWheel();
+        }
+
+
+  // if (telemetryState.m_gear != null && telemetryState.m_gear !== lastTelemetry.gear) {
+  //   document.getElementById("gear").textContent = telemetryState.m_gear;
+  //   lastTelemetry.gear = telemetryState.m_gear;
+  // }
 
   // Throttle
   const throttlePercent = telemetryState.m_throttle != null ? Math.round(telemetryState.m_throttle * 100) : null;
@@ -228,6 +283,32 @@ function renderFromState() {
     renderAlertBar(eventCodes);
     lastTelemetry.eventCode = eventCodeStr;
   }
+
+  const MAX_ERS = 400000;
+  // ERS Battery
+  if (telemetryState.m_ersStoreEnergy != null) {
+    const joules = telemetryState.m_ersStoreEnergy;
+    const percent = Math.max(0, Math.min(100, (joules / MAX_ERS) * 100));
+
+    const batteryFill = document.querySelector('.battery-fill');
+    const batteryText = document.getElementById('batteryPercent');
+
+    batteryFill.style.height = percent + "%";   // vertical battery bar
+    batteryText.textContent = percent.toFixed(0) + "%";
+
+    // Optional: color thresholds
+    if (percent > 60) {
+      batteryFill.style.backgroundColor = "#00FF00"; // green
+    } else if (percent > 30) {
+      batteryFill.style.backgroundColor = "#FFD700"; // yellow
+    } else {
+      batteryFill.style.backgroundColor = "#FF0000"; // red
+    }
+  }
+
+
+
+
 }
 
 // ===============================

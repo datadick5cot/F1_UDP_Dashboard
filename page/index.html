@@ -13,7 +13,6 @@
 </head>
 <body>
 
-
   <div class="alertBarContainer">
   <div id="alertBarContainer"></div>
   </div>
@@ -22,9 +21,6 @@
   <div class="alertBarContainer">
   <div id="starterlightsPanel"></div>
   </div>
-
-
-
 
 
   <div class="rev_panel">
@@ -57,11 +53,30 @@
   </div>
 </div>
 
+<div class="centerbox">
+<div class="gear-wheel">
+          <div class="gear-cylinder" id="gearCylinder">
+            <div class="gear-item">R</div>
+            <div class="gear-item">N</div>
+            <div class="gear-item">1</div>
+            <div class="gear-item">2</div>
+            <div class="gear-item">3</div>
+            <div class="gear-item">4</div>
+            <div class="gear-item">5</div>
+            <div class="gear-item">6</div>
+            <div class="gear-item">7</div>
+            <div class="gear-item">8</div>
+            <div class="gear-item"></div>
+          </div>
+        </div>
 
-  <div class="gear_panel">
-    <div class="label">Gear</div>
-    <div class="gear_value" id="gear">--</div>
+          <!-- Battery Panel -->
+<div class="battery-icon">
+    <div class="battery-level" id="batteryLevel"></div>
   </div>
+
+</div>
+
 
 <div class="panel"> <!-- Left panel with subgrid -->
   <div class="label">Throttle</div>
@@ -69,8 +84,11 @@
 
   <div class="subgrid">
     <div class="subpanel">
-      <div class="label">speed</div>
-      <div class="value" id="speed">--</div>
+      <div class="label">Slip Angle</div>
+      <div class="slip-values">
+      <div class="value-s" id="sliprl">--</div>
+      <div class="value-s" id="sliprr">--</div>
+      </div>
     </div>
     <div class="subpanel">
       <div class="label">DRS</div>
@@ -87,6 +105,13 @@
   </div>
 </div>
 
+
+
+
+
+
+
+  
 <script src="assets/script.js"></script>
 
 </body>
