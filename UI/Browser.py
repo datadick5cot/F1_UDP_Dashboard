@@ -16,7 +16,10 @@ class BorderlessBrowser(QMainWindow):
         
         menu = self.menuBar()
         
-        menu.setContentsMargins(20, 20, 20, 0)
+        
+        spacer = QWidget(self)  
+        spacer.setFixedWidth(40)  
+        self.menuBar().setCornerWidget(spacer, Qt.Corner.TopLeftCorner)
         
         file_menu = menu.addMenu("&File")
         
