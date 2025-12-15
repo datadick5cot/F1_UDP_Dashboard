@@ -1,8 +1,4 @@
 import asyncio
-# import struct
-# import queue
-# from ctypes import Array
-# import time
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
@@ -781,9 +777,10 @@ PACKET_HANDLERS = {
         }
     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
 
-    7: lambda pkt, hdr: {
+    7: lambda pkt, hdr: (
         # Car status data
-    },
+        lambda car_status : {'m_ersStoreEnergy' : car_status.m_ersStoreEnergy}
+    )(pkt.m_carStatusData[hdr.m_playerCarIndex]),
 
     8: lambda pkt, hdr: {
         # Final classification
@@ -895,21 +892,22 @@ def start_udp_background():
     print("UDP telemetry listener started in background.")
 
 
-if __name__ == "__main__":
-    start_udp_background()
 
-    # Example: continuously print updated dictionary
+# # Print Testing
+# if __name__ == "__main__":
+#     start_udp_background()
 
-    while True:
-        data = get_latest_data()
+#     # Example: continuously print updated dictionary
+
+#     while True:
+#         data = get_latest_data()
         
-        
-        # print(data)
-        # if data is not None:
-        try:
-            print(data)
-        except:
-            pass
+#         # print(data)
+#         # if data is not None:
+#         try:
+#             print(data)
+#         except:
+#             pass
         
 
 

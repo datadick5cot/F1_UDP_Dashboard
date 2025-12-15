@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QUrl, Qt
-from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QMessageBox, QApplication
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtGui import QAction
 import subprocess
@@ -16,7 +16,22 @@ class BorderlessBrowser(QMainWindow):
         
         menu = self.menuBar()
 
-        file_menu = menu.addMenu("&Options")
+        #App File options
+        file_menu = menu.addMenu("&File")
+        
+        shutdown = QAction("Shutdown Pi", self)
+        shutdown.triggered.connect(self.shutdown_pi)
+        
+        quit_app = QAction("Quit App", self)
+        quit_app.triggered.connect(self.quit_app)
+        file_menu.addAction(quit_app)
+        
+        file_menu.addAction(quit_app)
+        file_menu.addAction(shutdown)
+        
+
+        #Dashboard Options
+        option_menu = menu.addMenu("&Options")
         
         Button1 = QAction("Dashboard 1", self)
         Button1.triggered.connect(lambda: self.load_page("index"))
@@ -36,21 +51,12 @@ class BorderlessBrowser(QMainWindow):
         rivalsdashboard = QAction("Rival Dashboard", self)
         rivalsdashboard.triggered.connect(lambda: self.load_page("rival"))
         
-        shutdown = QAction("Shutdown", self)
-        shutdown.triggered.connect(self.shutdown_pi)
-        
-        # openterminal = QAction("Terminal Window", self)
-        # openterminal.trigger.connect(self.open_terminal)
-        
-        file_menu.addAction(Button1)
-        file_menu.addAction(Button2)
-        file_menu.addSeparator()
-        file_menu.addAction(Telemetry)
-        file_menu.addAction(Settings)
-        file_menu.addAction(rivalsdashboard)
-        file_menu.addSeparator()
-        # file_menu.addAction(openterminal)
-        file_menu.addAction(shutdown)
+        option_menu.addAction(Button1)
+        option_menu.addAction(Button2)
+        option_menu.addSeparator()
+        option_menu.addAction(Telemetry)
+        option_menu.addAction(Settings)
+        option_menu.addAction(rivalsdashboard)
         
 
         # Central widget and layout
@@ -71,14 +77,24 @@ class BorderlessBrowser(QMainWindow):
     def shutdown_pi(self):
         reply = QMessageBox.question(self, 
                                     "Shutdown", 
-                                    "Are you shure you want to Shutdown?",
+                                    "Are you sure you want to Shutdown?",
                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         
         if reply == QMessageBox.StandardButton.Yes:
                 subprocess.run(["sudo", "shutdown", "-h", "now"])
-                
-    # def open_terminal(self):
-    #     subprocess.Popen(['lxterminal'])
+      
+
+    def quit_app(self):
+        reply = QMessageBox.question(
+            self,
+            "Quit",
+            "Are you sure you want to quit the application?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            QApplication.instance().quit()
+
             
 
 

@@ -4,7 +4,7 @@ import threading
 # from UDP.fastapi_server import run_listening
 
 from UDP.fastapi_server import TelemetryServer
-from UDP.UDP_Speed import start_udp_background
+from UDP.F1_2024 import start_udp_background
 from UI.Browser import BorderlessBrowser
 from PyQt6.QtWidgets import QApplication
 from variables.settings_variables import ConfigureVariables
