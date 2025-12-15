@@ -37,10 +37,10 @@ class BorderlessBrowser(QMainWindow):
         rivalsdashboard.triggered.connect(lambda: self.load_page("rival"))
         
         shutdown = QAction("Shutdown", self)
-        shutdown.triggered.connect(self.shutdown_pi())
+        shutdown.triggered.connect(self.shutdown_pi)
         
         openterminal = QAction("Terminal Window", self)
-        
+        openterminal.trigger.connect(self.open_terminal)
         
         file_menu.addAction(Button1)
         file_menu.addAction(Button2)
