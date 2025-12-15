@@ -15,8 +15,9 @@ class BorderlessBrowser(QMainWindow):
         self.showMaximized()
         
         menu = self.menuBar()
-
-        #App File options
+        
+        menu.setContentsMargins(20, 20, 20, 0)
+        
         file_menu = menu.addMenu("&File")
         
         shutdown = QAction("Shutdown Pi", self)
