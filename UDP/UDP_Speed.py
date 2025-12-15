@@ -720,11 +720,11 @@ PACKET_HANDLERS = {
     
     
     1: lambda pkt, hdr: {  #Session Data
-        'm_weather': pkt.m_weather,
-        'm_trackTemperature': pkt.m_trackTemperature,
-        'm_airTemperature': pkt.m_airTemperature,
-        "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
-        "m_sessionDuration" : pkt.m_sessionDuration,
+        # 'm_weather': pkt.m_weather,
+        # 'm_trackTemperature': pkt.m_trackTemperature,
+        # 'm_airTemperature': pkt.m_airTemperature,
+        # "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
+        # "m_sessionDuration" : pkt.m_sessionDuration,
         "m_pitStopRejoinPosition" : pkt.m_pitStopRejoinPosition,
         
     },
@@ -738,6 +738,9 @@ PACKET_HANDLERS = {
         "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
         "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
         "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
+        "m_safetyCarDelta" : pkt.m_lapData[hdr.m_playerCarIndex].m_safetyCarDelta,
+        "m_deltaToCarInFrontMSPart" : pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToCarInFrontMSPart,
+        "m_deltaToCarInFrontMinutesPart" : pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToCarInFrontMinutesPart,
         
         
     },
@@ -758,21 +761,23 @@ PACKET_HANDLERS = {
     5: lambda pkt, hdr: {
         # Setup data
         'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
+        "m_fuelLoad" : pkt.m_carSetups[hdr.m_playerCarIndex].m_fuelLoad,
+        
     },
 
     6: lambda pkt, hdr: (
         lambda car: {
-            'm_speed': car.m_speed,
+            # 'm_speed': car.m_speed,
             'm_throttle': car.m_throttle,
             'm_brake': car.m_brake,
             'm_gear': car.m_gear,
             'm_drs': car.m_drs,
             'm_revLightsPercent': car.m_revLightsPercent,
-            'm_revLightsBitValue' : car.m_revLightsBitValue,
+            # 'm_revLightsBitValue' : car.m_revLightsBitValue,
             'm_brakesTemperature': list(car.m_brakesTemperature),
             'm_tyresSurfaceTemperature': list(car.m_tyresSurfaceTemperature),
             'm_tyresInnerTemperature': list(car.m_tyresInnerTemperature),
-            # 'm_surfaceType': list(car.m_surfaceType),
+           
         }
     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
 
@@ -794,7 +799,6 @@ PACKET_HANDLERS = {
         )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
         
 
-
     11: lambda pkt, hdr: {
         # Session history
     },
@@ -805,7 +809,9 @@ PACKET_HANDLERS = {
 
     13: lambda pkt, hdr: {
         # Extended motion
-    },
+        'm_wheelSlipAngle' : list(pkt.m_wheelSlipAngle),
+        },
+        
 
     14: lambda pkt, hdr: {
         # Time trial
@@ -901,7 +907,7 @@ if __name__ == "__main__":
         # print(data)
         # if data is not None:
         try:
-            print(data['m_revLightsPercent'])
+            print(data)
         except:
             pass
         

@@ -1,8 +1,10 @@
 from PyQt6.QtCore import QUrl, Qt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QToolBar, QSplashScreen
+from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QMessageBox
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtGui import QAction, QPixmap
-import sys
+from PyQt6.QtGui import QAction
+import subprocess
+
+
 
 class BorderlessBrowser(QMainWindow):
     def __init__(self):
@@ -34,12 +36,22 @@ class BorderlessBrowser(QMainWindow):
         rivalsdashboard = QAction("Rival Dashboard", self)
         rivalsdashboard.triggered.connect(lambda: self.load_page("rival"))
         
+        shutdown = QAction("Shutdown", self)
+        shutdown.triggered.connect(self.shutdown_pi())
+        
+        openterminal = QAction("Terminal Window", self)
+        
+        
         file_menu.addAction(Button1)
         file_menu.addAction(Button2)
         file_menu.addSeparator()
         file_menu.addAction(Telemetry)
         file_menu.addAction(Settings)
         file_menu.addAction(rivalsdashboard)
+        
+        file_menu.addSeparator()
+        file_menu.addAction(openterminal)
+        file_menu.addAction(shutdown)
         
 
         # Central widget and layout
@@ -55,6 +67,21 @@ class BorderlessBrowser(QMainWindow):
         # Load HTML served from FastAPI
         self.webview.load(QUrl("http://localhost:8000/dashboard"))
         
+            
+        
+    def shutdown_pi(self):
+        reply = QMessageBox.question(self, 
+                                    "Shutdown", 
+                                    "Are you shure you want to Shutdown?",
+                                    QMessageBox.StandardButton.Yes, 
+                                    QMessageBox.standardButton.No)
+        
+        if reply == QMessageBox.StandardButton.Yes:
+                subprocess.run(["sudo", "shutdown", "-h", "now"])
+                
+    def open_terminal(self):
+        subprocess.Popen(['lxterminal'])
+            
 
 
     def load_page(self, page_name):

@@ -3,26 +3,26 @@
 // ===============================
 
 // Cache last values to prevent flicker
-const lastTelemetry = {
-  tyrewear : [null, null, null, null],
-  tyreinnertemp : [null, null, null, null],
-  tyresurfacetemp : [null, null, null, null],
-  braketemp : [null, null, null, null],
-  slipsngle: [null, null, null, null],
-  drs : null,
-  brakebias: null,
-  fuelremaining : null,
-  gear: null,
-  throttle: null,
-  brake: null,
-  rpm: null,
-  eventCode: null,
-  starterLights: 0
-};
+const lastTelemetry = {tyrewear : [null, null, null, null],
+                      tyreinnertemp : [null, null, null, null],
+                      tyresurfacetemp : [null, null, null, null],
+                      braketemp : [null, null, null, null],
+                      slipsngle: [null, null, null, null],
+                      drs : null,
+                      brakebias: null,
+                      batteryFill: null,
+                      fuelremaining : null,
+                      gear: null,
+                      throttle: null,
+                      brake: null,
+                      rpm: null,
+                      eventCode: null,
+                      starterLights: 0,
+                      pitStopRejoinPosition : null,
+                      };
 
 // Shared telemetry snapshot
 let telemetryState = null;
-
 
 const gearMap = {
   "R": 0,
@@ -227,11 +227,25 @@ async function fetchTelemetry() {
   }
 }
 
+
+
+
+
 // ===============================
 // Render From State (decoupled)
 // ===============================
 function renderFromState() {
   if (!telemetryState) return;
+
+
+  // tyrewear
+  // tyreinnertemp
+  // tyresurfacetemp
+  // braketemp
+  // slipsngle
+  // drs
+  // brakebias
+  // fuelremaining
 
 
   // Gear
@@ -240,12 +254,6 @@ function renderFromState() {
         currentIndex = gearMap[gearValue];
         rotateWheel();
         }
-
-
-  // if (telemetryState.m_gear != null && telemetryState.m_gear !== lastTelemetry.gear) {
-  //   document.getElementById("gear").textContent = telemetryState.m_gear;
-  //   lastTelemetry.gear = telemetryState.m_gear;
-  // }
 
   // Throttle
   const throttlePercent = telemetryState.m_throttle != null ? Math.round(telemetryState.m_throttle * 100) : null;
@@ -292,10 +300,8 @@ function renderFromState() {
     const percent = Math.max(0, Math.min(100, (joules / MAX_ERS) * 100));
 
     const batteryFill = document.querySelector('.battery-fill');
-    const batteryText = document.getElementById('batteryPercent');
 
     batteryFill.style.height = percent + "%";   // vertical battery bar
-    batteryText.textContent = percent.toFixed(0) + "%";
 
     // Optional: color thresholds
     if (percent > 60) {
