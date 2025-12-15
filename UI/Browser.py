@@ -73,7 +73,7 @@ class BorderlessBrowser(QMainWindow):
         reply = QMessageBox.question(self, 
                                     "Shutdown", 
                                     "Are you shure you want to Shutdown?",
-                                    QMessageBox.StandardButton.Yes | QMessageBox.standardButton.No)
+                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         
         if reply == QMessageBox.StandardButton.Yes:
                 subprocess.run(["sudo", "shutdown", "-h", "now"])
