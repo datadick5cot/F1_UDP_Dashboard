@@ -39,8 +39,8 @@ class BorderlessBrowser(QMainWindow):
         shutdown = QAction("Shutdown", self)
         shutdown.triggered.connect(self.shutdown_pi)
         
-        openterminal = QAction("Terminal Window", self)
-        openterminal.trigger.connect(self.open_terminal)
+        # openterminal = QAction("Terminal Window", self)
+        # openterminal.trigger.connect(self.open_terminal)
         
         file_menu.addAction(Button1)
         file_menu.addAction(Button2)
@@ -48,9 +48,8 @@ class BorderlessBrowser(QMainWindow):
         file_menu.addAction(Telemetry)
         file_menu.addAction(Settings)
         file_menu.addAction(rivalsdashboard)
-        
         file_menu.addSeparator()
-        file_menu.addAction(openterminal)
+        # file_menu.addAction(openterminal)
         file_menu.addAction(shutdown)
         
 
@@ -78,8 +77,8 @@ class BorderlessBrowser(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
                 subprocess.run(["sudo", "shutdown", "-h", "now"])
                 
-    def open_terminal(self):
-        subprocess.Popen(['lxterminal'])
+    # def open_terminal(self):
+    #     subprocess.Popen(['lxterminal'])
             
 
 
