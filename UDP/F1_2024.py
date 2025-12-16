@@ -805,9 +805,17 @@ PACKET_HANDLERS = {
         # Tyre sets
     },
 
-    13: lambda pkt, hdr: {
-        # Extended motion
-    },
+    13: lambda pkt, hdr: {# Extended motion
+    "m_wheelSlipAngle": list(pkt.m_wheelSlipAngle),
+    "m_wheelSlipRatio": list(pkt.m_wheelSlipRatio),
+    "m_wheelSpeed": list(pkt.m_wheelSpeed),
+    "m_suspensionPosition": list(pkt.m_suspensionPosition),
+    "m_suspensionVelocity": list(pkt.m_suspensionVelocity),
+    "m_suspensionAcceleration": list(pkt.m_suspensionAcceleration),
+},
+
+
+
 
     14: lambda pkt, hdr: {
         # Time trial
