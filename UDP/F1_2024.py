@@ -757,7 +757,6 @@ PACKET_HANDLERS = {
     5: lambda pkt, hdr: {
         # Setup data
         'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
-        "m_fuelLoad" : pkt.m_carSetups[hdr.m_playerCarIndex].m_fuelLoad,
         
     },
 
@@ -777,9 +776,13 @@ PACKET_HANDLERS = {
         }
     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
 
+
     7: lambda pkt, hdr: (
         # Car status data
-        lambda car_status : {'m_ersStoreEnergy' : car_status.m_ersStoreEnergy}
+        lambda car_status : {'m_ersStoreEnergy' : car_status.m_ersStoreEnergy, 
+                             'm_fuelRemainingLaps' : car_status.m_fuelRemainingLaps,
+                             
+                             }
     )(pkt.m_carStatusData[hdr.m_playerCarIndex]),
 
     8: lambda pkt, hdr: {
@@ -800,19 +803,26 @@ PACKET_HANDLERS = {
         # Session history
     },
 
-    12: lambda pkt, hdr: {
-        # Tyre sets
-    },
+    12: lambda pkt, hdr: (
+      # Tyre sets
+      lambda tyre_sets : {'m_wear' : list(tyre_sets.m_wear)}
+        
+    )(pkt.tyre_sets[hdr.m_playerCarIndex]),
+        
+    
 
-    13: lambda pkt, hdr: {
+    13: lambda pkt, hdr: (
+        
         # Extended motion
-        'm_wheelSlipAngle' : list(pkt.m_wheelSlipAngle),
-        },
+        lambda motion_ex : {'m_wheelSlipAngle' : list(pkt.m_wheelSlipAngle),}
+    ),
         
 
-    14: lambda pkt, hdr: {
+
+    14: lambda pkt, hdr: (
         # Time trial
-    },
+        lambda timetrial : {pkt.m_lapTimeInMS[hdr.m_playerCarIndex].m_lapTimeInMS : timetrial}
+    )(pkt.timetrial[hdr.m_playerCarIndex]),
 }
 
 
@@ -893,21 +903,20 @@ def start_udp_background():
 
 
 
-# # Print Testing
-# if __name__ == "__main__":
-#     start_udp_background()
+# Print Testing
+if __name__ == "__main__":
+    start_udp_background()
 
-#     # Example: continuously print updated dictionary
-
-#     while True:
-#         data = get_latest_data()
+    while True:
+        data = get_latest_data()
         
-#         # print(data)
-#         # if data is not None:
-#         try:
-#             print(data)
-#         except:
-#             pass
+        
+        # if data is not None skip
+        try:
+            print(f'm_wheelSlipAngle : {data['m_wheelSlipAngle']}')
+            
+        except:
+            pass
         
 
 

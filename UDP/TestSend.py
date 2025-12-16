@@ -102,8 +102,10 @@ def status_build_test_packet():
     pkt = PacketCarStatusData()
     pkt.m_header.m_packetId = 7
     for i in range(22):
-        pkt.m_carStatusData[i].m_fuelInTank = 30.5
-        pkt.m_carStatusData[i].m_drsAllowed = 1
+        pkt.m_carStatusData[i].m_fuelRemainingLaps = 7
+        pkt.m_carStatusData[i].m_ersStoreEnergy = 400
+        
+        
     return bytes(pkt)
 
 @staticmethod
@@ -160,7 +162,7 @@ def tyres_build_test_packet():
 def motionex_build_test_packet():
     pkt = PacketMotionExData()
     pkt.m_header.m_packetId = 13
-    pkt.m_wheelSlipRatio[:] = [0.1, 0.2, 0.3, 0.4]
+    pkt.m_wheelSlipAngle[:] = [0.1, 0.2, 0.3, 0.4]
     return bytes(pkt)
 
 @staticmethod
