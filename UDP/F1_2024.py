@@ -779,8 +779,40 @@ PACKET_HANDLERS = {
     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
 
     7: lambda pkt, hdr: {
-        # Car status data
+    
+            "m_carStatusData": [
+            {
+            "m_tractionControl": cs.m_tractionControl,
+            "m_antiLockBrakes": cs.m_antiLockBrakes,
+            "m_fuelMix": cs.m_fuelMix,
+            "m_frontBrakeBias": cs.m_frontBrakeBias,
+            "m_pitLimiterStatus": cs.m_pitLimiterStatus,
+            "m_fuelInTank": cs.m_fuelInTank,
+            "m_fuelCapacity": cs.m_fuelCapacity,
+            "m_fuelRemainingLaps": cs.m_fuelRemainingLaps,
+            "m_maxRPM": cs.m_maxRPM,
+            "m_idleRPM": cs.m_idleRPM,
+            "m_maxGears": cs.m_maxGears,
+            "m_drsAllowed": cs.m_drsAllowed,
+            "m_drsActivationDistance": cs.m_drsActivationDistance,
+            "m_actualTyreCompound": cs.m_actualTyreCompound,
+            "m_visualTyreCompound": cs.m_visualTyreCompound,
+            "m_tyresAgeLaps": cs.m_tyresAgeLaps,
+            "m_vehicleFiaFlags": cs.m_vehicleFiaFlags,
+            "m_ersStoreEnergy": cs.m_ersStoreEnergy,
+            "m_ersDeployMode": cs.m_ersDeployMode,
+            "m_ersHarvestedThisLapMGUK": cs.m_ersHarvestedThisLapMGUK,
+            "m_ersHarvestedThisLapMGUH": cs.m_ersHarvestedThisLapMGUH,
+            "m_ersDeployedThisLap": cs.m_ersDeployedThisLap,
+            "m_networkPaused": cs.m_networkPaused,
+        }
+        for cs in pkt.m_carStatusData
+    ]
     },
+
+
+
+
 
     8: lambda pkt, hdr: {
         # Final classification
@@ -809,18 +841,27 @@ PACKET_HANDLERS = {
     "m_wheelSlipAngle": list(pkt.m_wheelSlipAngle),
     "m_wheelSlipRatio": list(pkt.m_wheelSlipRatio),
     "m_wheelSpeed": list(pkt.m_wheelSpeed),
-    "m_suspensionPosition": list(pkt.m_suspensionPosition),
-    "m_suspensionVelocity": list(pkt.m_suspensionVelocity),
-    "m_suspensionAcceleration": list(pkt.m_suspensionAcceleration),
 },
 
 
 
 
-    14: lambda pkt, hdr: {
+    14: lambda packet, hdr: {
         # Time trial
-    },
+    
+    # "m_playerSessionBestLapTime": packet.m_playerSessionBestLapTime,
+    # "m_playerSessionBestLapTimeLapNum": packet.m_playerSessionBestLapTimeLapNum,
+    # "m_playerSessionBestSector1Time": packet.m_playerSessionBestSector1Time,
+    # "m_playerSessionBestSector1TimeLapNum": packet.m_playerSessionBestSector1TimeLapNum,
+    # "m_playerSessionBestSector2Time": packet.m_playerSessionBestSector2Time,
+    # "m_playerSessionBestSector2TimeLapNum": packet.m_playerSessionBestSector2TimeLapNum,
+    # "m_playerSessionBestSector3Time": packet.m_playerSessionBestSector3Time,
+    # "m_playerSessionBestSector3TimeLapNum": packet.m_playerSessionBestSector3TimeLapNum,
 }
+
+}
+    
+
 
 
 
@@ -911,8 +952,8 @@ if __name__ == "__main__":
         
         # if data is not None skip
         try:
-            # print(f'm_wheelSlipAngle : {data['m_wheelSlipAngle']}')
-            print(data)
+            print(f'm_wheelSlipAngle : {data['m_wheelSlipAngle']}')
+            # print(data)
         except:
             pass
         
