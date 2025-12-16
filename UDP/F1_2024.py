@@ -708,21 +708,24 @@ UDP_PORT = 20777
 data_queue = asyncio.Queue(maxsize=100)
 latest_data = {}
 
+
+
+
 PACKET_HANDLERS = {
         0: lambda pkt, hdr: {
         # Motion
-        
+
     },
-    
-    
+
+
     1: lambda pkt, hdr: {  #Session Data
-        # 'm_weather': pkt.m_weather,
-        # 'm_trackTemperature': pkt.m_trackTemperature,
-        # 'm_airTemperature': pkt.m_airTemperature,
-        # "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
-        # "m_sessionDuration" : pkt.m_sessionDuration,
+        'm_weather': pkt.m_weather,
+        'm_trackTemperature': pkt.m_trackTemperature,
+        'm_airTemperature': pkt.m_airTemperature,
+        "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
+        "m_sessionDuration" : pkt.m_sessionDuration,
         "m_pitStopRejoinPosition" : pkt.m_pitStopRejoinPosition,
-        
+
     },
 
     2: lambda pkt, hdr: { #Lap Data
@@ -734,56 +737,50 @@ PACKET_HANDLERS = {
         "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
         "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
         "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
-        "m_safetyCarDelta" : pkt.m_lapData[hdr.m_playerCarIndex].m_safetyCarDelta,
-        "m_deltaToCarInFrontMSPart" : pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToCarInFrontMSPart,
-        "m_deltaToCarInFrontMinutesPart" : pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToCarInFrontMinutesPart,
-        
-        
+
+
     },
 
     3: lambda pkt, hdr: {
         # Event packet — often needs decoding from event string
+        # 'eventStringCode': pkt.m_eventStringCode.decode('utf-8'),
         'm_eventStringCode': bytes(pkt.m_eventStringCode).decode('utf-8').strip('\x00'), 
         'm_eventDetails' : pkt.m_eventDetails
-        
-        
+
+
     },
 
     4: lambda pkt, hdr: {
         # Participants
-        
+
     },
 
     5: lambda pkt, hdr: {
         # Setup data
-        'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
         
+        'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
     },
 
     6: lambda pkt, hdr: (
         lambda car: {
-            # 'm_speed': car.m_speed,
+            'm_speed': car.m_speed,
             'm_throttle': car.m_throttle,
             'm_brake': car.m_brake,
             'm_gear': car.m_gear,
             'm_drs': car.m_drs,
             'm_revLightsPercent': car.m_revLightsPercent,
-            # 'm_revLightsBitValue' : car.m_revLightsBitValue,
+            'm_revLightsBitValue' : car.m_revLightsBitValue,
             'm_brakesTemperature': list(car.m_brakesTemperature),
             'm_tyresSurfaceTemperature': list(car.m_tyresSurfaceTemperature),
             'm_tyresInnerTemperature': list(car.m_tyresInnerTemperature),
-           
+            'm_surfaceType': list(car.m_surfaceType),
+            # 'm_surfaceType': list(car.m_surfaceType),
         }
     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
 
-
-    7: lambda pkt, hdr: (
+    7: lambda pkt, hdr: {
         # Car status data
-        lambda car_status : {'m_ersStoreEnergy' : car_status.m_ersStoreEnergy, 
-                             'm_fuelRemainingLaps' : car_status.m_fuelRemainingLaps,
-                             
-                             }
-    )(pkt.m_carStatusData[hdr.m_playerCarIndex]),
+    },
 
     8: lambda pkt, hdr: {
         # Final classification
@@ -797,33 +794,26 @@ PACKET_HANDLERS = {
         # Damage data
         lambda car_damage : {'m_tyresWear' : list(car_damage.m_tyresWear)}
         )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
-        
+
+
 
     11: lambda pkt, hdr: {
         # Session history
     },
 
-    12: lambda pkt, hdr: (
-      # Tyre sets
-      lambda tyre_sets : {'m_wear' : list(tyre_sets.m_wear)}
-        
-    )(pkt.tyre_sets[hdr.m_playerCarIndex]),
-        
-    
+    12: lambda pkt, hdr: {
+        # Tyre sets
+    },
 
-    13: lambda pkt, hdr: (
-        
+    13: lambda pkt, hdr: {
         # Extended motion
-        lambda motion_ex : {'m_wheelSlipAngle' : list(pkt.m_wheelSlipAngle),}
-    ),
-        
+    },
 
-
-    14: lambda pkt, hdr: (
+    14: lambda pkt, hdr: {
         # Time trial
-        lambda timetrial : {pkt.m_lapTimeInMS[hdr.m_playerCarIndex].m_lapTimeInMS : timetrial}
-    )(pkt.timetrial[hdr.m_playerCarIndex]),
+    },
 }
+
 
 
 def get_latest_data():
@@ -913,8 +903,8 @@ if __name__ == "__main__":
         
         # if data is not None skip
         try:
-            print(f'm_wheelSlipAngle : {data['m_wheelSlipAngle']}')
-            
+            # print(f'm_wheelSlipAngle : {data['m_wheelSlipAngle']}')
+            print(data)
         except:
             pass
         
