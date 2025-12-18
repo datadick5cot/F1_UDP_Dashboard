@@ -69,3 +69,5 @@ class TelemetryServer:
 
     def run(self, host="0.0.0.0", port=8000):
         uvicorn.run(self.app, host=host, port=port, log_level="info")
+        
+    

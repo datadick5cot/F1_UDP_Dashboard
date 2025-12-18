@@ -710,14 +710,13 @@ latest_data = {}
 
 
 
-
 PACKET_HANDLERS = {
         0: lambda pkt, hdr: {
         # Motion
-
+        
     },
-
-
+    
+    
     1: lambda pkt, hdr: {  #Session Data
         'm_weather': pkt.m_weather,
         'm_trackTemperature': pkt.m_trackTemperature,
@@ -725,7 +724,7 @@ PACKET_HANDLERS = {
         "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
         "m_sessionDuration" : pkt.m_sessionDuration,
         "m_pitStopRejoinPosition" : pkt.m_pitStopRejoinPosition,
-
+        
     },
 
     2: lambda pkt, hdr: { #Lap Data
@@ -737,27 +736,25 @@ PACKET_HANDLERS = {
         "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
         "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
         "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
-
-
+        
+        
     },
 
     3: lambda pkt, hdr: {
         # Event packet — often needs decoding from event string
-        # 'eventStringCode': pkt.m_eventStringCode.decode('utf-8'),
         'm_eventStringCode': bytes(pkt.m_eventStringCode).decode('utf-8').strip('\x00'), 
         'm_eventDetails' : pkt.m_eventDetails
-
-
+        
+        
     },
 
     4: lambda pkt, hdr: {
         # Participants
-
+        
     },
 
     5: lambda pkt, hdr: {
         # Setup data
-        
         'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
     },
 
@@ -773,46 +770,13 @@ PACKET_HANDLERS = {
             'm_brakesTemperature': list(car.m_brakesTemperature),
             'm_tyresSurfaceTemperature': list(car.m_tyresSurfaceTemperature),
             'm_tyresInnerTemperature': list(car.m_tyresInnerTemperature),
-            'm_surfaceType': list(car.m_surfaceType),
             # 'm_surfaceType': list(car.m_surfaceType),
         }
     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
 
     7: lambda pkt, hdr: {
-    
-            "m_carStatusData": [
-            {
-            "m_tractionControl": cs.m_tractionControl,
-            "m_antiLockBrakes": cs.m_antiLockBrakes,
-            "m_fuelMix": cs.m_fuelMix,
-            "m_frontBrakeBias": cs.m_frontBrakeBias,
-            "m_pitLimiterStatus": cs.m_pitLimiterStatus,
-            "m_fuelInTank": cs.m_fuelInTank,
-            "m_fuelCapacity": cs.m_fuelCapacity,
-            "m_fuelRemainingLaps": cs.m_fuelRemainingLaps,
-            "m_maxRPM": cs.m_maxRPM,
-            "m_idleRPM": cs.m_idleRPM,
-            "m_maxGears": cs.m_maxGears,
-            "m_drsAllowed": cs.m_drsAllowed,
-            "m_drsActivationDistance": cs.m_drsActivationDistance,
-            "m_actualTyreCompound": cs.m_actualTyreCompound,
-            "m_visualTyreCompound": cs.m_visualTyreCompound,
-            "m_tyresAgeLaps": cs.m_tyresAgeLaps,
-            "m_vehicleFiaFlags": cs.m_vehicleFiaFlags,
-            "m_ersStoreEnergy": cs.m_ersStoreEnergy,
-            "m_ersDeployMode": cs.m_ersDeployMode,
-            "m_ersHarvestedThisLapMGUK": cs.m_ersHarvestedThisLapMGUK,
-            "m_ersHarvestedThisLapMGUH": cs.m_ersHarvestedThisLapMGUH,
-            "m_ersDeployedThisLap": cs.m_ersDeployedThisLap,
-            "m_networkPaused": cs.m_networkPaused,
-        }
-        for cs in pkt.m_carStatusData
-    ]
+        # Car status data
     },
-
-
-
-
 
     8: lambda pkt, hdr: {
         # Final classification
@@ -826,7 +790,7 @@ PACKET_HANDLERS = {
         # Damage data
         lambda car_damage : {'m_tyresWear' : list(car_damage.m_tyresWear)}
         )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
-
+        
 
 
     11: lambda pkt, hdr: {
@@ -837,29 +801,161 @@ PACKET_HANDLERS = {
         # Tyre sets
     },
 
-    13: lambda pkt, hdr: {# Extended motion
-    "m_wheelSlipAngle": list(pkt.m_wheelSlipAngle),
-    "m_wheelSlipRatio": list(pkt.m_wheelSlipRatio),
-    "m_wheelSpeed": list(pkt.m_wheelSpeed),
-},
+    13: lambda pkt, hdr: {
+        # Extended motion
+    },
 
-
-
-
-    14: lambda packet, hdr: {
+    14: lambda pkt, hdr: {
         # Time trial
-    
-    # "m_playerSessionBestLapTime": packet.m_playerSessionBestLapTime,
-    # "m_playerSessionBestLapTimeLapNum": packet.m_playerSessionBestLapTimeLapNum,
-    # "m_playerSessionBestSector1Time": packet.m_playerSessionBestSector1Time,
-    # "m_playerSessionBestSector1TimeLapNum": packet.m_playerSessionBestSector1TimeLapNum,
-    # "m_playerSessionBestSector2Time": packet.m_playerSessionBestSector2Time,
-    # "m_playerSessionBestSector2TimeLapNum": packet.m_playerSessionBestSector2TimeLapNum,
-    # "m_playerSessionBestSector3Time": packet.m_playerSessionBestSector3Time,
-    # "m_playerSessionBestSector3TimeLapNum": packet.m_playerSessionBestSector3TimeLapNum,
+    },
 }
 
-}
+# PACKET_HANDLERS = {
+#         0: lambda pkt, hdr: {
+#         # Motion
+
+#     },
+        
+#     1: lambda pkt, hdr: {  #Session Data
+#         'm_weather': pkt.m_weather,
+#         'm_trackTemperature': pkt.m_trackTemperature,
+#         'm_airTemperature': pkt.m_airTemperature,
+#         "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
+#         "m_sessionDuration" : pkt.m_sessionDuration,
+#         "m_pitStopRejoinPosition" : pkt.m_pitStopRejoinPosition,
+      
+#     },
+
+#     2: lambda pkt, hdr: { #Lap Data
+#         'm_currentLapTime': pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapTimeInMS,
+#         'm_carPosition': pkt.m_lapData[hdr.m_playerCarIndex].m_carPosition,
+#         'm_lastLapTimeInMS' : pkt.m_lapData[hdr.m_playerCarIndex].m_lastLapTimeInMS,
+#         "m_lapDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_lapDistance,
+#         "m_totalDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_totalDistance,
+#         "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
+#         "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
+#         "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
+#     },
+
+#     3: lambda pkt, hdr: {
+#         # Event packet — often needs decoding from event string
+#         # 'eventStringCode': pkt.m_eventStringCode.decode('utf-8'),
+#         'm_eventStringCode': bytes(pkt.m_eventStringCode).decode('utf-8').strip('\x00'), 
+#         'm_eventDetails' : pkt.m_eventDetails
+
+
+#     },
+
+#     4: lambda pkt, hdr: {
+#         # Participants
+
+#     },
+
+#     5: lambda pkt, hdr: {
+#         # Setup data
+        
+#         'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
+#     },
+
+#     6: lambda pkt, hdr: (
+#         lambda car: {
+#             'm_speed': car.m_speed,
+#             'm_throttle': car.m_throttle,
+#             'm_brake': car.m_brake,
+#             'm_gear': car.m_gear,
+#             'm_drs': car.m_drs,
+#             'm_revLightsPercent': car.m_revLightsPercent,
+#             'm_revLightsBitValue' : car.m_revLightsBitValue,
+#             'm_brakesTemperature': list(car.m_brakesTemperature),
+#             'm_tyresSurfaceTemperature': list(car.m_tyresSurfaceTemperature),
+#             'm_tyresInnerTemperature': list(car.m_tyresInnerTemperature),
+#             'm_surfaceType': list(car.m_surfaceType),
+#             # 'm_surfaceType': list(car.m_surfaceType),
+#         }
+#     )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
+
+#     7: lambda pkt, hdr: {
+    
+#             "m_carStatusData": [
+#             {
+#             "m_tractionControl": cs.m_tractionControl,
+#             "m_antiLockBrakes": cs.m_antiLockBrakes,
+#             "m_fuelMix": cs.m_fuelMix,
+#             "m_frontBrakeBias": cs.m_frontBrakeBias,
+#             "m_pitLimiterStatus": cs.m_pitLimiterStatus,
+#             "m_fuelInTank": cs.m_fuelInTank,
+#             "m_fuelCapacity": cs.m_fuelCapacity,
+#             "m_fuelRemainingLaps": cs.m_fuelRemainingLaps,
+#             "m_maxRPM": cs.m_maxRPM,
+#             "m_idleRPM": cs.m_idleRPM,
+#             "m_maxGears": cs.m_maxGears,
+#             "m_drsAllowed": cs.m_drsAllowed,
+#             "m_drsActivationDistance": cs.m_drsActivationDistance,
+#             "m_actualTyreCompound": cs.m_actualTyreCompound,
+#             "m_visualTyreCompound": cs.m_visualTyreCompound,
+#             "m_tyresAgeLaps": cs.m_tyresAgeLaps,
+#             "m_vehicleFiaFlags": cs.m_vehicleFiaFlags,
+#             "m_ersStoreEnergy": cs.m_ersStoreEnergy,
+#             "m_ersDeployMode": cs.m_ersDeployMode,
+#             "m_ersHarvestedThisLapMGUK": cs.m_ersHarvestedThisLapMGUK,
+#             "m_ersHarvestedThisLapMGUH": cs.m_ersHarvestedThisLapMGUH,
+#             "m_ersDeployedThisLap": cs.m_ersDeployedThisLap,
+#             "m_networkPaused": cs.m_networkPaused,
+#         }
+#         for cs in pkt.m_carStatusData
+#     ]
+#     },
+
+
+
+
+
+#     8: lambda pkt, hdr: {
+#         # Final classification
+#     },
+
+#     9: lambda pkt, hdr: {
+#         # Lobby info
+#     },
+
+#     10: lambda pkt, hdr: (
+#         # Damage data
+#         lambda car_damage : {'m_tyresWear' : list(car_damage.m_tyresWear)}
+#         )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
+
+
+
+#     11: lambda pkt, hdr: {
+#         # Session history
+#     },
+
+#     12: lambda pkt, hdr: {
+#         # Tyre sets
+#     },
+
+#     13: lambda pkt, hdr: {# Extended motion
+#     "m_wheelSlipAngle": list(pkt.m_wheelSlipAngle),
+#     "m_wheelSlipRatio": list(pkt.m_wheelSlipRatio),
+#     "m_wheelSpeed": list(pkt.m_wheelSpeed),
+# },
+
+
+
+
+#     14: lambda packet, hdr: {
+#         # Time trial
+    
+#     # "m_playerSessionBestLapTime": packet.m_playerSessionBestLapTime,
+#     # "m_playerSessionBestLapTimeLapNum": packet.m_playerSessionBestLapTimeLapNum,
+#     # "m_playerSessionBestSector1Time": packet.m_playerSessionBestSector1Time,
+#     # "m_playerSessionBestSector1TimeLapNum": packet.m_playerSessionBestSector1TimeLapNum,
+#     # "m_playerSessionBestSector2Time": packet.m_playerSessionBestSector2Time,
+#     # "m_playerSessionBestSector2TimeLapNum": packet.m_playerSessionBestSector2TimeLapNum,
+#     # "m_playerSessionBestSector3Time": packet.m_playerSessionBestSector3Time,
+#     # "m_playerSessionBestSector3TimeLapNum": packet.m_playerSessionBestSector3TimeLapNum,
+# }
+
+# }
     
 
 

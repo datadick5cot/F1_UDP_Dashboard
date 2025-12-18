@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QSplashScreen
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QGuiApplication
 from pathlib import Path
+import time
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -52,8 +53,7 @@ if __name__ == "__main__":
     app.processEvents()
 
     # Simulate loading work (e.g. configs, threads)
-    import time
-    time.sleep(2)  # <-- keep splash visible for 2 seconds
+    time.sleep(2)  # keep splash visible for 2 seconds
 
     browser = BorderlessBrowser()
 
