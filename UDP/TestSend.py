@@ -169,8 +169,8 @@ def motionex_build_test_packet():
 def tt_build_test_packet():
     pkt = PacketTimeTrialData()
     pkt.m_header.m_packetId = 14
-    pkt.m_pb.m_bestLapTime = 85.3
-    pkt.m_rival.m_bestLapTime = 86.1
+    pkt.m_playerSessionBestDataSet.m_bestLapTime = 85.3
+    pkt.m_rivalDataSet.m_bestLapTime = 86.1
     return bytes(pkt)
 
 
