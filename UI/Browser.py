@@ -16,11 +16,6 @@ class BorderlessBrowser(QMainWindow):
         
         menu = self.menuBar()
         
-        
-        spacer = QWidget(self)  
-        spacer.setFixedWidth(40)  
-        self.menuBar().setCornerWidget(spacer, Qt.Corner.TopLeftCorner)
-        
         file_menu = menu.addMenu("&File")
         
         shutdown = QAction("Shutdown Pi", self)

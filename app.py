@@ -2,7 +2,6 @@ import sys
 import os
 import threading
 # from UDP.fastapi_server import run_listening
-
 from UDP.fastapi_server import TelemetryServer
 from UDP.F1_2024 import start_udp_background
 from UI.Browser import BorderlessBrowser
@@ -16,7 +15,6 @@ from PyQt6.QtGui import QGuiApplication
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-
 
 server = TelemetryServer(BASE_DIR)
 
@@ -41,7 +39,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
    
     current_path = os.path.dirname(os.path.realpath(__file__))
-    # pixmap = QPixmap("F1_Dashboard/Sim_Dashboard/UI/DDD_Splash.png")
+    
     pixmap = QPixmap(f"{BASE_DIR}/UI/DDD_Splash.png")
     
     if pixmap.isNull():
