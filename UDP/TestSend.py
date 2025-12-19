@@ -174,8 +174,8 @@ def tt_build_test_packet():
     return bytes(pkt)
 
 
-
-UDP_IP = "127.0.0.1"
+hostname = socket.gethostname()
+UDP_IP = socket.gethostbyname(hostname)
 UDP_PORT = 20777
 DELAY_BETWEEN_PACKETS = 0.01  # seconds
 
@@ -213,3 +213,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
