@@ -33,6 +33,8 @@ def get_local_ip():
         s.close()
     return ip
 
+
+
 @staticmethod
 def Motion_build_test_packet():
     pkt = PacketMotionData()
@@ -187,7 +189,7 @@ def tt_build_test_packet():
 
 
 
-UDP_IP = get_local_ip
+UDP_IP = get_local_ip()
 UDP_PORT = 20777
 DELAY_BETWEEN_PACKETS = 0.01  # seconds
 

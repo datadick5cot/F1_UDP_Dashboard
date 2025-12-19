@@ -33,18 +33,18 @@ class BorderlessBrowser(QMainWindow):
         option_menu = menu.addMenu("&Options")
         
         Button1 = QAction("Dashboard 1", self)
-        Button1.triggered.connect(lambda: self.load_page("index"))
+        Button1.triggered.connect(lambda: self.load_page("dashboard-1"))
         
         
         Button2 = QAction("Dashboard 2", self)
-        Button2.triggered.connect(lambda: self.load_page("centre_display"))
+        Button2.triggered.connect(lambda: self.load_page("dashboard-2"))
         
         
         Telemetry = QAction("Telemetry", self)
         Telemetry.triggered.connect(lambda: self.load_page("telemetry"))
         
         Settings = QAction("Settings", self)
-        Settings.triggered.connect(lambda: self.load_page("settings"))
+        Settings.triggered.connect(lambda: self.load_page("index"))
         
         
         rivalsdashboard = QAction("Rival Dashboard", self)

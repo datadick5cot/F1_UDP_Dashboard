@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="assets/style.css">
+
+
+  
+  <title>F1 Telemetry Dashboard</title>
+  <style>
+  </style>
+</head>
+<body>
+
+  <div class="alertBarContainer">
+  <div id="alertBarContainer"></div>
+  </div>
+
+
+  <div class="alertBarContainer">
+  <div id="starterlightsPanel"></div>
+  </div>
+
+
+  <div class="rev_panel">
+    <div class="label">RPM Lights</div>
+    <div class="rpm-light-bar" id="rpmBar"></div>
+  </div>
+
+<div class="centered-panels">
+  <div class="panel"> <!-- Left panel with subgrid -->
+  <div class="label">Brake</div>
+  <div class="value" id="Brake">--</div>
+
+
+  <div class="subgrid">
+    <div class="subpanel">
+      <div class="label">Front Right</div>
+      <div class="wheel">
+      <div class="brakes"></div>
+      <div class="carcas"></div>
+      <div class="surface"></div>
+      <div class="tyrewear_value" id="FR_wear">--</div>
+      </div>
+    </div>
+
+<div class="subpanel">
+      <div class="label">Front Left</div>
+      <div class="wheel">
+      <div class="brakes"></div>
+      <div class="carcas"></div>
+      <div class="surface"></div>
+      </div>
+    </div>
+
+<div class="subpanel">
+      <div class="label">Rear Right</div>
+      <div class="wheel">
+      <div class="brakes"></div>
+      <div class="carcas"></div>
+      <div class="surface"></div>
+      </div>
+    </div>
+
+<div class="subpanel">
+      <div class="label">Rear Left</div>
+      <div class="wheel">
+      <div class="brakes"></div>
+      <div class="carcas"></div>
+      <div class="surface"></div>
+      </div>
+    </div>
+
+
+   
+  </div>
+</div>
+
+
+<div class="centerbox">
+<div class="gear-wheel">
+          <div class="gear-cylinder" id="gearCylinder">
+            <div class="gear-item">R</div>
+            <div class="gear-item">N</div>
+            <div class="gear-item">1</div>
+            <div class="gear-item">2</div>
+            <div class="gear-item">3</div>
+            <div class="gear-item">4</div>
+            <div class="gear-item">5</div>
+            <div class="gear-item">6</div>
+            <div class="gear-item">7</div>
+            <div class="gear-item">8</div>
+            <div class="gear-item"></div>
+          </div>
+        </div>
+
+          <!-- Battery Panel -->
+<div class="battery-icon">
+    <div class="battery-level" id="batteryLevel"></div>
+    <div class="ers-Deploy-Mode" id="ersDeployMode">--</div>
+  </div>
+
+</div>
+
+
+<div class="panel"> <!-- Left panel with subgrid -->
+  <div class="label">Throttle</div>
+  <div class="value" id="Throttle">--</div>
+
+  <div class="subgrid">
+    <div class="subpanel">
+      <div class="label">Slip Angle</div>
+      <div class="slip-values">
+      <div class="value-s" id="sliprl">--</div>
+      <div class="value-s" id="sliprr">--</div>
+      </div>
+    </div>
+    <div class="subpanel">
+      <div class="label">DRS</div>
+      <div class="value" id="metricB">--</div>
+    </div>
+    <div class="subpanel">
+      <div class="label">Brake Bias</div>
+      <div class="value" id="metricC">--</div>
+    </div>
+
+
+
+    <div class="subpanel">
+      <div class="label">Tyres Age</div>
+      <div class="value" id="metricD">--</div>
+    </div>
+
+  <div class="subpanel">
+      <div class="label">Pit Stop Rejoin</div>
+      <div class="value" id="metricD">--</div>
+    </div>
+
+
+
+    <div class="subpanel">
+      <div class="label">Fuel Remaining</div>
+      <div class="value" id="metricD">--</div>
+    </div>
+  </div>
+</div>
+
+  
+<script src="assets/script.js"></script>
+
+</body>
+</html>
