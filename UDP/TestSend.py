@@ -23,6 +23,16 @@ from F1_2024 import (
 
 
 
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Doesn't need to be reachable
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
+
 @staticmethod
 def Motion_build_test_packet():
     pkt = PacketMotionData()
@@ -175,8 +185,9 @@ def tt_build_test_packet():
     return bytes(pkt)
 
 
-hostname = socket.gethostname()
-UDP_IP = socket.gethostbyname(hostname)
+
+
+UDP_IP = get_local_ip
 UDP_PORT = 20777
 DELAY_BETWEEN_PACKETS = 0.01  # seconds
 
@@ -214,6 +225,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
 
 
 
