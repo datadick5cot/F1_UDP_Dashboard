@@ -104,6 +104,7 @@ def status_build_test_packet():
     for i in range(22):
         pkt.m_carStatusData[i].m_fuelRemainingLaps = 7
         pkt.m_carStatusData[i].m_ersStoreEnergy = 2000000
+        pkt.m_carStatusData[i].m_ersDeployMode = 3
         
         
     return bytes(pkt)

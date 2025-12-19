@@ -19,10 +19,11 @@ const lastTelemetry = {tyrewear : [null, null, null, null],
                       eventCode: null,
                       starterLights: 0,
                       pitStopRejoinPosition : null,
+                      ersDeployMode : null,
                       };
 
 // Shared telemetry snapshot
-let telemetryState = null;
+let telemetryState = {};
 
 const gearMap = {
   "R": 0,
@@ -36,6 +37,7 @@ const gearMap = {
   "7": 8,
   "8": 9
 };
+
 
 
 const cylinder = document.getElementById('gearCylinder');
@@ -317,6 +319,31 @@ if (telemetryState.m_ersStoreEnergy != null) {
 }
 
 }
+const ersMap = {
+  0: { label: "None",     color: "#ffffff" },
+  1: { label: "Medium",   color: "#ddbe50" },
+  2: { label: "Hotlap",   color: "#e24927" },
+  3: { label: "Overtake", color: "#a40808" }
+};
+
+
+
+const ersmodeNumber = telemetryState.m_ersDeployMode ?? lastTelemetry.ersDeployMode ?? 0;
+const ersdeploy = document.querySelector('.ers-Deploy-Mode');
+
+if (ersdeploy && ersmodeNumber != null) {
+  const mode = ersMap[ersmodeNumber];
+
+  if (mode) {
+    ersdeploy.textContent = mode.label;
+    ersdeploy.style.color = mode.color;
+  } else {
+    ersdeploy.textContent = "Unknown";
+    ersdeploy.style.color = "#ffffff";
+  }
+}
+
+
 
 // ===============================
 // Loop Control
