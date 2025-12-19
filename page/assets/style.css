@@ -358,6 +358,9 @@
 @keyframes blinker {  
   50% { opacity: 0; }
 }
+
+
+
 .battery-icon {
   width: 8vw;              /* narrow width */
   height: 18vw;            /* tall height */
@@ -394,8 +397,7 @@
 .ersDeployMode{
   position : absolute;
   bottom : 1vw;
-  left: 1vw;
-  
+  left: 1.5vw;
   font-size: 1rem;
   text-shadow: 1px 1.5px;
   color: rgb(174, 72, 35);

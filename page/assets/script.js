@@ -293,28 +293,28 @@ function renderFromState() {
     lastTelemetry.eventCode = eventCodeStr;
   }
 
-  const MAX_ERS = 400000;
-  // ERS Battery
-  if (telemetryState.m_ersStoreEnergy != null) {
-    const joules = telemetryState.m_ersStoreEnergy;
-    const percent = Math.max(0, Math.min(100, (joules / MAX_ERS) * 100));
 
-    const batteryFill = document.querySelector('.battery-fill');
+  
+const MAX_ERS = 4000000;
 
-    batteryFill.style.height = percent + "%";   // vertical battery bar
+// ERS Battery
+if (telemetryState.m_ersStoreEnergy != null) {
+  const joules = telemetryState.m_ersStoreEnergy;
+  const percent = Math.max(0, Math.min(100, (joules / MAX_ERS) * 100));
 
-    // Optional: color thresholds
-    if (percent > 60) {
-      batteryFill.style.backgroundColor = "#00FF00"; // green
-    } else if (percent > 30) {
-      batteryFill.style.backgroundColor = "#FFD700"; // yellow
-    } else {
-      batteryFill.style.backgroundColor = "#FF0000"; // red
-    }
+  const batteryFill = document.querySelector('.battery-level');
+  if (!batteryFill) return;
+
+  batteryFill.style.height = percent + "%";
+
+  if (percent > 60) {
+    batteryFill.style.backgroundColor = "#00FF00";
+  } else if (percent > 30) {
+    batteryFill.style.backgroundColor = "#FFD700";
+  } else {
+    batteryFill.style.backgroundColor = "#FF0000";
   }
-
-
-
+}
 
 }
 
