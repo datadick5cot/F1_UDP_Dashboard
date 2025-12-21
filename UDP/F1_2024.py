@@ -2,6 +2,7 @@ import asyncio
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
+
 from ctypes import LittleEndianStructure, Union, c_uint8, c_int8
 from ctypes import c_uint16, c_int16, c_uint32, c_uint64, c_float, c_double, c_char
 

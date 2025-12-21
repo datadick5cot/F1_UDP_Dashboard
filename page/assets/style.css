@@ -11,6 +11,7 @@
       overflow: hidden;
     }
 
+
 h5 {color: #E10600;}
 
 .bar-container {
@@ -125,7 +126,7 @@ h5 {color: #E10600;}
 
 .centerbox {
   display: flex;
-  flex-direction: column;     
+  flex-direction: row;     
   align-items: center;        
   justify-content: center;    
   gap: 24px;                  
@@ -194,14 +195,15 @@ h5 {color: #E10600;}
   display: none;
 }
 
+
 .centered-panels {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 10px; /* spacing between panels */
-  flex-wrap: nowrap; /* allows wrapping on smaller screens */
-  margin: 20px 0;
-  width: 100vw; 
+  justify-content: center;
+  gap: 10px;
+  /* margin: 20px 0; */
+  /* width: 100vw;  */
 }
 
 .subgrid {
@@ -230,9 +232,9 @@ h5 {color: #E10600;}
   flex: 0 0 auto;
 }
 
-.centered-panels {
-  align-items: center;
-}
+
+
+
 
 
 /* Wheel container with perspective */
@@ -374,35 +376,48 @@ h5 {color: #E10600;}
 
 
 
+
 .battery-icon {
-  width: 8vw;              /* narrow width */
-  height: 18vw;            /* tall height */
+  width: 6vw;
+  height: 18vw;
   border: 3px solid #444;
   border-radius: 5px;
   position: relative;
   background-color: #1E1E1E;
   margin: 0 auto;
   display: flex;
-  flex-direction: column;   /* stack fill vertically */
-  justify-content: flex-end;/* fill grows upward */
+  flex-direction: column;
+  justify-content: flex-end;
+  /* Ensure the cap doesn't get cut off if it overlaps containers */
+  overflow: visible; 
 }
 
+/* The Battery Cap */
 .battery-icon::after {
   content: "";
   position: absolute;
-  top: -10px;               /* cap now at top */
-  left: 2vw;
-  width: 4vw;
-  height: 0.9vw;
+  /* 1. Position vertically above the main body */
+  top: -1.5vw; 
+  height: 1.5vw;
+  
+  /* 2. Center it perfectly horizontally */
+  left: 50%;
+  transform: translateX(-50%); 
+  
+  /* 3. Width relative to the main battery body */
+  width: 50%; 
+  
   background: #444;
-  border-radius: 2px;
+  border-radius: 3px 3px 0 0; /* Slight rounding on top corners only */
 }
+
+
 
 .battery-level {
   width: 100%;
-  height: 50%;              /* dynamic fill height */
-  background-color: #00FF00;
-  transition: height 0.3s ease, background-color 0.3s ease;
+  height: 0%;              /* dynamic fill height */
+  /* background-color: #00FF00; */
+  transition: height 1s ease, background-color 1s ease;
   
 }
 
@@ -510,4 +525,42 @@ h5 {color: #E10600;}
     outline: none;
     border-color: #00aaff;
     box-shadow: 0 0 5px #00aaff;
+}
+
+
+
+
+svg path {
+  fill: rgba(0, 255, 0, 0.4);
+  stroke: #00ff00;
+}
+
+
+.car-wireframe {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  margin: 0 auto;
+ 
+  flex-direction: row;   /* stack fill vertically */
+  justify-content: flex-end;/* fill grows upward */
+}
+
+.car-battery-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+
+/* This holds the three panels side-by-side */
+.dashboard-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start; /* Aligns them to the top */
+  width: 100%;
+  gap: 10px; /* Optional: adds space between the main columns */
 }
