@@ -1,77 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/centre_display.css">
-    
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="assets/style-2.css">
+  <title>F1 Telemetry Dashboard</title>
+</head>
+<body>
 
-  <title>Dashboard</title>
-  </head>
-   <body>
-    <div class="grid">
-    <div class="item messages">lights+mesages</div>
-    <div class="item rev_lights">
-    <div class="rev_panel">
+  <div class="alertBarContainer">
+    <div id="alertBarContainer"></div>
+  </div>
+  <div class="alertBarContainer">
+    <div id="starterlightsPanel"></div>
+  </div>
+
+  <div class="rev_panel">
     <div class="rpm-light-bar" id="rpmBar"></div>
-    </div></div>
-    <div class="item centre_disp">
-          
-      
-    <!-- brake graph -->
-    <div class="bar-container bar-left side" id="brakeBar"></div>
+  </div>
 
-    <!-- Gear read out -->
-      <div class="oval center">
-        
-        
-        <!-- <div class="gear_value" id="gear">--</div> -->
-        <div class="gear-wheel">
-          <div class="gear-cylinder" id="gearCylinder">
-            <div class="gear-item">R</div>
-            <div class="gear-item">N</div>
-            <div class="gear-item">1</div>
-            <div class="gear-item">2</div>
-            <div class="gear-item">3</div>
-            <div class="gear-item">4</div>
-            <div class="gear-item">5</div>
-            <div class="gear-item">6</div>
-            <div class="gear-item">7</div>
-            <div class="gear-item">8</div>
-            <div class="gear-item"></div>
+  <div class="dashboard-row">
+    
+    <div class="centered-panels">
+      <div class="panel">
+        <div class="label">Brake</div>
+        <div class="value" id="Brake">--</div>
+        <div class="subgrid">
+          <div class="subpanel">
+            <div class="label">Slip Angle</div>
+            <div class="slip-values">
+              <div id="sliprl" class="value-s">--</div>
+              <div id="sliprr" class="value-s">--</div>
+            </div>
           </div>
+          <div class="subpanel">
+            <div class="label">Delta</div>
+            <div class="value delta-value" id="delta">--</div>
+          </div>
+        </div> 
+      </div>
+    </div>
+
+    <div class="centered-panels">
+      <div class="gear-wheel">
+        <div class="gear-cylinder" id="gearCylinder">
+          <div class="gear-item">R</div>
+          <div class="gear-item">N</div>
+          <div class="gear-item">1</div>
+          <div class="gear-item">2</div>
+          <div class="gear-item">3</div>
+          <div class="gear-item">4</div>
+          <div class="gear-item">5</div>
+          <div class="gear-item">6</div>
+          <div class="gear-item">7</div>
+          <div class="gear-item">8</div>
         </div>
-
-
-
-
       </div>
 
+      <div class="car-battery-container">
+        <div class="car-status-box">
+           </div>
 
-    <div class="bar-container bar-right side" id="throttleBar"></div>
-
-
-
-
+        <div class="battery-icon">
+            <div class="battery-level" id="batteryLevel"></div>
+            <div class="ers-Deploy-Mode" id="ersDeployMode">--</div>
+        </div>
+      </div>
     </div>
-  
-      <div class="item l1">l1</div>
-      <div class="item l2">l2</div>
-      <div class="item l3">l3</div>
 
-   <div class="item r1">r1</div>
-      <div class="item r2">r2</div>
-      <div class="item r3">r3</div>
+    <div class="centered-panels">
+      <div class="panel">
+        <div class="label">Throttle</div>
+        <div class="value" id="Throttle">--</div>
+        <div class="subgrid">
+          <div class="subpanel">
+            <div class="label">DRS</div>
+            <div class="value drs-status" id="metricB">--</div>
+          </div>
+          <div class="subpanel">
+            <div class="label">Brake Bias</div>
+            <div class="value" id="metricC">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-     <div class="item messages2">bottom messages</div>
-  </div>
-  
-  
-<script src="assets/centre_display.js"></script>
-<script src="assets/script.js"></script>
+  </div> <script src="assets/script.js"></script>
 </body>
-
-
 </html>
-
-

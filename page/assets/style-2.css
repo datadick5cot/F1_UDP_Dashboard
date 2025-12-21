@@ -1,0 +1,103 @@
+/* --- Global & Layout Fixes --- */
+body {
+  padding-top: 10px;
+  background-color: #121212; /* Darker for better contrast */
+  color: white;
+  font-family: 'Roboto Mono', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.dashboard-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  gap: 10px;
+}
+
+.centered-panels {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto; /* Fixed: allows side-by-side */
+}
+
+.panel {
+  background-color: #1E1E1E;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 15px;
+  width: 30vw;
+  height: auto;
+  min-height: 25vw;
+}
+
+/* --- High Visibility Racing Styles --- */
+.value {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+/* Red glow for alerts */
+.critical-alert {
+  color: #FF0000;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+  animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* --- Battery Stylings (AA Shape) --- */
+.battery-icon {
+  width: 5vw;
+  height: 12vw;
+  border: 3px solid #444;
+  border-radius: 4px;
+  position: relative;
+  background-color: #1a1a1a; /* Dark 'empty' background */
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Fill from bottom up */
+  overflow: visible;
+}
+
+/* Perfected Terminal Cap */
+.battery-icon::after {
+  content: "";
+  position: absolute;
+  top: -1.2vw;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 45%;
+  height: 1.2vw;
+  background: #444;
+  border-radius: 2px 2px 0 0;
+}
+
+.battery-level {
+  width: 100%;
+  height: 0%; /* Default empty until JS data */
+  transition: height 0.3s ease, background-color 0.3s ease;
+}
+
+/* --- Gear Indicator Enhancements --- */
+.gear-item {
+  font-size: 8rem;
+  font-weight: 900;
+  color: #444; /* Dim inactive gears */
+}
+
+.gear-item.active {
+  color: #FFD700; /* Gold for the current gear */
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
