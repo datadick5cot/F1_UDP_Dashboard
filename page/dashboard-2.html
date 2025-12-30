@@ -1,90 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="assets/style-2.css">
-  <title>F1 Telemetry Dashboard</title>
+    <style>
+        :root {
+            --bg-deep: #0a0a0a;
+            --display-glass: rgba(20, 20, 20, 0.95);
+            --f1-red: #e10600;
+            --f1-yellow: #fff200;
+            --f1-green: #00ff00;
+            --rev-percent: 0%;
+        }
+
+        body {
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Orbitron', sans-serif; /* High-tech font */
+            color: white;
+        }
+
+        /* Wider Dashboard Container */
+        .dash-frame {
+            width: 900px; /* Expanded Width */
+            height: 400px;
+            background: #222;
+            border-radius: 40px;
+            padding: 25px;
+            border: 4px solid #444;
+            box-shadow: 0 0 100px rgba(0,0,0,1);
+            position: relative;
+        }
+
+        /* LED Rev Strip - Top of Wheel */
+        .rev-strip {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+            height: 30px;
+        }
+
+        .led {
+            background: #1a1a1a;
+            border-radius: 4px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            transition: background 0.05s ease;
+        }
+
+        /* Digital Screen */
+        .screen {
+            background: var(--display-glass);
+            height: 320px;
+            border-radius: 15px;
+            border: 2px solid #333;
+            display: grid;
+            grid-template-rows: 1fr 2fr 1fr;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .top-row, .bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .bottom-row { border-bottom: none; border-top: 1px solid #333; }
+
+        /* The Gear Centerpiece */
+        .center-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+        }
+
+        .gear-num {
+            font-size: 160px;
+            text-align: center;
+            font-weight: 900;
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .data-block { text-align: center; }
+        .label { color: #666; font-size: 14px; text-transform: uppercase; margin-bottom: 5px; }
+        .value { font-size: 36px; font-weight: bold; font-family: monospace; }
+
+        /* Engine Start Button */
+        .start-btn {
+            margin-top: 40px;
+            padding: 15px 40px;
+            background: var(--f1-red);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(225, 6, 0, 0.4);
+            transition: transform 0.1s;
+        }
+
+        .start-btn:active { transform: scale(0.95); }
+
+        /* Flag Alert Overlay */
+        #flag-alert {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 40px;
+            background: var(--f1-yellow);
+            color: black;
+            font-weight: 900;
+            border-radius: 5px;
+            display: none;
+            z-index: 10;
+        }
+
+        .shift-flash {
+            animation: flash 0.1s infinite;
+        }
+
+        @keyframes flash {
+            from { background: white; }
+            to { background: var(--f1-red); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <div class="alertBarContainer">
-    <div id="alertBarContainer"></div>
-  </div>
-  <div class="alertBarContainer">
-    <div id="starterlightsPanel"></div>
-  </div>
+<div id="flag-alert">YELLOW FLAG - SECTOR 3</div>
 
-  <div class="rev_panel">
-    <div class="rpm-light-bar" id="rpmBar"></div>
-  </div>
+<div class="dash-frame" id="dash-frame">
+    <div class="rev-strip" id="rev-strip">
+        </div>
 
-  <div class="dashboard-row">
+    <div class="screen">
+        <div class="top-row">
+            <div class="data-block"><div class="label">Lap</div><div class="value">14/52</div></div>
+            <div class="data-block"><div class="label">Interval</div><div class="value" style="color:var(--f1-green)">-1.422</div></div>
+            <div class="data-block"><div class="label">Brake Bias</div><div class="value">56%</div></div>
+        </div>
+
+        <div class="center-row">
+            <div class="data-block"><div class="label">Speed</div><div class="value" id="speed">0</div></div>
+            <div class="gear-num" id="gear">N</div>
+            <div class="data-block"><div class="label">Fuel</div><div class="value">-0.21</div></div>
+        </div>
+
+        <div class="bottom-row">
+            <div class="data-block"><div class="label">Tyre Temp</div><div class="value">98°C</div></div>
+            <div class="data-block" style="color: var(--f1-yellow);"><div class="label">ERS</div><div class="value">MGU-K</div></div>
+            <div class="data-block"><div class="label">Oil</div><div class="value">104°</div></div>
+        </div>
+    </div>
+</div>
+
+<button class="start-btn" onclick="startEngine()">ENGINE START</button>
+
+<script>
+    const revStrip = document.getElementById('rev-strip');
+    const gearEl = document.getElementById('gear');
+    const speedEl = document.getElementById('speed');
+    const dashFrame = document.getElementById('dash-frame');
     
-    <div class="centered-panels">
-      <div class="panel">
-        <div class="label">Brake</div>
-        <div class="value" id="Brake">--</div>
-        <div class="subgrid">
-          <div class="subpanel">
-            <div class="label">Slip Angle</div>
-            <div class="slip-values">
-              <div id="sliprl" class="value-s">--</div>
-              <div id="sliprr" class="value-s">--</div>
-            </div>
-          </div>
-          <div class="subpanel">
-            <div class="label">Delta</div>
-            <div class="value delta-value" id="delta">--</div>
-          </div>
-        </div> 
-      </div>
-    </div>
+    // Create 15 LED elements
+    for(let i=0; i<15; i++) {
+        const led = document.createElement('div');
+        led.className = 'led';
+        revStrip.appendChild(led);
+    }
+    const leds = document.querySelectorAll('.led');
 
-    <div class="centered-panels">
-      <div class="gear-wheel">
-        <div class="gear-cylinder" id="gearCylinder">
-          <div class="gear-item">R</div>
-          <div class="gear-item">N</div>
-          <div class="gear-item">1</div>
-          <div class="gear-item">2</div>
-          <div class="gear-item">3</div>
-          <div class="gear-item">4</div>
-          <div class="gear-item">5</div>
-          <div class="gear-item">6</div>
-          <div class="gear-item">7</div>
-          <div class="gear-item">8</div>
-        </div>
-      </div>
+    function startEngine() {
+        let rpm = 0;
+        let gear = 1;
+        let speed = 0;
+        
+        const interval = setInterval(() => {
+            rpm += 2;
+            speed += 3;
+            
+            // Update Speed
+            speedEl.innerText = Math.floor(speed);
 
-      <div class="car-battery-container">
-        <div class="car-status-box">
-           </div>
+            // Update Gear
+            if (rpm > 20 && rpm < 40) gearEl.innerText = "1";
+            if (rpm > 40 && rpm < 70) gearEl.innerText = "2";
+            if (rpm > 70) gearEl.innerText = "3";
 
-        <div class="battery-icon">
-            <div class="battery-level" id="batteryLevel"></div>
-            <div class="ers-Deploy-Mode" id="ersDeployMode">--</div>
-        </div>
-      </div>
-    </div>
+            // Update LED colors based on RPM percentage
+            leds.forEach((led, index) => {
+                const threshold = (index / leds.length) * 100;
+                if (rpm > threshold) {
+                    if (index < 5) led.style.background = '#4caf50'; // Green
+                    else if (index < 10) led.style.background = '#ffeb3b'; // Yellow
+                    else led.style.background = '#f44336'; // Red
+                    led.style.boxShadow = '0 0 10px ' + led.style.background;
+                }
+            });
 
-    <div class="centered-panels">
-      <div class="panel">
-        <div class="label">Throttle</div>
-        <div class="value" id="Throttle">--</div>
-        <div class="subgrid">
-          <div class="subpanel">
-            <div class="label">DRS</div>
-            <div class="value drs-status" id="metricB">--</div>
-          </div>
-          <div class="subpanel">
-            <div class="label">Brake Bias</div>
-            <div class="value" id="metricC">--</div>
-          </div>
-        </div>
-      </div>
-    </div>
+            // Shift Flash logic
+            if (rpm >= 100) {
+                dashFrame.classList.add('shift-flash');
+                setTimeout(() => {
+                    clearInterval(interval);
+                    document.getElementById('flag-alert').style.display = 'block';
+                }, 1000);
+            }
+        }, 50);
+    }
+</script>
 
-  </div> <script src="assets/script.js"></script>
 </body>
 </html>

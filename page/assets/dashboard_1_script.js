@@ -2,7 +2,24 @@
 // Telemetry Dashboard Script
 // ===============================
 
+// ===============================
+// Fetch Telemetry (polling only)
+// ===============================
+async function fetchTelemetry() {
+  try {
+    const res = await fetch("http://localhost:8000/telemetry");
+    const data = await res.json();
+    telemetryState = data;
+  } catch (err) {
+    console.error("Failed to fetch telemetry:", err);
+  }
+}
 
+// ===============================
+// Render From State (decoupled)
+// ===============================
+function renderFromState() {
+  if (!telemetryState) return;
 
 
 // Cache last values to prevent flicker
@@ -15,10 +32,11 @@ const lastTelemetry = {tyrewear : [null, null, null, null],
                       brakebias: null,
                       batteryFill: null,
                       fuelremaining : null,
-                      gear: null,
-                      throttle: null,
-                      brake: null,
-                      rpm: null,
+                      m_gear: null,
+                      m_throttle: null,
+                      m_throttlePercent : null,
+                      m_brake: null,
+                      m_revLightsPercent: null,
                       eventCode: null,
                       starterLights: 0,
                       pitStopRejoinPosition : null,
@@ -27,6 +45,11 @@ const lastTelemetry = {tyrewear : [null, null, null, null],
 
 // Shared telemetry snapshot
 let telemetryState = {};
+
+
+// ===============================
+//  Gear Cylinder
+// ===============================
 
 const gearMap = {
   "R": 0,
@@ -67,6 +90,8 @@ function updateActive() {
 
 // Rotate cylinder so active item is centered
 function rotateWheel() {
+  if (!cylinder) return;
+
   rotation = -currentIndex * angleStep;
   cylinder.style.transform = `rotateY(${rotation}deg)`;
   updateActive();
@@ -219,32 +244,9 @@ function starterlights(count) {
   }
 }
 
-// ===============================
-// Fetch Telemetry (polling only)
-// ===============================
-async function fetchTelemetry() {
-  try {
-    const res = await fetch("http://localhost:8000/telemetry");
-    const data = await res.json();
-    telemetryState = data;
-  } catch (err) {
-    console.error("Failed to fetch telemetry:", err);
-  }
-}
 
 
-
-
-
-// ===============================
-// Render From State (decoupled)
-// ===============================
-function renderFromState() {
-  if (!telemetryState) return;
-
-
-  // tyrewear
-  // tyreinnertemp
+ 
   // tyresurfacetemp
   // braketemp
   // slipsngle
@@ -254,24 +256,26 @@ function renderFromState() {
 
 
   // Gear
-  const gearValue = telemetryState.m_gear ?? lastTelemetry.gear ?? "0";
-        if (gearMap.hasOwnProperty(gearValue)) {
-        currentIndex = gearMap[gearValue];
+  const m_gear = telemetryState.m_gear ?? lastTelemetry.m_gear ?? "0";
+        if (gearMap.hasOwnProperty(m_gear)) {
+        currentIndex = gearMap[m_gear];
+        
         rotateWheel();
+
         }
 
   // Throttle
-  const throttlePercent = telemetryState.m_throttle != null ? Math.round(telemetryState.m_throttle * 100) : null;
-  if (throttlePercent != null && throttlePercent !== lastTelemetry.throttle) {
-    document.getElementById("Throttle").textContent = `${throttlePercent}%`;
-    lastTelemetry.throttle = throttlePercent;
+  const m_throttlePercent = telemetryState.m_throttle != null ? Math.round(telemetryState.m_throttle * 100) : null;
+  if (m_throttlePercent != null && m_throttlePercent !== lastTelemetry.m_throttle) {
+    document.getElementById("throttle_div").textContent = `${m_throttlePercent}%`;
+    lastTelemetry.m_throttlePercent = m_throttlePercent;
   }
 
   // Brake
   const brakePercent = telemetryState.m_brake != null ? Math.round(telemetryState.m_brake * 100) : null;
-  if (brakePercent != null && brakePercent !== lastTelemetry.brake) {
-    document.getElementById("Brake").textContent = `${brakePercent}%`;
-    lastTelemetry.brake = brakePercent;
+  if (brakePercent != null && brakePercent !== lastTelemetry.m_brake) {
+    document.getElementById("brake_div").textContent = `${brakePercent}%`;
+    lastTelemetry.m_brake = brakePercent;
   }
 
   // Starter lights – prevent unnecessary toggles
@@ -282,9 +286,9 @@ function renderFromState() {
   }
 
   // RPM lights
-  if (telemetryState.m_revLightsPercent != null && telemetryState.m_revLightsPercent !== lastTelemetry.rpm) {
+  if (telemetryState.m_revLightsPercent != null && telemetryState.m_revLightsPercent !== lastTelemetry.m_revLightsPercent) {
     renderRpmLights(telemetryState.m_revLightsPercent);
-    lastTelemetry.rpm = telemetryState.m_revLightsPercent;
+    lastTelemetry.m_revLightsPercent = telemetryState.m_revLightsPercent;
   }
 
   // Event codes
@@ -329,12 +333,12 @@ const ersMap = {
   3: { label: "Overtake", color: "#a40808" }
 };
 
+// ERS Deploy Mode Text
+const ersmodeNumber =
+  telemetryState.m_ersDeployMode ?? lastTelemetry.ersDeployMode ?? 0;
 
-
-const ersmodeNumber = telemetryState.m_ersDeployMode ?? lastTelemetry.ersDeployMode ?? 0;
 const ersdeploy = document.querySelector('.ers-Deploy-Mode');
-
-if (ersdeploy && ersmodeNumber != null) {
+if (ersdeploy && ersmodeNumber !== lastTelemetry.ersDeployMode) {
   const mode = ersMap[ersmodeNumber];
 
   if (mode) {
@@ -344,6 +348,8 @@ if (ersdeploy && ersmodeNumber != null) {
     ersdeploy.textContent = "Unknown";
     ersdeploy.style.color = "#ffffff";
   }
+
+  lastTelemetry.ersDeployMode = ersmodeNumber;
 }
 
 
@@ -353,4 +359,3 @@ if (ersdeploy && ersmodeNumber != null) {
 // ===============================
 setInterval(fetchTelemetry, 100);   // 10 Hz polling
 setInterval(renderFromState, 250); // 4 Hz rendering
-

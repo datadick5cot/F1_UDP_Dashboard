@@ -71,6 +71,7 @@ def event_build_test_packet():
     pkt.m_eventStringCode[:] = b"FTLP"
     pkt.m_eventDetails.FastestLap.vehicleIdx = 0
     pkt.m_eventDetails.FastestLap.lapTime = 85.3
+    pkt.m_eventDetails.StartLights.numLights = 4
     return bytes(pkt)
 
 @staticmethod

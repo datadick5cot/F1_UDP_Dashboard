@@ -1,7 +1,5 @@
 import asyncio
 
-UDP_IP = "0.0.0.0"
-UDP_PORT = 20777
 
 from ctypes import LittleEndianStructure, Union, c_uint8, c_int8
 from ctypes import c_uint16, c_int16, c_uint32, c_uint64, c_float, c_double, c_char
@@ -730,6 +728,7 @@ from ctypes import Structure, c_uint8  # example import; your F1 packet parser u
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
+
 data_queue = asyncio.Queue(maxsize=100)
 latest_data = {}
 
@@ -775,6 +774,8 @@ PACKET_HANDLERS = {
         # Setup data
         'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
     },
+
+
 
     6: lambda pkt, hdr: (
         # Car Telemetry 
@@ -935,8 +936,13 @@ if __name__ == "__main__":
         
         # if data is not None skip
         try:
+            
+            print(f"Brakes : {data['m_brake']}")
+            print(f"Throttle : {data['m_throttle']}")
+            print(f"gear : {data['m_gear']}")
+            print(f"drs = {data['m_drs']}")
             print(f'm_wheelSlipAngle : {data['m_wheelSlipAngle']}')
-            # print(data)
+            print(f"REVS = {data['m_revLightsPercent']}")
         except:
             pass
         
