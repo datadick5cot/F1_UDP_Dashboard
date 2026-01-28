@@ -791,7 +791,7 @@ PACKET_HANDLERS = {
    3: lambda pkt, hdr: decode_event(pkt),
 
     4: lambda pkt, hdr: {
-        # Participants  
+        'm_numActiveCars': pkt.m_numActiveCars
     },
 
     5: lambda pkt, hdr: {

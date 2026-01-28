@@ -121,6 +121,8 @@ def status_build_test_packet():
         pkt.m_carStatusData[i].m_ersDeployMode = 3
         pkt.m_carStatusData[i].m_drsAllowed = 1
         
+    # Set Red Flag for player car (index 0)
+    pkt.m_carStatusData[0].m_vehicleFiaFlags = 4
         
     return bytes(pkt)
 
@@ -217,16 +219,31 @@ PACKETS_TO_SEND = [
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    print(f"Sending test packets to {UDP_IP}:{UDP_PORT}...")
+    print(f"Sending Red Flag test packets to {UDP_IP}:{UDP_PORT}...")
 
-    i = 0
-    while i < 100:
-        for packet_name, build_func in PACKETS_TO_SEND:
-            pkt = build_func()
-            sock.sendto(pkt, (UDP_IP, UDP_PORT))
-            print(f"Sent {packet_name} ({len(pkt)} bytes)")
-            time.sleep(DELAY_BETWEEN_PACKETS)
-            i += 1
+    # Build a red flag status packet
+    pkt = status_build_test_packet()
+
+    # Send for 5 seconds
+    print("Sending Red Flag packets for 5 seconds...")
+    end_time = time.time() + 5
+    while time.time() < end_time:
+        sock.sendto(pkt, (UDP_IP, UDP_PORT))
+        time.sleep(0.1) # Send every 100ms to simulate a stream
+
+    print("Finished sending Red Flag test packets.")
+
+    # To return to normal, we can send a "green flag" or "no flag" packet
+    
+    # Build a "no flag" packet
+    pkt = status_build_test_packet()
+    # In the test builder, we set flags for car 0. Let's clear it.
+    pkt_obj = PacketCarStatusData.from_buffer_copy(pkt)
+    pkt_obj.m_carStatusData[0].m_vehicleFiaFlags = 0 # No flag
+    pkt = bytes(pkt_obj)
+
+    print("Sending one 'No Flag' packet to clear the flag state.")
+    sock.sendto(pkt, (UDP_IP, UDP_PORT))
 
 if __name__ == "__main__":
     main()

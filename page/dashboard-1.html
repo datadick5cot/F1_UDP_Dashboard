@@ -7,6 +7,7 @@
             --display-glass: rgba(20, 20, 20, 0.95);
             --f1-red: #e10600;
             --f1-green: #00ff00;
+            --f1-amber: #FFBF00;
         }
 
         body {
@@ -78,7 +79,7 @@
         }
 
         .value {
-            font-size: 45px;
+            font-size: 35px;
             font-weight: bold;
             font-family: monospace;
         }
@@ -125,6 +126,27 @@
             animation: flash 0.1s infinite;
         }
 
+        #flag-alert {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: yellow; /* Default, will be overridden by JS */
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 1000; /* Ensure it's on top */
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+
+        #lap-info {
+            color: var(--f1-amber);
+        }
+
         @keyframes flash {
             from { background: white; }
             to { background: var(--f1-red); }
@@ -136,26 +158,18 @@
 <body>
 
 
-<div id="flag-alert" style="display: none; 
-                            position: absolute; 
-                            top: 10px;
-                            left: 50%; 
-                            transform: translateX(-50%); 
-                            background-color: yellow;
-                            color: black; 
-                            padding: 10px 20px; 
-                            border-radius: 5px; 
-                            font-weight: bold;
-                            text-align: center;">YELLOW FLAG - SECTOR 3</div>
+<div id="flag-alert"></div>
 
 
 <div class="dash-frame" id="dash-frame">
     <div class="rev-strip" id="rev-strip"></div>
     <div class="screen" style="margin-top: 20px;">
-        <div class="data-grid">
+        <div class="data-grid" style="justify-content: space-between;">
             <div class="data-block" id="lap-info-block"><div class="label">Lap</div><div class="value" id="lap-info">0/0</div></div>
+            <div class="data-block" id="pos-block"><div class="label">Position</div><div class="value" id="position">0/0</div></div>
             <div class="data-block" id="drs-block"><div class="label">DRS</div><div class="leds" id="drs-led"></div></div>
             <div class="data-block" id="brake-bias-block"><div class="label">Brake Bias</div><div class="value" id="brake-bias">0%</div></div>
+            <div class="data-block" id="ers-mode-block"><div class="label">ERS Mode</div><div class="value" id="ers-mode">None</div></div>
         </div>
         <div class="gear-display">
             <div class="gear-num" id="gear">N</div>
@@ -169,6 +183,8 @@
     const brakeBiasEl = document.getElementById('brake-bias');
     const drsLedEl = document.getElementById('drs-led');
     const lapInfoEl = document.getElementById('lap-info');
+    const positionEl = document.getElementById('position');
+    const ersModeEl = document.getElementById('ers-mode');
     const revStrip = document.getElementById('rev-strip');
     const dashFrame = document.getElementById('dash-frame');
     const flagAlertEl = document.getElementById('flag-alert'); 
@@ -200,6 +216,13 @@
         4: {text: 'RED FLAG', color: 'red'}
     };
 
+    const ersModeMap = {
+        0: { text: 'None', color: '#FFFFFF' },
+        1: { text: 'Medium', color: '#FFD580' },
+        2: { text: 'Hotlap', color: '#FFA500' },
+        3: { text: 'Overtake', color: '#FF8C00' }
+    };
+
 
     async function fetchTelemetry() {
         try {
@@ -214,22 +237,18 @@
     function updateDashboard() {
         if (!telemetryState || Object.keys(telemetryState).length === 0) return;
 
-
-    // Update Flag Alert                                               
-    if (telemetryState.m_vehicleFiaFlags !== undefined) {              
-        const flagValue = telemetryState.m_vehicleFiaFlags;            
+        const flagValue = telemetryState.m_vehicleFiaFlags;
         const flagInfo = flagMap[flagValue];
+        const rpmPercent = telemetryState.m_revLightsPercent;
 
-    if (flagInfo) {
-        flagAlertEl.innerText = flagInfo.text;                     
-        flagAlertEl.style.backgroundColor = flagInfo.color;        
-        flagAlertEl.style.display = 'block';                       
-            } else {
-        flagAlertEl.style.display = 'none';                        
+        // Update Flag Alert
+        if (flagInfo) {
+            flagAlertEl.innerText = flagInfo.text;
+            flagAlertEl.style.backgroundColor = flagInfo.color;
+            flagAlertEl.style.display = 'block';
+        } else {
+            flagAlertEl.style.display = 'none';
         }
-        }
-
-
 
         // Update Gear
         if (telemetryState.m_gear !== undefined) {
@@ -241,6 +260,16 @@
         if (telemetryState.m_brakeBias !== undefined) {
             const brakeBiasValue = telemetryState.m_brakeBias;
             brakeBiasEl.innerText = `${brakeBiasValue}%`;
+        }
+
+        // Update ERS Mode
+        if (telemetryState.m_ersDeployMode !== undefined) {
+            const ersMode = telemetryState.m_ersDeployMode;
+            const ersInfo = ersModeMap[ersMode];
+            if (ersInfo) {
+                ersModeEl.innerText = ersInfo.text;
+                ersModeEl.style.color = ersInfo.color;
+            }
         }
 
         // Update DRS
@@ -256,17 +285,21 @@
         }
 
         // Update Lap Info
-        if (telemetryState.m_currentLapNum !== undefined && telemetryState.m_totalLaps !== undefined) {
-            const currentLap = telemetryState.m_currentLapNum;
-            const totalLaps = telemetryState.m_totalLaps; 
-            lapInfoEl.innerText = `${currentLap}/${totalLaps}`;
+        if (telemetryState.m_currentLapNum !== undefined && telemetryState.m_totalLaps !== undefined && telemetryState.m_totalLaps > 0) {
+            lapInfoEl.innerText = `${telemetryState.m_currentLapNum}/${telemetryState.m_totalLaps}`;
         } else if (telemetryState.m_currentLapNum !== undefined) {
             lapInfoEl.innerText = `${telemetryState.m_currentLapNum}`;
         }
-        
-        // Update Rev Lights
-        if (telemetryState.m_revLightsPercent !== undefined) {
-            const rpmPercent = telemetryState.m_revLightsPercent;
+
+        // Update Position
+        if (telemetryState.m_carPosition !== undefined && telemetryState.m_numActiveCars !== undefined && telemetryState.m_numActiveCars > 0) {
+            positionEl.innerText = `${telemetryState.m_carPosition}/${telemetryState.m_numActiveCars}`;
+        } else if (telemetryState.m_carPosition !== undefined) {
+            positionEl.innerText = `${telemetryState.m_carPosition}`;
+        }
+
+        // Update Rev Lights and dash background
+        if (rpmPercent !== undefined) {
             leds.forEach((led, index) => {
                 const threshold = (index / leds.length) * 100;
                 if (rpmPercent > threshold) {
@@ -280,10 +313,19 @@
                 }
             });
 
-            if (rpmPercent > 90) { // Shift flash threshold
+            // Handle dash frame background and shift flash
+            const isShiftFlash = rpmPercent > 90 && telemetryState.m_gear !== 8;
+
+            if (isShiftFlash) {
                 dashFrame.classList.add('shift-flash');
+                dashFrame.style.backgroundColor = ''; // Let animation take over
             } else {
                 dashFrame.classList.remove('shift-flash');
+                if (flagInfo) {
+                    dashFrame.style.backgroundColor = flagInfo.color;
+                } else {
+                    dashFrame.style.backgroundColor = '#222'; // Default color
+                }
             }
         }
     }
