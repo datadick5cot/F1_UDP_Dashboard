@@ -730,7 +730,30 @@ UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
 
 data_queue = asyncio.Queue(maxsize=100)
-latest_data = {}
+latest_data = {
+    'm_speed': 0,
+    'm_throttle': 0.0,
+    'm_brake': 0.0,
+    'm_gear': 0,
+    'm_drs': 0,
+    'm_revLightsPercent': 0,
+    'm_revLightsBitValue': 0,
+    'm_brakesTemperature': [0, 0, 0, 0],
+    'm_tyresSurfaceTemperature': [0, 0, 0, 0],
+    'm_tyresInnerTemperature': [0, 0, 0, 0],
+    'm_drsAllowed': 0,
+    'm_brakeBias': 50,
+    'm_ersDeployMode': 0,
+    'm_ersStoreEnergy': 0.0,
+    'm_fuelRemainingLaps': 0.0,
+    'm_tyresAgeLaps': 0,
+    'm_pitStopRejoinPosition': 0,
+    'm_wheelSlipAngle': [0.0, 0.0, 0.0, 0.0],
+    'm_wheelSlipRatio': [0.0, 0.0, 0.0, 0.0],
+    'm_wheelSpeed': [0.0, 0.0, 0.0, 0.0],
+    'm_eventStringCode': '',
+    'm_eventDetails': {},
+}
 
 
 
@@ -748,6 +771,7 @@ PACKET_HANDLERS = {
         "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
         "m_sessionDuration" : pkt.m_sessionDuration,
         "m_pitStopRejoinPosition" : pkt.m_pitStopRejoinPosition,
+        "m_totalLaps" : pkt.m_totalLaps,
         
     },
 
@@ -856,7 +880,8 @@ def get_latest_data():
 
 def handle_packet(packet_id, packet, header):
     handler = PACKET_HANDLERS.get(packet_id)
-    return handler(packet, header) if handler else None
+    processed_data = handler(packet, header) if handler else None
+    return processed_data
 
 
 def unpack_packet(data: bytes):
@@ -902,12 +927,13 @@ async def udp_listener():
 
 
 async def dashboard_update_loop():
-    """Continuously pull from queue and update latest_data."""
+    """Continuously pull from queue and update latest_data by merging."""
     global latest_data
     while True:
         try:
             new_data = await asyncio.wait_for(data_queue.get(), timeout=0.05)
-            latest_data = new_data
+            if new_data: # Only merge if new_data is not None (i.e. handler returned something)
+                latest_data.update(new_data)
         except asyncio.TimeoutError:
             await asyncio.sleep(0.01)
 
@@ -941,7 +967,7 @@ if __name__ == "__main__":
             print(f"Throttle : {data['m_throttle']}")
             print(f"gear : {data['m_gear']}")
             print(f"drs = {data['m_drs']}")
-            print(f'm_wheelSlipAngle : {data['m_wheelSlipAngle']}')
+            print(f"m_wheelSlipAngle : {data['m_wheelSlipAngle']}")
             print(f"REVS = {data['m_revLightsPercent']}")
         except:
             pass

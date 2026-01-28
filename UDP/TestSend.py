@@ -104,8 +104,9 @@ def telemetry_build_test_packet():
         pkt.m_carTelemetryData[i].m_throttle = 0.8
         pkt.m_carTelemetryData[i].m_gear = 7
         pkt.m_carTelemetryData[i].m_brake = 0.5
-        pkt.m_carTelemetryData[i].m_revLightsPercent = 100
-        pkt.m_carTelemetryData[i].m_revLightsBitValue = 32000
+        pkt.m_carTelemetryData[i].m_revLightsPercent = 90
+        pkt.m_carTelemetryData[i].m_revLightsBitValue = 3000
+        pkt.m_carTelemetryData[i].m_drs = 0
         
     pkt.m_suggestedGear = 6
     return bytes(pkt)
@@ -118,6 +119,7 @@ def status_build_test_packet():
         pkt.m_carStatusData[i].m_fuelRemainingLaps = 7
         pkt.m_carStatusData[i].m_ersStoreEnergy = 4000000
         pkt.m_carStatusData[i].m_ersDeployMode = 3
+        pkt.m_carStatusData[i].m_drsAllowed = 1
         
         
     return bytes(pkt)

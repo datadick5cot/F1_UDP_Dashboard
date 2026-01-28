@@ -41,7 +41,9 @@ class TelemetryServer:
     def _setup_routes(self):
         @self.app.get("/telemetry")
         def telemetry():
-            return get_latest_data()
+            from UDP.F1_2024 import get_latest_data
+            data = get_latest_data()
+            return data
 
         @self.app.get("/config")
         def get_config():
