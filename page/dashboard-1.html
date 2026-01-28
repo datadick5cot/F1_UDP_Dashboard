@@ -78,7 +78,7 @@
         }
 
         .value {
-            font-size: 36px;
+            font-size: 45px;
             font-weight: bold;
             font-family: monospace;
         }
@@ -135,7 +135,19 @@
 </head>
 <body>
 
-<div id="flag-alert">YELLOW FLAG - SECTOR 3</div>
+
+<div id="flag-alert" style="display: none; 
+                            position: absolute; 
+                            top: 10px;
+                            left: 50%; 
+                            transform: translateX(-50%); 
+                            background-color: yellow;
+                            color: black; 
+                            padding: 10px 20px; 
+                            border-radius: 5px; 
+                            font-weight: bold;
+                            text-align: center;">YELLOW FLAG - SECTOR 3</div>
+
 
 <div class="dash-frame" id="dash-frame">
     <div class="rev-strip" id="rev-strip"></div>
@@ -159,6 +171,7 @@
     const lapInfoEl = document.getElementById('lap-info');
     const revStrip = document.getElementById('rev-strip');
     const dashFrame = document.getElementById('dash-frame');
+    const flagAlertEl = document.getElementById('flag-alert'); 
 
     for(let i=0; i<15; i++) {
         const led = document.createElement('div');
@@ -180,6 +193,14 @@
         '8': '8'
     };
 
+    const flagMap = {
+        1: {text: 'GREEN FLAG', color: 'green'},
+        2: {text: 'BLUE FLAG', color: 'blue'},
+        3: {text: 'YELLOW FLAG', color: 'yellow'},
+        4: {text: 'RED FLAG', color: 'red'}
+    };
+
+
     async function fetchTelemetry() {
         try {
             const res = await fetch("http://localhost:8000/telemetry");
@@ -189,8 +210,26 @@
         }
     }
 
+
     function updateDashboard() {
         if (!telemetryState || Object.keys(telemetryState).length === 0) return;
+
+
+    // Update Flag Alert                                               
+    if (telemetryState.m_vehicleFiaFlags !== undefined) {              
+        const flagValue = telemetryState.m_vehicleFiaFlags;            
+        const flagInfo = flagMap[flagValue];
+
+    if (flagInfo) {
+        flagAlertEl.innerText = flagInfo.text;                     
+        flagAlertEl.style.backgroundColor = flagInfo.color;        
+        flagAlertEl.style.display = 'block';                       
+            } else {
+        flagAlertEl.style.display = 'none';                        
+        }
+        }
+
+
 
         // Update Gear
         if (telemetryState.m_gear !== undefined) {
