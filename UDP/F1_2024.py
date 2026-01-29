@@ -737,34 +737,60 @@ UDP_PORT = 20777
 
 data_queue = asyncio.Queue(maxsize=100)
 latest_data = {
-    'm_speed': 0,
-    'm_throttle': 0.0,
-    'm_brake': 0.0,
-    'm_gear': 0,
-    'm_drs': 0,
-    'm_revLightsPercent': 0,
-    'm_revLightsBitValue': 0,
-    'm_brakesTemperature': [0, 0, 0, 0],
-    'm_tyresSurfaceTemperature': [0, 0, 0, 0],
-    'm_tyresInnerTemperature': [0, 0, 0, 0],
-    'm_drsAllowed': 0,
-    'm_brakeBias': 50,
-    'm_ersDeployMode': 0,
-    'm_ersStoreEnergy': 0.0,
-    'm_fuelRemainingLaps': 0.0,
-    'm_tyresAgeLaps': 0,
-    'm_pitStopRejoinPosition': 0,
-    'm_wheelSlipAngle': [0.0, 0.0, 0.0, 0.0],
-    'm_wheelSlipRatio': [0.0, 0.0, 0.0, 0.0],
-    'm_wheelSpeed': [0.0, 0.0, 0.0, 0.0],
-    'm_eventStringCode': '',
-    'm_eventDetails': {},
-    'm_timeTrialRivalCarIdx': 255,
-    'player_telemetry': {},
-    'rival_telemetry': {},
-    'm_playerSessionBestDataSet': {},
+    'player_car_data': {
+        'm_speed': 0,
+        'm_throttle': 0.0,
+        'm_brake': 0.0,
+        'm_steer': 0.0,
+        'm_gear': 0,
+        'm_drs': 0,
+        'm_revLightsPercent': 0,
+        'm_revLightsBitValue': 0,
+        'm_brakesTemperature': [0, 0, 0, 0],
+        'm_tyresSurfaceTemperature': [0, 0, 0, 0],
+        'm_tyresInnerTemperature': [0, 0, 0, 0],
+        'm_drsAllowed': 0,
+        'm_brakeBias': 50,
+        'm_ersDeployMode': 0,
+        'm_ersStoreEnergy': 0.0,
+        'm_fuelRemainingLaps': 0.0,
+        'm_tyresAgeLaps': 0,
+        'm_pitStopRejoinPosition': 0,
+        'm_vehicleFiaFlags': 0,
+        'm_currentLapTime': 0,
+        'm_carPosition': 0,
+        'm_lastLapTimeInMS' : 0,
+        "m_lapDistance" : 0.0,
+        "m_totalDistance" : 0.0,
+        "m_pitStatus" : 0,
+        "m_driverStatus" : 0,
+        "m_currentLapNum" : 0,
+        "m_totalLaps" : 0, # From Packet 1
+    },
+    'rival_car_data': {
+        'm_speed': 0,
+        'm_throttle': 0.0,
+        'm_brake': 0.0,
+        'm_steer': 0.0,
+        'm_gear': 0,
+        'm_drs': 0,
+        'm_revLightsPercent': 0,
+        'm_revLightsBitValue': 0,
+    },
+    'global_data': {
+        'm_timeTrialRivalCarIdx': 255, # Keep global as it's an index for other packets
+        'm_numActiveCars': 0,
+        'm_weather': 0, # From Packet 1
+        'm_trackTemperature': 0, # From Packet 1
+        'm_airTemperature': 0, # From Packet 1
+        'm_sessionTimeLeft': 0, # From Packet 1
+        'm_sessionDuration': 0, # From Packet 1
+    },
+    'm_playerSessionBestDataSet': {}, # Time trial data can remain top level
     'm_personalBestDataSet': {},
     'm_rivalDataSet': {},
+    'm_eventStringCode': '',
+    'm_eventDetails': {},
 }
 
 
@@ -785,6 +811,14 @@ def packet_to_dict(packet):
         return result
     return packet
 
+def deep_merge(dict1, dict2):
+    for k, v in dict2.items():
+        if k in dict1 and isinstance(dict1[k], dict) and isinstance(v, dict):
+            dict1[k] = deep_merge(dict1[k], v)
+        else:
+            dict1[k] = v
+    return dict1
+
 PACKET_HANDLERS = {
         0: lambda pkt, hdr: {
         # Motion
@@ -792,46 +826,55 @@ PACKET_HANDLERS = {
     },
     
     
-    1: lambda pkt, hdr: {#Session Data
-        'm_weather': pkt.m_weather,
-        'm_trackTemperature': pkt.m_trackTemperature,
-        'm_airTemperature': pkt.m_airTemperature,
-        "m_sessionTimeLeft" : pkt.m_sessionTimeLeft,
-        "m_sessionDuration" : pkt.m_sessionDuration,
-        "m_pitStopRejoinPosition" : pkt.m_pitStopRejoinPosition,
-        "m_totalLaps" : pkt.m_totalLaps,
-        
+    1: lambda pkt, hdr: {
+        'global_data': {
+            'm_weather': pkt.m_weather,
+            'm_trackTemperature': pkt.m_trackTemperature,
+            'm_airTemperature': pkt.m_airTemperature,
+            'm_sessionTimeLeft': pkt.m_sessionTimeLeft,
+            'm_sessionDuration': pkt.m_sessionDuration,
+        },
+        'player_car_data': {
+            'm_pitStopRejoinPosition': pkt.m_pitStopRejoinPosition,
+            'm_totalLaps': pkt.m_totalLaps,
+        },
     },
 
     2: lambda pkt, hdr: { #Lap Data
-        'm_currentLapTime': pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapTimeInMS,
-        'm_carPosition': pkt.m_lapData[hdr.m_playerCarIndex].m_carPosition,
-        'm_lastLapTimeInMS' : pkt.m_lapData[hdr.m_playerCarIndex].m_lastLapTimeInMS,
-        "m_lapDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_lapDistance,
-        "m_totalDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_totalDistance,
-        "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
-        "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
-        "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
-        'm_timeTrialRivalCarIdx': pkt.m_timeTrialRivalCarIdx,
+        'player_car_data': {
+            'm_currentLapTime': pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapTimeInMS,
+            'm_carPosition': pkt.m_lapData[hdr.m_playerCarIndex].m_carPosition,
+            'm_lastLapTimeInMS' : pkt.m_lapData[hdr.m_playerCarIndex].m_lastLapTimeInMS,
+            "m_lapDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_lapDistance,
+            "m_totalDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_totalDistance,
+            "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
+            "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
+            "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
+        },
+        'global_data': {
+            'm_timeTrialRivalCarIdx': pkt.m_timeTrialRivalCarIdx,
+        },
     },
 
    3: lambda pkt, hdr: decode_event(pkt),
 
     4: lambda pkt, hdr: {
-        'm_numActiveCars': pkt.m_numActiveCars
+        'global_data': {
+            'm_numActiveCars': pkt.m_numActiveCars
+        },
     },
 
     5: lambda pkt, hdr: {
-        # Setup data
-        'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
+        'player_car_data': {
+            'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
+        },
     },
 
 
 
     6: lambda pkt, hdr: (
-        # Car Telemetry 
         lambda player_idx, rival_idx: {
-            'player_telemetry': {
+            'player_car_data': {
                 'm_speed': pkt.m_carTelemetryData[player_idx].m_speed,
                 'm_throttle': pkt.m_carTelemetryData[player_idx].m_throttle,
                 'm_brake': pkt.m_carTelemetryData[player_idx].m_brake,
@@ -844,7 +887,7 @@ PACKET_HANDLERS = {
                 'm_tyresSurfaceTemperature': list(pkt.m_carTelemetryData[player_idx].m_tyresSurfaceTemperature),
                 'm_tyresInnerTemperature': list(pkt.m_carTelemetryData[player_idx].m_tyresInnerTemperature),
             },
-            'rival_telemetry': {
+            'rival_car_data': {
                 'm_speed': pkt.m_carTelemetryData[rival_idx].m_speed,
                 'm_throttle': pkt.m_carTelemetryData[rival_idx].m_throttle,
                 'm_brake': pkt.m_carTelemetryData[rival_idx].m_brake,
@@ -853,22 +896,24 @@ PACKET_HANDLERS = {
                 'm_drs': pkt.m_carTelemetryData[rival_idx].m_drs,
             } if rival_idx != 255 and rival_idx < 22 else {} # Check bounds for rival_idx
         }
-    )(hdr.m_playerCarIndex, latest_data.get('m_timeTrialRivalCarIdx', 255)),
+    )(hdr.m_playerCarIndex, latest_data['global_data'].get('m_timeTrialRivalCarIdx', 255)),
 
 
     7: lambda pkt, hdr: (
         # Car status data
         lambda car_status : {
-            "m_fuelMix": car_status.m_fuelMix,
-            "m_frontBrakeBias": car_status.m_frontBrakeBias,
-            "m_pitLimiterStatus": car_status.m_pitLimiterStatus,
-            "m_fuelRemainingLaps": car_status.m_fuelRemainingLaps,
-            "m_drsAllowed": car_status.m_drsAllowed,
-            "m_drsActivationDistance": car_status.m_drsActivationDistance,
-            "m_tyresAgeLaps": car_status.m_tyresAgeLaps,
-            "m_vehicleFiaFlags": car_status.m_vehicleFiaFlags,
-            "m_ersStoreEnergy": car_status.m_ersStoreEnergy,
-            "m_ersDeployMode": car_status.m_ersDeployMode,
+            'player_car_data': {
+                "m_fuelMix": car_status.m_fuelMix,
+                "m_frontBrakeBias": car_status.m_frontBrakeBias,
+                "m_pitLimiterStatus": car_status.m_pitLimiterStatus,
+                "m_fuelRemainingLaps": car_status.m_fuelRemainingLaps,
+                "m_drsAllowed": car_status.m_drsAllowed,
+                "m_drsActivationDistance": car_status.m_drsActivationDistance,
+                "m_tyresAgeLaps": car_status.m_tyresAgeLaps,
+                "m_vehicleFiaFlags": car_status.m_vehicleFiaFlags,
+                "m_ersStoreEnergy": car_status.m_ersStoreEnergy,
+                "m_ersDeployMode": car_status.m_ersDeployMode,
+            }
         }
     )(pkt.m_carStatusData[hdr.m_playerCarIndex]),
 
@@ -905,9 +950,11 @@ PACKET_HANDLERS = {
         
     
     14: lambda pkt, hdr: {
-        'm_playerSessionBestDataSet': packet_to_dict(pkt.m_playerSessionBestDataSet),
-        'm_personalBestDataSet': packet_to_dict(pkt.m_personalBestDataSet),
-        'm_rivalDataSet': packet_to_dict(pkt.m_rivalDataSet),
+        'global_data': { # These are "global" bests, not specific to current car data
+            'player_session_best_data': packet_to_dict(pkt.m_playerSessionBestDataSet),
+            'personal_best_data': packet_to_dict(pkt.m_personalBestDataSet),
+            'rival_best_data': packet_to_dict(pkt.m_rivalDataSet),
+        },
     },
 }
 
@@ -974,7 +1021,7 @@ async def dashboard_update_loop():
         try:
             new_data = await asyncio.wait_for(data_queue.get(), timeout=0.05)
             if new_data: # Only merge if new_data is not None (i.e. handler returned something)
-                latest_data.update(new_data)
+                latest_data = deep_merge(latest_data, new_data) # Use deep merge
         except asyncio.TimeoutError:
             await asyncio.sleep(0.01)
 

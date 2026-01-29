@@ -1,5 +1,6 @@
 import time
 import socket
+import random
 
 
 from F1_2024 import (
@@ -52,16 +53,20 @@ def Session_build_test_packet():
     pkt.m_weather = 1
     pkt.m_trackTemperature = 30
     pkt.m_airTemperature = 22
-    pkt.m_totalLaps = 5
+    pkt.m_totalLaps = random.randint(10, 20) # Dynamic total laps
+    pkt.m_pitStopRejoinPosition = random.randint(1, 22) # Dynamic rejoin position
     return bytes(pkt)
 
 @staticmethod
 def lap_build_test_packet():
     pkt = PacketLapData()
     pkt.m_header.m_packetId = 2
+    pkt.m_header.m_playerCarIndex = 0 # Assume player is car 0 for test data
+    pkt.m_timeTrialRivalCarIdx = 1 # Dummy rival for testing
     for i in range(22):
         pkt.m_lapData[i].m_lastLapTimeInMS = 90000 + i * 100
-        pkt.m_lapData[i].m_currentLapNum = 3
+        pkt.m_lapData[i].m_currentLapNum = random.randint(1, 10)
+        pkt.m_lapData[i].m_carPosition = i + 1
     return bytes(pkt)
 
 @staticmethod
@@ -78,7 +83,7 @@ def event_build_test_packet():
 def participants_build_test_packet():
     pkt = PacketParticipantsData()
     pkt.m_header.m_packetId = 4
-    pkt.m_numActiveCars = 22
+    pkt.m_numActiveCars = random.randint(10, 22) # Dynamic number of active cars
     for i in range(22):
         pkt.m_participants[i].m_name = b"Driver%d" % i
         pkt.m_participants[i].m_driverId = i
@@ -99,30 +104,29 @@ def setup_build_test_packet():
 def telemetry_build_test_packet():
     pkt = PacketCarTelemetryData()
     pkt.m_header.m_packetId = 6
+    pkt.m_header.m_playerCarIndex = 0 # Assume player is car 0 for test data
     for i in range(22):
         pkt.m_carTelemetryData[i].m_speed = 320
-        pkt.m_carTelemetryData[i].m_throttle = 0.8
-        pkt.m_carTelemetryData[i].m_gear = 7
-        pkt.m_carTelemetryData[i].m_brake = 0.5
-        pkt.m_carTelemetryData[i].m_revLightsPercent = 90
-        pkt.m_carTelemetryData[i].m_revLightsBitValue = 3000
-        pkt.m_carTelemetryData[i].m_drs = 0
+        pkt.m_carTelemetryData[i].m_throttle = random.uniform(0.0, 1.0)
+        pkt.m_carTelemetryData[i].m_gear = random.randint(1, 8)
+        pkt.m_carTelemetryData[i].m_brake = random.uniform(0.0, 1.0)
+        pkt.m_carTelemetryData[i].m_revLightsPercent = random.randint(0, 100)
+        pkt.m_carTelemetryData[i].m_revLightsBitValue = random.randint(0, 4095)
+        pkt.m_carTelemetryData[i].m_drs = random.randint(0, 1) # DRS on/off
         
-    pkt.m_suggestedGear = 6
+    pkt.m_suggestedGear = random.randint(1, 8)
     return bytes(pkt)
 
 @staticmethod
 def status_build_test_packet():
     pkt = PacketCarStatusData()
     pkt.m_header.m_packetId = 7
+    pkt.m_header.m_playerCarIndex = 0 # Assume player is car 0 for test data
     for i in range(22):
-        pkt.m_carStatusData[i].m_fuelRemainingLaps = 7
-        pkt.m_carStatusData[i].m_ersStoreEnergy = 4000000
-        pkt.m_carStatusData[i].m_ersDeployMode = 3
-        pkt.m_carStatusData[i].m_drsAllowed = 1
-        
-    # Set Red Flag for player car (index 0)
-    pkt.m_carStatusData[0].m_vehicleFiaFlags = 4
+        pkt.m_carStatusData[i].m_fuelRemainingLaps = round(random.uniform(1.0, 20.0), 1)
+        pkt.m_carStatusData[i].m_ersDeployMode = random.randint(0, 3) # ERS modes
+        pkt.m_carStatusData[i].m_drsAllowed = random.randint(0, 1)
+        pkt.m_carStatusData[i].m_vehicleFiaFlags = random.randint(0, 4) # Random flags (0=None, 1=Green, 2=Blue, 3=Yellow, 4=Red)
         
     return bytes(pkt)
 
@@ -219,31 +223,17 @@ PACKETS_TO_SEND = [
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    print(f"Sending Red Flag test packets to {UDP_IP}:{UDP_PORT}...")
+    print(f"Sending test packets to {UDP_IP}:{UDP_PORT}...")
 
-    # Build a red flag status packet
-    pkt = status_build_test_packet()
-
-    # Send for 5 seconds
-    print("Sending Red Flag packets for 5 seconds...")
-    end_time = time.time() + 5
-    while time.time() < end_time:
-        sock.sendto(pkt, (UDP_IP, UDP_PORT))
-        time.sleep(0.1) # Send every 100ms to simulate a stream
-
-    print("Finished sending Red Flag test packets.")
-
-    # To return to normal, we can send a "green flag" or "no flag" packet
-    
-    # Build a "no flag" packet
-    pkt = status_build_test_packet()
-    # In the test builder, we set flags for car 0. Let's clear it.
-    pkt_obj = PacketCarStatusData.from_buffer_copy(pkt)
-    pkt_obj.m_carStatusData[0].m_vehicleFiaFlags = 0 # No flag
-    pkt = bytes(pkt_obj)
-
-    print("Sending one 'No Flag' packet to clear the flag state.")
-    sock.sendto(pkt, (UDP_IP, UDP_PORT))
+    i = 0
+    while i < 1000: # Send more packets for better testing
+        for packet_name, build_func in PACKETS_TO_SEND:
+            pkt = build_func()
+            sock.sendto(pkt, (UDP_IP, UDP_PORT))
+            # print(f"Sent {packet_name} ({len(pkt)} bytes)")
+            time.sleep(DELAY_BETWEEN_PACKETS)
+        i += 1
+    print("Finished sending test packets.")
 
 if __name__ == "__main__":
     main()
