@@ -44,7 +44,7 @@ class BorderlessBrowser(QMainWindow):
         Telemetry.triggered.connect(lambda: self.load_page("telemetry"))
         
         Settings = QAction("Settings", self)
-        Settings.triggered.connect(lambda: self.load_page("index"))
+        Settings.triggered.connect(lambda: self.load_page("settings"))
         
         
         rivalsdashboard = QAction("Rival Dashboard", self)
@@ -69,7 +69,7 @@ class BorderlessBrowser(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Load HTML served from FastAPI
-        self.webview.load(QUrl("http://localhost:8000/dashboard"))
+        self.webview.load(QUrl("http://localhost:8000/dashboard/dashboard-1.html"))
         
             
         

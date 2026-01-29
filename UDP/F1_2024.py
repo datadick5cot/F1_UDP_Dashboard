@@ -635,11 +635,17 @@ class TimeTrialDataSet(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ('m_carIdx', c_uint8),
-        ('m_lapTimeInMS', c_uint16),
-        ('m_bestLapTime', c_float),
-        ('m_sector1Time', c_float),
-        ('m_sector2Time', c_float),
-        ('m_sector3Time', c_float),
+        ('m_teamId', c_uint8),
+        ('m_lapTimeInMS', c_uint32),
+        ('m_sector1TimeInMS', c_uint32),
+        ('m_sector2TimeInMS', c_uint32),
+        ('m_sector3TimeInMS', c_uint32),
+        ('m_tractionControl', c_uint8),
+        ('m_gearboxAssist', c_uint8),
+        ('m_antiLockBrakes', c_uint8),
+        ('m_equalCarPerformance', c_uint8),
+        ('m_customSetup', c_uint8),
+        ('m_valid', c_uint8),
     ]
 
 class PacketTimeTrialData(LittleEndianStructure):
@@ -753,9 +759,31 @@ latest_data = {
     'm_wheelSpeed': [0.0, 0.0, 0.0, 0.0],
     'm_eventStringCode': '',
     'm_eventDetails': {},
+    'm_timeTrialRivalCarIdx': 255,
+    'player_telemetry': {},
+    'rival_telemetry': {},
+    'm_playerSessionBestDataSet': {},
+    'm_personalBestDataSet': {},
+    'm_rivalDataSet': {},
 }
 
 
+
+def packet_to_dict(packet):
+    # This function converts a ctypes Structure to a dictionary.
+    # It handles nested structures by recursively calling itself.
+    if isinstance(packet, LittleEndianStructure):
+        result = {}
+        for field_name, field_type in packet._fields_:
+            value = getattr(packet, field_name)
+            if isinstance(value, LittleEndianStructure):
+                result[field_name] = packet_to_dict(value)
+            elif hasattr(value, '__len__') and not isinstance(value, (str, bytes)): # Handle arrays
+                result[field_name] = [packet_to_dict(item) if isinstance(item, LittleEndianStructure) else item for item in value]
+            else:
+                result[field_name] = value
+        return result
+    return packet
 
 PACKET_HANDLERS = {
         0: lambda pkt, hdr: {
@@ -784,8 +812,7 @@ PACKET_HANDLERS = {
         "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
         "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
         "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
-        
-        
+        'm_timeTrialRivalCarIdx': pkt.m_timeTrialRivalCarIdx,
     },
 
    3: lambda pkt, hdr: decode_event(pkt),
@@ -803,19 +830,31 @@ PACKET_HANDLERS = {
 
     6: lambda pkt, hdr: (
         # Car Telemetry 
-        lambda car: {
-            'm_speed': car.m_speed,
-            'm_throttle': car.m_throttle,
-            'm_brake': car.m_brake,
-            'm_gear': car.m_gear,
-            'm_drs': car.m_drs,
-            'm_revLightsPercent': car.m_revLightsPercent,
-            'm_revLightsBitValue' : car.m_revLightsBitValue,
-            'm_brakesTemperature': list(car.m_brakesTemperature),
-            'm_tyresSurfaceTemperature': list(car.m_tyresSurfaceTemperature),
-            'm_tyresInnerTemperature': list(car.m_tyresInnerTemperature),
+        lambda player_idx, rival_idx: {
+            'player_telemetry': {
+                'm_speed': pkt.m_carTelemetryData[player_idx].m_speed,
+                'm_throttle': pkt.m_carTelemetryData[player_idx].m_throttle,
+                'm_brake': pkt.m_carTelemetryData[player_idx].m_brake,
+                'm_steer': pkt.m_carTelemetryData[player_idx].m_steer,
+                'm_gear': pkt.m_carTelemetryData[player_idx].m_gear,
+                'm_drs': pkt.m_carTelemetryData[player_idx].m_drs,
+                'm_revLightsPercent': pkt.m_carTelemetryData[player_idx].m_revLightsPercent,
+                'm_revLightsBitValue' : pkt.m_carTelemetryData[player_idx].m_revLightsBitValue,
+                'm_brakesTemperature': list(pkt.m_carTelemetryData[player_idx].m_brakesTemperature),
+                'm_tyresSurfaceTemperature': list(pkt.m_carTelemetryData[player_idx].m_tyresSurfaceTemperature),
+                'm_tyresInnerTemperature': list(pkt.m_carTelemetryData[player_idx].m_tyresInnerTemperature),
+            },
+            'rival_telemetry': {
+                'm_speed': pkt.m_carTelemetryData[rival_idx].m_speed,
+                'm_throttle': pkt.m_carTelemetryData[rival_idx].m_throttle,
+                'm_brake': pkt.m_carTelemetryData[rival_idx].m_brake,
+                'm_steer': pkt.m_carTelemetryData[rival_idx].m_steer,
+                'm_gear': pkt.m_carTelemetryData[rival_idx].m_gear,
+                'm_drs': pkt.m_carTelemetryData[rival_idx].m_drs,
+            } if rival_idx != 255 and rival_idx < 22 else {} # Check bounds for rival_idx
         }
-    )(pkt.m_carTelemetryData[hdr.m_playerCarIndex]),
+    )(hdr.m_playerCarIndex, latest_data.get('m_timeTrialRivalCarIdx', 255)),
+
 
     7: lambda pkt, hdr: (
         # Car status data
@@ -865,9 +904,11 @@ PACKET_HANDLERS = {
         ),
         
     
-    14: lambda pkt, hdr: (
-        # Time trial
-    ),
+    14: lambda pkt, hdr: {
+        'm_playerSessionBestDataSet': packet_to_dict(pkt.m_playerSessionBestDataSet),
+        'm_personalBestDataSet': packet_to_dict(pkt.m_personalBestDataSet),
+        'm_rivalDataSet': packet_to_dict(pkt.m_rivalDataSet),
+    },
 }
 
 
