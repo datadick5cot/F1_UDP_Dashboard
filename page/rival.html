@@ -301,18 +301,22 @@
         function updateDashboard() {
             if (!telemetryState || Object.keys(telemetryState).length === 0) return;
 
-            // Player Lap Data (from m_playerSessionBestDataSet)
-            if (telemetryState.m_playerSessionBestDataSet) {
-                const playerBest = telemetryState.m_playerSessionBestDataSet;
+            const globalData = telemetryState.global_data || {};
+            const playerCarData = telemetryState.player_car_data || {};
+            const rivalCarData = telemetryState.rival_car_data || {};
+
+            // Player Lap Data (from globalData.player_session_best_data)
+            if (globalData.player_session_best_data) {
+                const playerBest = globalData.player_session_best_data;
                 playerLapTimeEl.innerText = formatTime(playerBest.m_lapTimeInMS);
                 playerS1TimeEl.innerText = formatSectorTime(playerBest.m_sector1TimeInMS);
                 playerS2TimeEl.innerText = formatSectorTime(playerBest.m_sector2TimeInMS);
                 playerS3TimeEl.innerText = formatSectorTime(playerBest.m_sector3TimeInMS);
             }
 
-            // Rival Lap Data (from m_rivalDataSet)
-            if (telemetryState.m_rivalDataSet) {
-                const rivalBest = telemetryState.m_rivalDataSet;
+            // Rival Lap Data (from globalData.rival_best_data)
+            if (globalData.rival_best_data) {
+                const rivalBest = globalData.rival_best_data;
                 rivalLapTimeEl.innerText = formatTime(rivalBest.m_lapTimeInMS);
                 rivalS1TimeEl.innerText = formatSectorTime(rivalBest.m_sector1TimeInMS);
                 rivalS2TimeEl.innerText = formatSectorTime(rivalBest.m_sector2TimeInMS);
@@ -320,24 +324,22 @@
             }
 
             // Player Telemetry
-            if (telemetryState.player_telemetry) {
-                const pt = telemetryState.player_telemetry;
-                updateGauge(playerThrottleGauge, playerThrottleValue, pt.m_throttle);
-                updateGauge(playerBrakeGauge, playerBrakeValue, pt.m_brake);
-                updateGauge(playerSteerGauge, playerSteerValue, pt.m_steer, true);
-                if (pt.m_gear !== undefined) {
-                    playerGearEl.innerText = gearMap[pt.m_gear] || pt.m_gear;
+            if (playerCarData) {
+                updateGauge(playerThrottleGauge, playerThrottleValue, playerCarData.m_throttle);
+                updateGauge(playerBrakeGauge, playerBrakeValue, playerCarData.m_brake);
+                updateGauge(playerSteerGauge, playerSteerValue, playerCarData.m_steer, true);
+                if (playerCarData.m_gear !== undefined) {
+                    playerGearEl.innerText = gearMap[playerCarData.m_gear] || playerCarData.m_gear;
                 }
             }
 
             // Rival Telemetry
-            if (telemetryState.rival_telemetry) {
-                const rt = telemetryState.rival_telemetry;
-                updateGauge(rivalThrottleGauge, rivalThrottleValue, rt.m_throttle);
-                updateGauge(rivalBrakeGauge, rivalBrakeValue, rt.m_brake);
-                updateGauge(rivalSteerGauge, rivalSteerValue, rt.m_steer, true);
-                if (rt.m_gear !== undefined) {
-                    rivalGearEl.innerText = gearMap[rt.m_gear] || rt.m_gear;
+            if (rivalCarData) {
+                updateGauge(rivalThrottleGauge, rivalThrottleValue, rivalCarData.m_throttle);
+                updateGauge(rivalBrakeGauge, rivalBrakeValue, rivalCarData.m_brake);
+                updateGauge(rivalSteerGauge, rivalSteerValue, rivalCarData.m_steer, true);
+                if (rivalCarData.m_gear !== undefined) {
+                    rivalGearEl.innerText = gearMap[rivalCarData.m_gear] || rivalCarData.m_gear;
                 }
             }
         }

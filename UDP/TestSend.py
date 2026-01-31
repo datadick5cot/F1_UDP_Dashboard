@@ -67,6 +67,8 @@ def lap_build_test_packet():
         pkt.m_lapData[i].m_lastLapTimeInMS = 90000 + i * 100
         pkt.m_lapData[i].m_currentLapNum = random.randint(1, 10)
         pkt.m_lapData[i].m_carPosition = i + 1
+        pkt.m_lapData[i].m_deltaToRaceLeaderMinutesPart = random.randint(0, 1) # Random minutes
+        pkt.m_lapData[i].m_deltaToRaceLeaderMSPart = random.randint(0, 59999) # Random milliseconds
     return bytes(pkt)
 
 @staticmethod
@@ -97,6 +99,7 @@ def setup_build_test_packet():
     for i in range(22):
         pkt.m_carSetups[i].m_frontWing = 5
         pkt.m_carSetups[i].m_rearWing = 6
+        pkt.m_carSetups[i].m_brakeBias = random.randint(50, 70) # Add random brake bias
     pkt.m_nextFrontWingValue = 7.0
     return bytes(pkt)
 
@@ -125,6 +128,8 @@ def status_build_test_packet():
     for i in range(22):
         pkt.m_carStatusData[i].m_fuelRemainingLaps = round(random.uniform(1.0, 20.0), 1)
         pkt.m_carStatusData[i].m_ersDeployMode = random.randint(0, 3) # ERS modes
+        pkt.m_carStatusData[i].m_ersStoreEnergy = random.randint(0, 4000000) # Add random ERS energy
+        pkt.m_carStatusData[i].m_ersDeployedThisLap = random.randint(0, 4000000)
         pkt.m_carStatusData[i].m_drsAllowed = random.randint(0, 1)
         pkt.m_carStatusData[i].m_vehicleFiaFlags = random.randint(0, 4) # Random flags (0=None, 1=Green, 2=Blue, 3=Yellow, 4=Red)
         
@@ -191,8 +196,49 @@ def motionex_build_test_packet():
 def tt_build_test_packet():
     pkt = PacketTimeTrialData()
     pkt.m_header.m_packetId = 14
-    pkt.m_playerSessionBestDataSet.m_bestLapTime = 85.3
-    pkt.m_rivalDataSet.m_bestLapTime = 86.1
+    
+    # Player Session Best Data
+    pkt.m_playerSessionBestDataSet.m_carIdx = 0
+    pkt.m_playerSessionBestDataSet.m_teamId = 6 # Mercedes
+    pkt.m_playerSessionBestDataSet.m_lapTimeInMS = random.randint(70000, 90000)
+    pkt.m_playerSessionBestDataSet.m_sector1TimeInMS = random.randint(20000, 30000)
+    pkt.m_playerSessionBestDataSet.m_sector2TimeInMS = random.randint(20000, 30000)
+    pkt.m_playerSessionBestDataSet.m_sector3TimeInMS = random.randint(20000, 30000)
+    pkt.m_playerSessionBestDataSet.m_tractionControl = random.randint(0,2)
+    pkt.m_playerSessionBestDataSet.m_gearboxAssist = random.randint(1,3)
+    pkt.m_playerSessionBestDataSet.m_antiLockBrakes = random.randint(0,1)
+    pkt.m_playerSessionBestDataSet.m_equalCarPerformance = 0
+    pkt.m_playerSessionBestDataSet.m_customSetup = 1
+    pkt.m_playerSessionBestDataSet.m_valid = 1
+
+    # Rival Data
+    pkt.m_rivalDataSet.m_carIdx = 1
+    pkt.m_rivalDataSet.m_teamId = 0 # Red Bull
+    pkt.m_rivalDataSet.m_lapTimeInMS = random.randint(70000, 90000)
+    pkt.m_rivalDataSet.m_sector1TimeInMS = random.randint(20000, 30000)
+    pkt.m_rivalDataSet.m_sector2TimeInMS = random.randint(20000, 30000)
+    pkt.m_rivalDataSet.m_sector3TimeInMS = random.randint(20000, 30000)
+    pkt.m_rivalDataSet.m_tractionControl = random.randint(0,2)
+    pkt.m_rivalDataSet.m_gearboxAssist = random.randint(1,3)
+    pkt.m_rivalDataSet.m_antiLockBrakes = random.randint(0,1)
+    pkt.m_rivalDataSet.m_equalCarPerformance = 0
+    pkt.m_rivalDataSet.m_customSetup = 1
+    pkt.m_rivalDataSet.m_valid = 1
+    
+    # Personal Best Data (can be similar to player session best for testing)
+    pkt.m_personalBestDataSet.m_carIdx = 0
+    pkt.m_personalBestDataSet.m_teamId = 6
+    pkt.m_personalBestDataSet.m_lapTimeInMS = random.randint(70000, 90000)
+    pkt.m_personalBestDataSet.m_sector1TimeInMS = random.randint(20000, 30000)
+    pkt.m_personalBestDataSet.m_sector2TimeInMS = random.randint(20000, 30000)
+    pkt.m_personalBestDataSet.m_sector3TimeInMS = random.randint(20000, 30000)
+    pkt.m_personalBestDataSet.m_tractionControl = random.randint(0,2)
+    pkt.m_personalBestDataSet.m_gearboxAssist = random.randint(1,3)
+    pkt.m_personalBestDataSet.m_antiLockBrakes = random.randint(0,1)
+    pkt.m_personalBestDataSet.m_equalCarPerformance = 0
+    pkt.m_personalBestDataSet.m_customSetup = 1
+    pkt.m_personalBestDataSet.m_valid = 1
+
     return bytes(pkt)
 
 

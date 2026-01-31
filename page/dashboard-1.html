@@ -50,6 +50,7 @@
         }
 
         .screen {
+            
             background: var(--display-glass);
             height: 100%;
             border-radius: 15px;
@@ -73,23 +74,150 @@
 
         .label {
             color: #666;
-            font-size: 14px;
+            font-size: 20px;
             text-transform: uppercase;
             margin-bottom: 5px;
         }
 
         .value {
-            font-size: 55px;
+            font-size: 60px;
             font-weight: bold;
             font-family: monospace;
         }
 
         .gear-display {
-            flex-grow: 1;
             display: flex;
-            justify-content: center;
+            justify-content: space-around; /* Evenly distribute children */
+            align-items: center;
+            position: relative;
+            height: 250px; /* Fixed height to prevent vertical shifting */
+        }
+
+
+        #ers-mode-container {
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(50%);
+            display: flex;
+            flex-direction: column;
             align-items: center;
         }
+
+        #ers-mode-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px; /* Fixed width to prevent nudging */
+        }
+        
+                #bat_bloc {
+        
+                    display: block;
+        
+                    position: relative; /* Establish positioning context for absolute children */
+        
+                    width: 110px; /* Match the new width of #ers-store-circle */
+        
+                    height: 110px; /* Match the new height of #ers-store-circle */
+        
+                } 
+        
+        
+        
+                #ers-store-circle {
+        
+                    width: 110px;
+        
+                    height: 110px;
+        
+                    border-radius: 50%;
+        
+                    background: conic-gradient(
+        
+                        #ffeb3b 0%, 
+        
+                        #ffeb3b var(--ers-store-percent, 0%), 
+        
+                        #333 var(--ers-store-percent, 0%), 
+        
+                        #333 100%
+        
+                    );
+        
+                    position: absolute;
+        
+                    top: 0;
+        
+                    left: 0;
+        
+                    transition: box-shadow 0.2s;
+        
+                }
+        
+        
+        
+                #ers-deployed-circle {
+        
+                    width: 90px;
+        
+                    height: 90px;
+        
+                    border-radius: 50%;
+        
+                    background: conic-gradient(
+        
+                        #00ff00 0%, 
+        
+                        #00ff00 var(--ers-deployed-percent, 0%), 
+        
+                        #333 var(--ers-deployed-percent, 0%), 
+        
+                        #333 100%
+        
+                    );
+        
+                    position: absolute;
+        
+                    top: 10px; /* (110 - 90) / 2 = 10px */
+        
+                    left: 10px; /* (110 - 90) / 2 = 10px */
+        
+                    transition: box-shadow 0.2s;
+        
+                }
+        
+        
+        
+            #polohole{
+        
+                position: absolute;
+        
+                top: 20px; /* (110 - 70) / 2 = 20px */
+        
+                left: 20px; /* (110 - 70) / 2 = 20px */
+        
+                width: 70px;
+        
+                height: 70px;
+        
+                background: var(--display-glass);
+        
+                border-radius: 50%;
+        
+            }
+
+        #ers-battery-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            position: absolute; /* Center within bat_bloc */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Removed margin-top as absolute positioning handles placement */
+        }
+
 
         .gear-num {
             font-size: 200px;
@@ -166,15 +294,33 @@
     <div class="screen" style="margin-top: 20px;">
         <div class="data-grid" style="justify-content: space-between;">
             <div class="data-block" id="lap-info-block"><div class="label">Lap</div><div class="value" id="lap-info">0/0</div></div>
-            <div class="data-block" id="pos-block"><div class="label">Position</div><div class="value" id="position">0/0</div></div>
-            <div class="data-block" id="drs-block"><div class="label">DRS</div><div class="leds" id="drs-led"></div></div>
-            <div class="data-block" id="brake-bias-block"><div class="label">Brake Bias</div><div class="value" id="brake-bias">0%</div></div>
-            <div class="data-block" id="ers-mode-block"><div class="label">ERS Mode</div><div class="value" id="ers-mode">None</div></div>
             <div class="data-block" id="fuel-laps-block"><div class="label">Fuel Laps</div><div class="value" id="fuel-laps">0.0</div></div>
+            <div class="data-block" id="pos-block"><div class="label">Position</div><div class="value" id="position">0/0</div></div>
             <div class="data-block" id="rejoin-pos-block"><div class="label">Rejoin Pos</div><div class="value" id="rejoin-pos">0</div></div>
+            <div class="data-block" id="brake-bias-block"><div class="label">Brake Bias</div><div class="value" id="brake-bias">0%</div></div>
+            <div class="data-block" id="drs-block"><div class="label">DRS</div><div class="leds" id="drs-led"></div></div>
+            
+            
+            
+            
         </div>
+
         <div class="gear-display">
+            
+            <div id="ers-mode-block">
+                <div class="value" id="ers-mode">None</div><div class="label">ERS Mode</div></div>
+            
             <div class="gear-num" id="gear">N</div>
+            <div id="ers-battery-container">
+            <div id="bat_bloc"> 
+                <div id="ers-store-circle"></div>
+                <div id="ers-deployed-circle"></div>
+                <div id="polohole"></div>
+                <div id="ers-battery-text">0%</div>
+            </div>
+                
+                
+            </div>
         </div>
     </div>
 </div>
@@ -192,6 +338,9 @@
     const revStrip = document.getElementById('rev-strip');
     const dashFrame = document.getElementById('dash-frame');
     const flagAlertEl = document.getElementById('flag-alert'); 
+    const ersDeployedCircleEl = document.getElementById('ers-deployed-circle');
+    const ersStoreCircleEl = document.getElementById('ers-store-circle');
+    const ersBatteryTextEl = document.getElementById('ers-battery-text');
 
     for(let i=0; i<15; i++) {
         const led = document.createElement('div');
@@ -224,7 +373,7 @@
         0: { text: 'None', color: '#FFFFFF' },
         1: { text: 'Medium', color: '#FFD580' },
         2: { text: 'Hotlap', color: '#FFA500' },
-        3: { text: 'Overtake', color: '#FF8C00' }
+        3: { text: 'Overtake', color: '#ff3300' }
     };
 
 
@@ -280,9 +429,38 @@
             }
         }
 
+        // Update ERS Store (Yellow)
+        if (playerCarData.m_ersStoreEnergy !== undefined) {
+            const MAX_ERS_STORE = 4000000;
+            const ersEnergy = playerCarData.m_ersStoreEnergy;
+            const ersStorePercent = (ersEnergy / MAX_ERS_STORE) * 100;
+
+            ersStoreCircleEl.style.setProperty('--ers-store-percent', `${ersStorePercent}%`);
+
+            const glowIntensity = ersStorePercent / 100;
+            const glowColor = `rgba(255, 235, 59, ${glowIntensity * 0.8})`;
+            ersStoreCircleEl.style.boxShadow = `0 0 ${15 * glowIntensity}px ${glowColor}`;
+        }
+        
+        // Update ERS Deployed This Lap (Green)
+        if (playerCarData.m_ersDeployedThisLap !== undefined) {
+            const MAX_ERS_DEPLOY_LAP = 4000000; // This might need adjustment
+            const ersDeployed = playerCarData.m_ersDeployedThisLap;
+            const ersDeployedPercent = (ersDeployed / MAX_ERS_DEPLOY_LAP) * 100;
+
+            ersBatteryTextEl.innerText = `${Math.round(ersDeployedPercent)}%`; // Updated to show deployed percentage
+            ersDeployedCircleEl.style.setProperty('--ers-deployed-percent', `${ersDeployedPercent}%`);
+        }
+
         // Update Fuel Laps
         if (playerCarData.m_fuelRemainingLaps !== undefined) {
-            fuelLapsEl.innerText = playerCarData.m_fuelRemainingLaps.toFixed(1);
+            const fuelLaps = playerCarData.m_fuelRemainingLaps;
+            fuelLapsEl.innerText = fuelLaps.toFixed(2);
+            if (fuelLaps < 0) {
+                fuelLapsEl.style.color = 'red';
+            } else {
+                fuelLapsEl.style.color = '#24fe07';
+            }
         }
 
         // Update Rejoin Position
@@ -304,7 +482,8 @@
 
         // Update Lap Info
         if (playerCarData.m_currentLapNum !== undefined && playerCarData.m_totalLaps !== undefined && playerCarData.m_totalLaps > 0) {
-            lapInfoEl.innerText = `${playerCarData.m_currentLapNum}/${playerCarData.m_totalLaps}`;
+            const remainingLaps = playerCarData.m_totalLaps - playerCarData.m_currentLapNum;
+            lapInfoEl.innerText = `${remainingLaps}`;
         } else if (playerCarData.m_currentLapNum !== undefined) {
             lapInfoEl.innerText = `${playerCarData.m_currentLapNum}`;
         }

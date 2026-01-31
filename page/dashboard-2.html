@@ -6,9 +6,8 @@
             --bg-deep: #0a0a0a;
             --display-glass: rgba(20, 20, 20, 0.95);
             --f1-red: #e10600;
-            --f1-yellow: #fff200;
             --f1-green: #00ff00;
-            --rev-percent: 0%;
+            --f1-amber: #FFBF00;
         }
 
         body {
@@ -19,209 +18,261 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            font-family: 'Orbitron', sans-serif; /* High-tech font */
+            font-family: 'Orbitron', sans-serif;
             color: white;
         }
 
-        /* Wider Dashboard Container */
         .dash-frame {
-            width: 900px; /* Expanded Width */
-            height: 400px;
+            width: 90%;
+            height: 80%;
             background: #222;
             border-radius: 40px;
             padding: 25px;
             border: 4px solid #444;
             box-shadow: 0 0 100px rgba(0,0,0,1);
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* LED Rev Strip - Top of Wheel */
         .rev-strip {
             display: grid;
             grid-template-columns: repeat(15, 1fr);
             gap: 8px;
-            margin-bottom: 20px;
             height: 30px;
         }
-
         
-  .leds {
-    /* Global settings for this component */
-    --size: 50px;
-    --border-width: 6px;
-    --off-center: 30% 30%;
-    
-    /* OFF state colors (shared by all lights) */
-    --off-inner: #e6e6e6;
-    --off-mid:   #bdbdbd;
-    --off-edge:  #6b6b6b;
+        .led {
+            background: #333;
+            border-radius: 3px;
+            box-shadow: none;
+            transition: background-color 0.05s, box-shadow 0.05s;
+        }
 
-    /* RED state colors (Default) */
-    --on-core:   #e3d585; /* bright center */
-    --on-mid:    #e71d1d;           
-    --on-edge:   #a32300;
-    --glow-color: rgba(255, 88, 55, 0.75);
-
-    /* Shadows */
-    --shadow-outer: rgba(0,0,0,0.4);
-    --inset-dark:   rgba(0,0,0,0.55);
-    --inset-light:  rgba(255,255,255,0.15);
-
-    /* Layout for this demo */
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    padding: 20px;
-    background: #111; /* Just for demo visibility */
-  }
-
-  /* 2. NEW BLUE VARIANT 
-     We simply override the "on" colors when the .blue class is present.
-  */
-  .leds.blue {
-    --on-core:   #e0f7fa; /* bright cyan/white center */
-    --on-mid:    #29b6f6; /* bright blue */
-    --on-edge:   #1f82ce; /* dark blue edge */
-    --glow-color: rgba(41, 182, 246, 0.75); /* blue glow */
-  }
-
-
-  .leds.green {
-    --on-core:   #e0f7fa; 
-    --on-mid:    #29f629; 
-    --on-edge:   #1fce5c; 
-    --glow-color: rgba(113, 246, 41, 0.75);
-  }
-
-  /* The single light base styles */
-  .leds {
-    width: var(--size);
-    height: var(--size);
-    border-radius: 50%;
-    border: var(--border-width) solid #000;
-    box-sizing: border-box;
-    /* Default (off) background */
-    background:
-      radial-gradient(circle at var(--off-center),
-        var(--off-inner) 0%,
-        var(--off-mid) 40%,
-        var(--off-edge) 100%);
-    box-shadow:
-      inset -12px -14px 22px var(--inset-dark),
-      inset 8px 10px 18px var(--inset-light),
-      0 10px 24px var(--shadow-outer);
-    display: flex;
-    transition: box-shadow 300ms ease, background 300ms ease, transform 200ms ease;
-    position: relative;
-  }
-
-  /* ON state logic */
-  .leds.on {
-    background:
-      radial-gradient(circle at 40% 35%,
-        var(--on-core) 0%,
-        var(--on-mid) 40%,
-        var(--on-edge) 100%);
-    box-shadow:
-      inset -6px -8px 18px rgba(0,0,0,0.35),
-      inset 6px 8px 12px rgba(255,255,255,0.08),
-      0 10px 30px rgba(0,0,0,0.45),
-      0 0 28px 8px var(--glow-color); /* Uses variable glow color */
-  }
-
-  /* Flicker animation (remains same) */
-  @media (prefers-reduced-motion: no-preference) {
-    .leds.on::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      pointer-events: none;
-      box-shadow: 0 0 60px 10px var(--glow-color); /* Use variable here too */
-      animation: tinyFlicker 900ms infinite;
-      opacity: 0.5;
-    }
-    @keyframes tinyFlicker {
-      0%   { filter: brightness(1); transform: scale(1); opacity: 0.5; }
-      50%  { filter: brightness(0.95); transform: scale(0.998); opacity: 0.4; }
-      100% { filter: brightness(1); transform: scale(1); opacity: 0.5; }
-    }
-  }
-
-        /* Digital Screen */
         .screen {
+            
             background: var(--display-glass);
-            height: 320px;
+            height: 100%;
             border-radius: 15px;
             border: 2px solid #333;
-            display: grid;
-            grid-template-rows: 1fr 2fr 1fr;
+            display: flex;
+            flex-direction: column;
             padding: 20px;
             box-sizing: border-box;
         }
 
-        .top-row, .bottom-row {
+        .data-grid {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: space-around;
             border-bottom: 1px solid #333;
+            padding-bottom: 10px;
         }
 
-        .bottom-row { border-bottom: none; border-top: 1px solid #333; }
+        .data-block {
+            text-align: center;
+        }
 
-        /* The Gear Centerpiece */
-        .center-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+        .label {
+            color: #666;
+            font-size: 20px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-size: 60px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .gear-display {
+            display: flex;
+            justify-content: space-around; /* Evenly distribute children */
+            align-items: center;
+            position: relative;
+            height: 250px; /* Fixed height to prevent vertical shifting */
+        }
+
+
+        #ers-mode-container {
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(50%);
+            display: flex;
+            flex-direction: column;
             align-items: center;
         }
+
+        #ers-mode-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px; /* Fixed width to prevent nudging */
+        }
+        
+                #bat_bloc {
+        
+                    display: block;
+        
+                    position: relative; /* Establish positioning context for absolute children */
+        
+                    width: 110px; /* Match the new width of #ers-store-circle */
+        
+                    height: 110px; /* Match the new height of #ers-store-circle */
+        
+                } 
+        
+        
+        
+                #ers-store-circle {
+        
+                    width: 110px;
+        
+                    height: 110px;
+        
+                    border-radius: 50%;
+        
+                    background: conic-gradient(
+        
+                        #ffeb3b 0%, 
+        
+                        #ffeb3b var(--ers-store-percent, 0%), 
+        
+                        #333 var(--ers-store-percent, 0%), 
+        
+                        #333 100%
+        
+                    );
+        
+                    position: absolute;
+        
+                    top: 0;
+        
+                    left: 0;
+        
+                    transition: box-shadow 0.2s;
+        
+                }
+        
+        
+        
+                #ers-deployed-circle {
+        
+                    width: 90px;
+        
+                    height: 90px;
+        
+                    border-radius: 50%;
+        
+                    background: conic-gradient(
+        
+                        #00ff00 0%, 
+        
+                        #00ff00 var(--ers-deployed-percent, 0%), 
+        
+                        #333 var(--ers-deployed-percent, 0%), 
+        
+                        #333 100%
+        
+                    );
+        
+                    position: absolute;
+        
+                    top: 10px; /* (110 - 90) / 2 = 10px */
+        
+                    left: 10px; /* (110 - 90) / 2 = 10px */
+        
+                    transition: box-shadow 0.2s;
+        
+                }
+        
+        
+        
+            #polohole{
+        
+                position: absolute;
+        
+                top: 20px; /* (110 - 70) / 2 = 20px */
+        
+                left: 20px; /* (110 - 70) / 2 = 20px */
+        
+                width: 70px;
+        
+                height: 70px;
+        
+                background: var(--display-glass);
+        
+                border-radius: 50%;
+        
+            }
+
+        #ers-battery-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            position: absolute; /* Center within bat_bloc */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Removed margin-top as absolute positioning handles placement */
+        }
+
 
         .gear-num {
-            font-size: 160px;
-            text-align: center;
+            font-size: 200px;
             font-weight: 900;
             line-height: 1;
             text-shadow: 0 0 30px rgba(255,255,255,0.2);
         }
-
-        .data-block { text-align: center; }
-        .label { color: #666; font-size: 14px; text-transform: uppercase; margin-bottom: 5px; }
-        .value { font-size: 36px; font-weight: bold; font-family: monospace; }
-
-        /* Engine Start Button */
-        .start-btn {
-            margin-top: 40px;
-            padding: 15px 40px;
-            background: var(--f1-red);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(225, 6, 0, 0.4);
-            transition: transform 0.1s;
+        
+        .leds {
+            --size: 40px;
+            --border-width: 4px;
+            width: var(--size);
+            height: var(--size);
+            border-radius: 50%;
+            border: var(--border-width) solid #000;
+            box-sizing: border-box;
+            background: radial-gradient(circle at 30% 30%, #e6e6e6 0%, #bdbdbd 40%, #6b6b6b 100%);
+            box-shadow: inset -12px -14px 22px rgba(0,0,0,0.55), inset 8px 10px 18px rgba(255,255,255,0.15), 0 10px 24px rgba(0,0,0,0.4);
+            transition: all 300ms ease;
+            margin: 0 auto;
         }
 
-        .start-btn:active { transform: scale(0.95); }
+        .leds.on.green {
+            background: radial-gradient(circle at 40% 35%, #e0f7fa 0%, #29f629 40%, #1fce5c 100%);
+            box-shadow: inset -6px -8px 18px rgba(0,0,0,0.35), inset 6px 8px 12px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.45), 0 0 28px 8px rgba(113, 246, 41, 0.75);
+        }
 
-        /* Flag Alert Overlay */
-        #flag-alert {
-            position: absolute;
-            top: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 40px;
-            background: var(--f1-yellow);
-            color: black;
-            font-weight: 900;
-            border-radius: 5px;
-            display: none;
-            z-index: 10;
+        .leds.on.blue {
+            background: radial-gradient(circle at 40% 35%, #e0f7fa 0%, #29b6f6 40%, #1f82ce 100%);
+            box-shadow: inset -6px -8px 18px rgba(0,0,0,0.35), inset 6px 8px 12px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.45), 0 0 28px 8px rgba(41, 182, 246, 0.75);
         }
 
         .shift-flash {
             animation: flash 0.1s infinite;
+        }
+
+        #flag-alert {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: yellow; /* Default, will be overridden by JS */
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 1000; /* Ensure it's on top */
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+
+        #lap-info {
+            color: var(--f1-amber);
         }
 
         @keyframes flash {
@@ -229,149 +280,233 @@
             to { background: var(--f1-red); }
         }
 
-
-
-
-
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div id="flag-alert">YELLOW FLAG - SECTOR 3</div>
+
+<div id="flag-alert"></div>
+
 
 <div class="dash-frame" id="dash-frame">
-    <div class="rev-strip" id="rev-strip">
-        </div>
+    <div class="rev-strip" id="rev-strip"></div>
+    <div class="screen" style="margin-top: 20px;">
+                <div class="data-grid" style="justify-content: space-between;">
+                    <div class="data-block" id="delta-leader-block"><div class="label">Delta Leader</div><div class="value" id="delta-leader">00:00.000</div></div>
+                    <div class="data-block" id="time-left-block"><div class="label">Time Left</div><div class="value" id="time-left">00:00</div></div>
+                    <div class="data-block" id="drs-block"><div class="label">DRS</div><div class="leds" id="drs-led"></div></div>
+                    <div class="data-block" id="brake-bias-block"><div class="label">Brake Bias</div><div class="value" id="brake-bias">0%</div></div>
+                    
+                </div>
 
-
-
-  
-
-    <div class="screen">
-        <div class="top-row">
-            <div class="data-block"><div class="label">Lap</div><div class="value">14/52</div></div>
-            <div class="data-block"><div class="label">Pit Stop Fall to Position</div><div class="value" style="color:var(--f1-green)">-1.422</div></div>
-            <div class="data-block"><div class="label">DRS</div> <div class="leds green" id="DRS-Light"></div></div>
-            <div class="data-block"><div class="label">Brake Bias</div><div class="value">56%</div></div>
-        </div>
-
-        <div class="center-row">
-            <div class="data-block"><div class="label">Speed</div><div class="value" id="speed">0</div></div>
+        <div class="gear-display">
+            
+            
             <div class="gear-num" id="gear">N</div>
-            <div class="data-block"><div class="label">Fuel</div><div class="value">-0.21</div></div>
-        </div>
-
-        <div class="bottom-row">
-            <div class="data-block"><div class="label">Tyre Temp</div><div class="value">98°C</div></div>
-            <div class="data-block" style="color: var(--f1-yellow);"><div class="label">ERS</div><div class="value">MGU-K</div></div>
-            <div class="data-block"><div class="label">Oil</div><div class="value">104°</div></div>
+            <div id="ers-battery-container">
+            <div id="bat_bloc"> 
+                <div id="ers-store-circle"></div>
+                <div id="ers-deployed-circle"></div>
+                <div id="polohole"></div>
+                <div id="ers-battery-text">0%</div>
+            </div>
+                
+                
+            </div>
         </div>
     </div>
 </div>
-
-<button class="start-btn" onclick="startEngine()">ENGINE START</button>
-
 <script>
-// ===============================
-// Global Telemetry State
-// ===============================
-let telemetryState = {};
+    let telemetryState = {};
 
-const lastTelemetry = {
-  m_gear: null,
-  m_throttlePercent: null,
-  m_brakePercent: null,
-  starterLights: 0,
-  m_revLightsPercent: null,
-  eventCodeStr: null,
-  ersEnergyPercent: null,
-  ersDeployMode: null,
-};
-
-
-// ===============================
-// Fetch Telemetry Data
-// ===============================
-
-async function fetchTelemetry() {
-  try {
-    const res = await fetch("http://localhost:8000/telemetry");
-    telemetryState = await res.json();
-  } catch (err) {
-    console.error("Failed to fetch telemetry:", err);
-  }
-}
-
-
-function renderFromState() {
-  if (!telemetryState || Object.keys(telemetryState).length === 0) return;
-
-  renderGear(telemetryState.m_gear);
-  renderDRS(telemetryState.m_drsAllowed)
-  renderThrottle(telemetryState.m_throttle);
-  renderBrake(telemetryState.m_brake);
-  renderStarterLights(telemetryState.m_eventDetails?.numLights);
-  renderRPM(telemetryState.m_revLightsPercent);
-  renderEvents(telemetryState.m_eventStringCode);
-  renderERSBattery(telemetryState.m_ersStoreEnergy);
-  renderERSMode(telemetryState.m_ersDeployMode);
-}
-
-
-
-
-    const revStrip = document.getElementById('rev-strip');
     const gearEl = document.getElementById('gear');
-    const speedEl = document.getElementById('speed');
+    const brakeBiasEl = document.getElementById('brake-bias');
+    const drsLedEl = document.getElementById('drs-led');
+    const deltaLeaderEl = document.getElementById('delta-leader');
+    const timeLeftEl = document.getElementById('time-left');
+    const revStrip = document.getElementById('rev-strip');
     const dashFrame = document.getElementById('dash-frame');
-    
-    // Create 15 LED elements
+    const flagAlertEl = document.getElementById('flag-alert'); 
+    const ersDeployedCircleEl = document.getElementById('ers-deployed-circle');
+    const ersStoreCircleEl = document.getElementById('ers-store-circle');
+    const ersBatteryTextEl = document.getElementById('ers-battery-text');
+
     for(let i=0; i<15; i++) {
         const led = document.createElement('div');
         led.className = 'led';
         revStrip.appendChild(led);
     }
-    const leds = document.querySelectorAll('.led');
+    const leds = Array.from(revStrip.children);
 
-    function startEngine() {
-        let rpm = 0;
-        let gear = 1;
-        let speed = 0;
+    const gearMap = {
+        '-1': 'R',
+        '0': 'N',
+        '1': '1',
+        '2': '2',
+        '3': '3',
+        '4': '4',
+        '5': '5',
+        '6': '6',
+        '7': '7',
+        '8': '8'
+    };
+
+    const flagMap = {
+        1: {text: 'GREEN FLAG', color: 'green'},
+        2: {text: 'BLUE FLAG', color: 'blue'},
+        3: {text: 'YELLOW FLAG', color: 'yellow'},
+        4: {text: 'RED FLAG', color: 'red'}
+    };
+
+    const ersModeMap = {
+        0: { text: 'None', color: '#FFFFFF' },
+        1: { text: 'Medium', color: '#FFD580' },
+        2: { text: 'Hotlap', color: '#FFA500' },
+        3: { text: 'Overtake', color: '#ff3300' }
+    };
+
+
+    async function fetchTelemetry() {
+        try {
+            const res = await fetch("http://localhost:8000/telemetry");
+            telemetryState = await res.json();
+        } catch (err) {
+            console.error("Failed to fetch telemetry:", err);
+        }
+    }
+
+
+    function updateDashboard() {
+        if (!telemetryState || Object.keys(telemetryState).length === 0) return;
+
+        // Safely access player_car_data and global_data
+        const playerCarData = telemetryState.player_car_data || {};
+        const globalData = telemetryState.global_data || {};
+
+        const flagValue = playerCarData.m_vehicleFiaFlags;
+        const flagInfo = flagMap[flagValue];
+        const rpmPercent = playerCarData.m_revLightsPercent;
+
+        // Update Flag Alert
+        if (flagInfo) {
+            flagAlertEl.innerText = flagInfo.text;
+            flagAlertEl.style.backgroundColor = flagInfo.color;
+            flagAlertEl.style.display = 'block';
+        } else {
+            flagAlertEl.style.display = 'none';
+        }
+
+        // Update Gear
+        if (playerCarData.m_gear !== undefined) {
+            const gearValue = playerCarData.m_gear;
+            gearEl.innerText = gearMap[gearValue] || gearValue;
+        }
+
+        // Update Brake Bias
+        if (playerCarData.m_brakeBias !== undefined) {
+            const brakeBiasValue = playerCarData.m_brakeBias;
+            brakeBiasEl.innerText = `${brakeBiasValue}%`;
+        }
+
+        // Update ERS Store (Yellow)
+        if (playerCarData.m_ersStoreEnergy !== undefined) {
+            const MAX_ERS_STORE = 4000000;
+            const ersEnergy = playerCarData.m_ersStoreEnergy;
+            const ersStorePercent = (ersEnergy / MAX_ERS_STORE) * 100;
+
+            ersStoreCircleEl.style.setProperty('--ers-store-percent', `${ersStorePercent}%`);
+
+            const glowIntensity = ersStorePercent / 100;
+            const glowColor = `rgba(255, 235, 59, ${glowIntensity * 0.8})`;
+            ersStoreCircleEl.style.boxShadow = `0 0 ${15 * glowIntensity}px ${glowColor}`;
+        }
         
-        const interval = setInterval(() => {
-            rpm += 2;
-            speed += 3;
+        // Update ERS Deployed This Lap (Green)
+        if (playerCarData.m_ersDeployedThisLap !== undefined) {
+            const MAX_ERS_DEPLOY_LAP = 4000000; // This might need adjustment
+            const ersDeployed = playerCarData.m_ersDeployedThisLap;
+            const ersDeployedPercent = (ersDeployed / MAX_ERS_DEPLOY_LAP) * 100;
+
+            ersBatteryTextEl.innerText = `${Math.round(ersDeployedPercent)}%`; // Updated to show deployed percentage
+            ersDeployedCircleEl.style.setProperty('--ers-deployed-percent', `${ersDeployedPercent}%`);
+        }
+
+        // Update Session Time Left
+        if (globalData.m_sessionTimeLeft !== undefined) {
+            const minutes = Math.floor(globalData.m_sessionTimeLeft / 60);
+            const seconds = globalData.m_sessionTimeLeft % 60;
+            timeLeftEl.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Update Delta to Leader
+        if (playerCarData.m_deltaToRaceLeaderMinutesPart !== undefined && playerCarData.m_deltaToRaceLeaderMSPart !== undefined) {
+            const minutes = Math.abs(playerCarData.m_deltaToRaceLeaderMinutesPart);
+            const seconds = Math.floor(Math.abs(playerCarData.m_deltaToRaceLeaderMSPart) / 1000);
+            const milliseconds = Math.abs(playerCarData.m_deltaToRaceLeaderMSPart) % 1000;
             
-            // Update Speed
-            speedEl.innerText = Math.floor(speed);
+            // Combine minutes and ms parts to determine the sign
+            const totalDelta = (playerCarData.m_deltaToRaceLeaderMinutesPart * 60 * 1000) + playerCarData.m_deltaToRaceLeaderMSPart;
 
-            // Update Gear
-            if (rpm > 20 && rpm < 40) gearEl.innerText = "1";
-            if (rpm > 40 && rpm < 70) gearEl.innerText = "2";
-            if (rpm > 70) gearEl.innerText = "3";
+            const sign = totalDelta < 0 ? '-' : '+';
+            deltaLeaderEl.innerText = `${sign}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
 
-            // Update LED colors based on RPM percentage
+            if (totalDelta < 0) {
+                deltaLeaderEl.style.color = 'lime'; // Green for being ahead
+            } else {
+                deltaLeaderEl.style.color = 'red'; // Red for being behind
+            }
+        }
+
+        // Update DRS
+        if (playerCarData.m_drs !== undefined && playerCarData.m_drsAllowed !== undefined) {
+            const drsValue = playerCarData.m_drs;
+            const drsAllowedValue = playerCarData.m_drsAllowed;
+            drsLedEl.classList.remove('on', 'green', 'blue'); // Clear previous states
+            if (drsValue === 1) {
+                drsLedEl.classList.add('on', 'green');
+            } else if (drsAllowedValue === 1) {
+                drsLedEl.classList.add('on', 'blue');
+            }
+        }
+
+
+        // Update Rev Lights and dash background
+        if (rpmPercent !== undefined) {
             leds.forEach((led, index) => {
                 const threshold = (index / leds.length) * 100;
-                if (rpm > threshold) {
+                if (rpmPercent > threshold) {
                     if (index < 5) led.style.background = '#4caf50'; // Green
                     else if (index < 10) led.style.background = '#ffeb3b'; // Yellow
                     else led.style.background = '#f44336'; // Red
                     led.style.boxShadow = '0 0 10px ' + led.style.background;
+                } else {
+                    led.style.background = '#333';
+                    led.style.boxShadow = 'none';
                 }
             });
 
-            // Shift Flash logic
-            if (rpm >= 100) {
+            // Handle dash frame background and shift flash
+            const isShiftFlash = (rpmPercent !== undefined && rpmPercent > 90) && playerCarData.m_gear !== 8; // Corrected
+
+            if (isShiftFlash) {
                 dashFrame.classList.add('shift-flash');
-                setTimeout(() => {
-                    clearInterval(interval);
-                    document.getElementById('flag-alert').style.display = 'block';
-                }, 1000);
+                dashFrame.style.backgroundColor = ''; // Let animation take over
+            } else {
+                dashFrame.classList.remove('shift-flash');
+                if (flagInfo) {
+                    dashFrame.style.backgroundColor = flagInfo.color;
+                } else {
+                    dashFrame.style.backgroundColor = '#222'; // Default color
+                }
             }
-        }, 50);
+        }
     }
+
+    setInterval(async () => {
+        await fetchTelemetry();
+        updateDashboard();
+    }, 100);
 </script>
 
 </body>

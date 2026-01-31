@@ -753,6 +753,7 @@ latest_data = {
         'm_brakeBias': 50,
         'm_ersDeployMode': 0,
         'm_ersStoreEnergy': 0.0,
+        'm_ersDeployedThisLap': 0.0,
         'm_fuelRemainingLaps': 0.0,
         'm_tyresAgeLaps': 0,
         'm_pitStopRejoinPosition': 0,
@@ -765,6 +766,8 @@ latest_data = {
         "m_pitStatus" : 0,
         "m_driverStatus" : 0,
         "m_currentLapNum" : 0,
+        "m_deltaToRaceLeaderMinutesPart": 0,
+        "m_deltaToRaceLeaderMSPart": 0,
         "m_totalLaps" : 0, # From Packet 1
     },
     'rival_car_data': {
@@ -850,6 +853,8 @@ PACKET_HANDLERS = {
             "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
             "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
             "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
+            "m_deltaToRaceLeaderMinutesPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMinutesPart,
+            "m_deltaToRaceLeaderMSPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMSPart,
         },
         'global_data': {
             'm_timeTrialRivalCarIdx': pkt.m_timeTrialRivalCarIdx,
@@ -913,6 +918,7 @@ PACKET_HANDLERS = {
                 "m_vehicleFiaFlags": car_status.m_vehicleFiaFlags,
                 "m_ersStoreEnergy": car_status.m_ersStoreEnergy,
                 "m_ersDeployMode": car_status.m_ersDeployMode,
+                "m_ersDeployedThisLap": car_status.m_ersDeployedThisLap,
             }
         }
     )(pkt.m_carStatusData[hdr.m_playerCarIndex]),
