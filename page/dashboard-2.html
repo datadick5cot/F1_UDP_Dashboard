@@ -108,116 +108,147 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 200px; /* Fixed width to prevent nudging */
         }
         
-                #bat_bloc {
+                                #bat_bloc {
         
-                    display: block;
+                                    display: block;
         
-                    position: relative; /* Establish positioning context for absolute children */
+                                    position: relative; /* Establish positioning context for absolute children */
         
-                    width: 110px; /* Match the new width of #ers-store-circle */
+                                    width: 12.375em; /* 198px / 16px */
         
-                    height: 110px; /* Match the new height of #ers-store-circle */
+                                    height: 12.375em; /* 198px / 16px */
         
-                } 
+                                } 
         
+                        
         
+                                #ers-store-circle {
         
-                #ers-store-circle {
+                                    width: 12.375em;
         
-                    width: 110px;
+                                    height: 12.375em;
         
-                    height: 110px;
+                                    border-radius: 50%;
         
-                    border-radius: 50%;
+                                    background: conic-gradient(
         
-                    background: conic-gradient(
+                                        #ffeb3b 0%, 
         
-                        #ffeb3b 0%, 
+                                        #ffeb3b var(--ers-store-percent, 0%), 
         
-                        #ffeb3b var(--ers-store-percent, 0%), 
+                                        #333 var(--ers-store-percent, 0%), 
         
-                        #333 var(--ers-store-percent, 0%), 
+                                        #333 100%
         
-                        #333 100%
+                                    );
         
-                    );
+                                    position: absolute;
         
-                    position: absolute;
+                                    top: 0;
         
-                    top: 0;
+                                    left: 0;
         
-                    left: 0;
+                                    transition: box-shadow 0.2s;
         
-                    transition: box-shadow 0.2s;
+                                }
         
-                }
+                        
         
+                                #ers-deployed-circle {
         
+                                    width: 10.125em; /* 162px / 16px */
         
-                #ers-deployed-circle {
+                                    height: 10.125em; /* 162px / 16px */
         
-                    width: 90px;
+                                    border-radius: 50%;
         
-                    height: 90px;
+                                    background: conic-gradient(
         
-                    border-radius: 50%;
+                                        #00ff00 0%, 
         
-                    background: conic-gradient(
+                                        #00ff00 var(--ers-deployed-percent, 0%), 
         
-                        #00ff00 0%, 
+                                        #333 var(--ers-deployed-percent, 0%), 
         
-                        #00ff00 var(--ers-deployed-percent, 0%), 
+                                        #333 100%
         
-                        #333 var(--ers-deployed-percent, 0%), 
+                                    );
         
-                        #333 100%
+                                    position: absolute;
         
-                    );
+                                    top: 1.125em; /* 18px / 16px */
         
-                    position: absolute;
+                                    left: 1.125em; /* 18px / 16px */
         
-                    top: 10px; /* (110 - 90) / 2 = 10px */
+                                    transition: box-shadow 0.2s;
         
-                    left: 10px; /* (110 - 90) / 2 = 10px */
+                                }
         
-                    transition: box-shadow 0.2s;
+                        
         
-                }
+                            #polohole{
         
+                                position: absolute;
         
+                                top: 2.25em; /* 36px / 16px */
         
-            #polohole{
+                                left: 2.25em; /* 36px / 16px */
         
-                position: absolute;
+                                width: 7.875em; /* 126px / 16px */
         
-                top: 20px; /* (110 - 70) / 2 = 20px */
+                                height: 7.875em; /* 126px / 16px */
         
-                left: 20px; /* (110 - 70) / 2 = 20px */
+                                background: var(--display-glass);
         
-                width: 70px;
+                                border-radius: 50%;
         
-                height: 70px;
+                            }
         
-                background: var(--display-glass);
+                        
         
-                border-radius: 50%;
+                                        #ers-battery-text {
         
-            }
-
-        #ers-battery-text {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            position: absolute; /* Center within bat_bloc */
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            /* Removed margin-top as absolute positioning handles placement */
-        }
-
+                        
+        
+                                            font-size: 2.7em; /* 43.2px / 16px */
+        
+                        
+        
+                                            font-weight: bold;
+        
+                        
+        
+                                            color: white;
+        
+                        
+        
+                                            position: absolute; /* Center within bat_bloc */
+        
+                        
+        
+                                            top: 50%;
+        
+                        
+        
+                                            left: 50%;
+        
+                        
+        
+                                            transform: translate(-50%, -50%);
+        
+                        
+        
+                                            /* Removed margin-top as absolute positioning handles placement */
+        
+                        
+        
+                                        }
+        
+                        
+        
+               
 
         .gear-num {
             font-size: 200px;

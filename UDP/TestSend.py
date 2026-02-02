@@ -162,6 +162,7 @@ def damage_build_test_packet():
     for i in range(22):
         pkt.m_carDamageData[i].m_frontLeftWingDamage = 10
         pkt.m_carDamageData[i].m_engineDamage = 5
+        pkt.m_carDamageData[i].m_tyresWear[:] = [random.uniform(0, 100) for _ in range(4)]
     return bytes(pkt)
 
 @staticmethod

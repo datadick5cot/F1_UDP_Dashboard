@@ -66,6 +66,7 @@
             justify-content: space-around;
             border-bottom: 1px solid #333;
             padding-bottom: 10px;
+            margin-bottom: 20px; /* Add space below the grid */
         }
 
         .data-block {
@@ -87,10 +88,16 @@
 
         .gear-display {
             display: flex;
-            justify-content: space-around; /* Evenly distribute children */
+            justify-content: space-between; /* Space columns evenly */
+            align-items: flex-start; /* Align columns to the top */
+            padding-top: 20px; /* Add space between this and the data grid */
+        }
+
+        .display-column {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            position: relative;
-            height: 250px; /* Fixed height to prevent vertical shifting */
+            flex: 1;
         }
 
 
@@ -108,115 +115,474 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 200px; /* Fixed width to prevent nudging */
         }
         
-                #bat_bloc {
+                                #bat_bloc {
         
-                    display: block;
+                                    display: block;
         
-                    position: relative; /* Establish positioning context for absolute children */
+                                    position: relative; /* Establish positioning context for absolute children */
         
-                    width: 110px; /* Match the new width of #ers-store-circle */
+                                    width: 12.375em; /* 198px / 16px */
         
-                    height: 110px; /* Match the new height of #ers-store-circle */
+                                    height: 12.375em; /* 198px / 16px */
         
-                } 
+                                } 
         
+                        
         
+                                #ers-store-circle {
         
-                #ers-store-circle {
+                                    width: 12.375em;
         
-                    width: 110px;
+                                    height: 12.375em;
         
-                    height: 110px;
+                                    border-radius: 50%;
         
-                    border-radius: 50%;
+                                    background: conic-gradient(
         
-                    background: conic-gradient(
+                                        #ffeb3b 0%, 
         
-                        #ffeb3b 0%, 
+                                        #ffeb3b var(--ers-store-percent, 0%), 
         
-                        #ffeb3b var(--ers-store-percent, 0%), 
+                                        #333 var(--ers-store-percent, 0%), 
         
-                        #333 var(--ers-store-percent, 0%), 
+                                        #333 100%
         
-                        #333 100%
+                                    );
         
-                    );
+                                    position: absolute;
         
-                    position: absolute;
+                                    top: 0;
         
-                    top: 0;
+                                    left: 0;
         
-                    left: 0;
+                                    transition: box-shadow 0.2s;
         
-                    transition: box-shadow 0.2s;
+                                }
         
-                }
+                        
         
+                                #ers-deployed-circle {
         
+                                    width: 10.125em; /* 162px / 16px */
         
-                #ers-deployed-circle {
+                                    height: 10.125em; /* 162px / 16px */
         
-                    width: 90px;
+                                    border-radius: 50%;
         
-                    height: 90px;
+                                    background: conic-gradient(
         
-                    border-radius: 50%;
+                                        #00ff00 0%, 
         
-                    background: conic-gradient(
+                                        #00ff00 var(--ers-deployed-percent, 0%), 
         
-                        #00ff00 0%, 
+                                        #333 var(--ers-deployed-percent, 0%), 
         
-                        #00ff00 var(--ers-deployed-percent, 0%), 
+                                        #333 100%
         
-                        #333 var(--ers-deployed-percent, 0%), 
+                                    );
         
-                        #333 100%
+                                    position: absolute;
         
-                    );
+                                    top: 1.125em; /* 18px / 16px */
         
-                    position: absolute;
+                                    left: 1.125em; /* 18px / 16px */
         
-                    top: 10px; /* (110 - 90) / 2 = 10px */
+                                    transition: box-shadow 0.2s;
         
-                    left: 10px; /* (110 - 90) / 2 = 10px */
+                                }
         
-                    transition: box-shadow 0.2s;
+                        
         
-                }
+                            #polohole{
         
+                                position: absolute;
         
+                                top: 2.25em; /* 36px / 16px */
         
-            #polohole{
+                                left: 2.25em; /* 36px / 16px */
         
-                position: absolute;
+                                width: 7.875em; /* 126px / 16px */
         
-                top: 20px; /* (110 - 70) / 2 = 20px */
+                                height: 7.875em; /* 126px / 16px */
         
-                left: 20px; /* (110 - 70) / 2 = 20px */
+                                background: var(--display-glass);
         
-                width: 70px;
+                                border-radius: 50%;
         
-                height: 70px;
+                            }
         
-                background: var(--display-glass);
+                        
         
-                border-radius: 50%;
+                                        #ers-battery-text {
         
-            }
-
-        #ers-battery-text {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            position: absolute; /* Center within bat_bloc */
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            /* Removed margin-top as absolute positioning handles placement */
+                        
+        
+                                            font-size: 2.7em; /* 43.2px / 16px */
+        
+                        
+        
+                                            font-weight: bold;
+        
+                        
+        
+                                            color: white;
+        
+                        
+        
+                                            position: absolute; /* Center within bat_bloc */
+        
+                        
+        
+                                            top: 50%;
+        
+                        
+        
+                                            left: 50%;
+        
+                        
+        
+                                            transform: translate(-50%, -50%);
+        
+                        
+        
+                                            /* Removed margin-top as absolute positioning handles placement */
+        
+                        
+        
+                                        }
+        
+                        
+        
+                                
+        
+                        
+        
+        #tyre-wear-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px; /* Increased gap */
+            width: 100%; /* Fill the column */
+            margin-top: 20px; /* Add some space below ERS mode */
         }
+        
+                        
+        
+                                
+        
+                        
+        
+                                        .tyre-wear-item {
+        
+                        
+        
+                                            display: flex;
+        
+                        
+        
+                                            align-items: center;
+        
+                        
+        
+                                        }
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                .tyre-label {
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    font-size: 20px; /* Increased font size */
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    font-weight: bold;
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    width: 40px; /* Increased width */
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                }
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                .wear-bar-container {
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    flex-grow: 1;
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    height: 25px; /* Increased height */
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    background-color: #333;
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    border-radius: 3px;
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    overflow: hidden;
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                }
+        
+                        
+        
+                                
+        
+                        
+        
+                                        .wear-bar {
+        
+                        
+        
+                                            height: 100%;
+        
+                        
+        
+                                            width: 0%;
+        
+                        
+        
+                                            background-color: green;
+        
+                        
+        
+                                            transition: width 0.1s, background-color 0.1s;
+        
+                        
+        
+                                        }
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                .wear-value {
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    font-size: 20px; /* Increased font size */
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    font-weight: bold;
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    width: 60px; /* Increased width */
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                    text-align: right;
+        
+                        
+        
+                                
+        
+                        
+        
+                                                
+        
+                        
+        
+                                
+        
+                        
+        
+                                                                                }
+        
+                        
+        
+                                
 
 
         .gear-num {
@@ -224,6 +590,14 @@
             font-weight: 900;
             line-height: 1;
             text-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .speed-display {
+            font-size: 30px; /* Smaller than gear-num */
+            font-weight: bold;
+            text-align: center;
+            color: #888; /* Slightly subdued color */
+            margin-top: -30px; /* Pull it closer to the gear number */
         }
         
         .leds {
@@ -306,20 +680,55 @@
         </div>
 
         <div class="gear-display">
-            
-            <div id="ers-mode-block">
-                <div class="value" id="ers-mode">None</div><div class="label">ERS Mode</div></div>
-            
-            <div class="gear-num" id="gear">N</div>
-            <div id="ers-battery-container">
-            <div id="bat_bloc"> 
-                <div id="ers-store-circle"></div>
-                <div id="ers-deployed-circle"></div>
-                <div id="polohole"></div>
-                <div id="ers-battery-text">0%</div>
+            <div class="display-column">
+                <div id="ers-mode-block">
+                    <div class="value" id="ers-mode">None</div>
+                    <div class="label">ERS Mode</div>
+                </div>
+                <div id="tyre-wear-container">
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">FL</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="fl-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="fl-wear-value">0%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">FR</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="fr-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="fr-wear-value">0%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">RL</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="rl-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="rl-wear-value">0%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">RR</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="rr-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="rr-wear-value">0%</span>
+                    </div>
+                </div>
             </div>
-                
-                
+            <div class="display-column">
+                <div class="gear-num" id="gear">N</div>
+                <div class="speed-display" id="speed">000 MPH</div>
+            </div>
+            <div class="display-column">
+                <div id="ers-battery-container">
+                    <div id="bat_bloc">
+                        <div id="ers-store-circle"></div>
+                        <div id="ers-deployed-circle"></div>
+                        <div id="polohole"></div>
+                        <div id="ers-battery-text">0%</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -335,12 +744,22 @@
     const ersModeEl = document.getElementById('ers-mode');
     const fuelLapsEl = document.getElementById('fuel-laps');
     const rejoinPosEl = document.getElementById('rejoin-pos');
+    const speedEl = document.getElementById('speed');
     const revStrip = document.getElementById('rev-strip');
     const dashFrame = document.getElementById('dash-frame');
     const flagAlertEl = document.getElementById('flag-alert'); 
     const ersDeployedCircleEl = document.getElementById('ers-deployed-circle');
     const ersStoreCircleEl = document.getElementById('ers-store-circle');
     const ersBatteryTextEl = document.getElementById('ers-battery-text');
+
+    const flWearBarEl = document.getElementById('fl-wear-bar');
+    const frWearBarEl = document.getElementById('fr-wear-bar');
+    const rlWearBarEl = document.getElementById('rl-wear-bar');
+    const rrWearBarEl = document.getElementById('rr-wear-bar');
+    const flWearValueEl = document.getElementById('fl-wear-value');
+    const frWearValueEl = document.getElementById('fr-wear-value');
+    const rlWearValueEl = document.getElementById('rl-wear-value');
+    const rrWearValueEl = document.getElementById('rr-wear-value');
 
     for(let i=0; i<15; i++) {
         const led = document.createElement('div');
@@ -413,6 +832,12 @@
             gearEl.innerText = gearMap[gearValue] || gearValue;
         }
 
+        // Update Speed
+        if (playerCarData.m_speed !== undefined) {
+            speedEl.innerText = `${Math.round(playerCarData.m_speed)} MPH`;
+        }
+
+
         // Update Brake Bias
         if (playerCarData.m_brakeBias !== undefined) {
             const brakeBiasValue = playerCarData.m_brakeBias;
@@ -435,6 +860,7 @@
             const ersEnergy = playerCarData.m_ersStoreEnergy;
             const ersStorePercent = (ersEnergy / MAX_ERS_STORE) * 100;
 
+            ersBatteryTextEl.innerText = `${Math.round(ersStorePercent)}%`; // Text now shows store percentage
             ersStoreCircleEl.style.setProperty('--ers-store-percent', `${ersStorePercent}%`);
 
             const glowIntensity = ersStorePercent / 100;
@@ -442,14 +868,14 @@
             ersStoreCircleEl.style.boxShadow = `0 0 ${15 * glowIntensity}px ${glowColor}`;
         }
         
-        // Update ERS Deployed This Lap (Green)
+        // Update ERS Deployed This Lap (Green) - Now represents AVAILABLE deployment
         if (playerCarData.m_ersDeployedThisLap !== undefined) {
             const MAX_ERS_DEPLOY_LAP = 4000000; // This might need adjustment
             const ersDeployed = playerCarData.m_ersDeployedThisLap;
             const ersDeployedPercent = (ersDeployed / MAX_ERS_DEPLOY_LAP) * 100;
+            const ersAvailablePercent = 100 - ersDeployedPercent; // Invert to show available
 
-            ersBatteryTextEl.innerText = `${Math.round(ersDeployedPercent)}%`; // Updated to show deployed percentage
-            ersDeployedCircleEl.style.setProperty('--ers-deployed-percent', `${ersDeployedPercent}%`);
+            ersDeployedCircleEl.style.setProperty('--ers-deployed-percent', `${ersAvailablePercent}%`);
         }
 
         // Update Fuel Laps
@@ -486,6 +912,30 @@
             lapInfoEl.innerText = `${remainingLaps}`;
         } else if (playerCarData.m_currentLapNum !== undefined) {
             lapInfoEl.innerText = `${playerCarData.m_currentLapNum}`;
+        }
+
+        // Update Tyre Wear
+        if (playerCarData.m_tyresWear) {
+            const wears = playerCarData.m_tyresWear; // [RL, RR, FL, FR]
+            const wearElements = [
+                { bar: rlWearBarEl, value: rlWearValueEl, wear: wears[0] },
+                { bar: rrWearBarEl, value: rrWearValueEl, wear: wears[1] },
+                { bar: flWearBarEl, value: flWearValueEl, wear: wears[2] },
+                { bar: frWearBarEl, value: frWearValueEl, wear: wears[3] }
+            ];
+
+            wearElements.forEach(elem => {
+                elem.bar.style.width = `${elem.wear}%`;
+                elem.value.innerText = `${Math.round(elem.wear)}%`;
+
+                if (elem.wear >= 75) {
+                    elem.bar.style.backgroundColor = 'red';
+                } else if (elem.wear >= 50) {
+                    elem.bar.style.backgroundColor = 'yellow';
+                } else {
+                    elem.bar.style.backgroundColor = 'lime';
+                }
+            });
         }
 
         // Update Position

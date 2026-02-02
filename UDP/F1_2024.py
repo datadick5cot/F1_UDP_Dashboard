@@ -755,6 +755,7 @@ latest_data = {
         'm_ersStoreEnergy': 0.0,
         'm_ersDeployedThisLap': 0.0,
         'm_fuelRemainingLaps': 0.0,
+        'm_tyresWear': [0, 0, 0, 0],
         'm_tyresAgeLaps': 0,
         'm_pitStopRejoinPosition': 0,
         'm_vehicleFiaFlags': 0,
@@ -933,7 +934,7 @@ PACKET_HANDLERS = {
 
     10: lambda pkt, hdr: (
         # Damage data
-        lambda car_damage : {'m_tyresWear' : list(car_damage.m_tyresWear)}
+        lambda car_damage : {'player_car_data': {'m_tyresWear' : list(car_damage.m_tyresWear)}}
         )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
         
 
