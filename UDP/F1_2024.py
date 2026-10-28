@@ -561,12 +561,15 @@ class LapHistoryData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ('m_lapTimeInMS', c_uint32),
-        ('m_sector1TimeInMS', c_uint16),
-        ('m_sector2TimeInMS', c_uint16),
-        ('m_sector3TimeInMS', c_uint16),
+        ('m_sector1TimeMSPart', c_uint16),
+        ('m_sector1TimeMinutesPart', c_uint8),
+        ('m_sector2TimeMSPart', c_uint16),
+        ('m_sector2TimeMinutesPart', c_uint8),
+        ('m_sector3TimeMSPart', c_uint16),
+        ('m_sector3TimeMinutesPart', c_uint8),
         ('m_lapValidBitFlags', c_uint8),
     ]
-
+    
 class TyreStintHistoryData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
@@ -619,11 +622,19 @@ class PacketTyreSetsData(LittleEndianStructure):
     ]
 
 # -------------------- Packet 13: Motion Ex --------------------
-
 class PacketMotionExData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ('m_header', PacketHeader),
+        ('m_suspensionPosition', c_float * 4),
+        ('m_suspensionVelocity', c_float * 4),
+        ('m_suspensionAcceleration', c_float * 4),
+        ('m_wheelSpeed', c_float * 4),
+        ('m_wheelSlipRatio', c_float * 4),
+        ('m_wheelSlipAngle', c_float * 4),
+        ('m_wheelLatForce', c_float * 4),
+        ('m_wheelLongForce', c_float * 4),
+        ('m_heightOfCOGAboveGround', c_float),
         ('m_localVelocityX', c_float),
         ('m_localVelocityY', c_float),
         ('m_localVelocityZ', c_float),
@@ -634,12 +645,16 @@ class PacketMotionExData(LittleEndianStructure):
         ('m_angularAccelerationY', c_float),
         ('m_angularAccelerationZ', c_float),
         ('m_frontWheelsAngle', c_float),
-        ('m_wheelSpeed', c_float * 4),
-        ('m_wheelSlipRatio', c_float * 4),
-        ('m_wheelSlipAngle', c_float * 4)
+        ('m_wheelVertForce', c_float * 4),
+        ('m_frontAeroHeight', c_float),
+        ('m_rearAeroHeight', c_float),
+        ('m_frontRollAngle', c_float),
+        ('m_rearRollAngle', c_float),
+        ('m_chassisYaw', c_float),
+        ('m_chassisPitch', c_float),
+        ('m_wheelCamber', c_float * 4),
+        ('m_wheelCamberGain', c_float * 4),
     ]
-
-
 # -------------------- Packet 14:  Time Trial --------------------
 
 class TimeTrialDataSet(LittleEndianStructure):
