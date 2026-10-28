@@ -23,11 +23,10 @@ class BorderlessBrowser(QMainWindow):
         
         quit_app = QAction("Quit App", self)
         quit_app.triggered.connect(self.quit_app)
+
         file_menu.addAction(quit_app)
-        
-        file_menu.addAction(quit_app)
+        file_menu.addSeparator()
         file_menu.addAction(shutdown)
-        
 
         #Dashboard Options
         option_menu = menu.addMenu("&Options")
@@ -56,6 +55,8 @@ class BorderlessBrowser(QMainWindow):
         option_menu.addAction(Telemetry)
         option_menu.addAction(Settings)
         option_menu.addAction(rivalsdashboard)
+
+        self.apply_touch_styles()
         
 
         # Central widget and layout
@@ -70,6 +71,66 @@ class BorderlessBrowser(QMainWindow):
 
         # Load HTML served from FastAPI
         self.webview.load(QUrl("http://localhost:8000/dashboard/dashboard-1.html"))
+
+    def apply_touch_styles(self):
+        # Scale sizes from screen height so it works on any display
+        screen_h = QApplication.primaryScreen().availableGeometry().height()
+        bar_h = max(70, int(screen_h * 0.10))     # menu bar height
+        font_px = int(bar_h * 0.40)               # text size
+        pad_v = int(bar_h * 0.20)
+        pad_h = int(bar_h * 0.60)
+    
+        self.menuBar().setFixedHeight(bar_h)
+        self.setStyleSheet(f"""
+            QMenuBar {{
+                background-color: #1e1e1e;
+                color: white;
+                font-size: {font_px}px;
+                spacing: 12px;
+            }}
+            QMenuBar::item {{
+                padding: {pad_v}px {pad_h}px;
+                margin: 4px;
+                border-radius: 8px;
+                background: #333333;
+            }}
+            QMenuBar::item:selected,
+            QMenuBar::item:pressed {{
+                background-color: #e10600;
+            }}
+    
+            QMenu {{
+                background-color: #1e1e1e;
+                color: white;
+                font-size: {font_px}px;
+                border: 2px solid #555555;
+            }}
+            QMenu::item {{
+                padding: {pad_v}px {pad_h * 2}px {pad_v}px {pad_h}px;
+                min-height: {int(bar_h * 0.6)}px;
+            }}
+            QMenu::item:selected {{
+                background-color: #e10600;
+            }}
+            QMenu::separator {{
+                height: 3px;
+                background: #555555;
+                margin: 6px 10px;
+            }}
+    
+            /* Shutdown / Quit confirmation dialogs */
+            QMessageBox {{
+                font-size: {font_px}px;
+            }}
+            QMessageBox QLabel {{
+                font-size: {font_px}px;
+            }}
+            QMessageBox QPushButton {{
+                font-size: {font_px}px;
+                min-width: {bar_h * 2}px;
+                min-height: {bar_h}px;
+            }}
+        """)
         
             
         
@@ -94,7 +155,6 @@ class BorderlessBrowser(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             QApplication.instance().quit()
 
-            
 
 
     def load_page(self, page_name):
