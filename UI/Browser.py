@@ -66,6 +66,9 @@ class BorderlessBrowser(QMainWindow):
 
         # Web view
         self.webview = QWebEngineView()
+        self.webview.setCursor(Qt.CursorShape.BlankCursor)
+        layout.addWidget(self.webview)
+        
         layout.addWidget(self.webview)
         self.setCentralWidget(central_widget)
 
