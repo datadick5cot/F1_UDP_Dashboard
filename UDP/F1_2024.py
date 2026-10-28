@@ -1004,7 +1004,6 @@ def handle_packet(packet_id, packet, header):
     processed_data = handler(packet, header) if handler else None
     return processed_data
 
-_seen_ids = set()
 
 def unpack_packet(data: bytes):
     try:
@@ -1013,16 +1012,8 @@ def unpack_packet(data: bytes):
         parser_cls = PACKET_PARSERS.get(packet_id)
         if not parser_cls:
             return None
-
         packet = parser_cls.from_buffer_copy(data)
-
-        if packet_id not in _seen_ids:
-            _seen_ids.add(packet_id)
-            print(f"PKT {packet_id}: game sent {len(data)}, struct expects {sizeof(parser_cls)}", flush=True)
-
         return handle_packet(packet_id, packet, header)
-
-        
     except Exception as e:
         print(f"Error unpacking packet: {e}")
         return None
