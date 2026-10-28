@@ -978,6 +978,7 @@ def handle_packet(packet_id, packet, header):
     processed_data = handler(packet, header) if handler else None
     return processed_data
 
+_seen_ids = set()
 
 def unpack_packet(data: bytes):
     try:
@@ -987,6 +988,16 @@ def unpack_packet(data: bytes):
         if not parser_cls:
             return None
         packet = parser_cls.from_buffer_copy(data)
+
+        if packet_id not in _seen_ids:
+            _seen_ids.add(packet_id)
+            print("First packet of id", packet_id, "len", len(data))
+        
+        if packet_id == 10:
+            idx = header.m_playerCarIndex
+            print("DAMAGE idx", idx, list(packet.m_carDamageData[idx].m_tyresWear))
+
+        
         return handle_packet(packet_id, packet, header)
     except Exception as e:
         print(f"Error unpacking packet: {e}")
