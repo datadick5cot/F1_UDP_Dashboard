@@ -325,6 +325,15 @@ class PacketEventData(LittleEndianStructure):
     ]
 
 # -------------------- Packet 4: Participants --------------------
+# -------------------- Packet 4: Participants (F1 25) --------------------
+class LiveryColour(LittleEndianStructure):
+    _pack_ = 1
+    _fields_ = [
+        ('red', c_uint8),
+        ('green', c_uint8),
+        ('blue', c_uint8),
+    ]
+
 class ParticipantData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
@@ -335,11 +344,13 @@ class ParticipantData(LittleEndianStructure):
         ('m_myTeam', c_uint8),
         ('m_raceNumber', c_uint8),
         ('m_nationality', c_uint8),
-        ('m_name', c_char * 48),
+        ('m_name', c_char * 32),
         ('m_yourTelemetry', c_uint8),
         ('m_showOnlineNames', c_uint8),
         ('m_techLevel', c_uint16),
         ('m_platform', c_uint8),
+        ('m_numColours', c_uint8),
+        ('m_liveryColours', LiveryColour * 4),
     ]
 
 class PacketParticipantsData(LittleEndianStructure):
