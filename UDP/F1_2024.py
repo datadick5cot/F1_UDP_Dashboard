@@ -510,13 +510,13 @@ class PacketLobbyInfoData(LittleEndianStructure):
     ]
 
 # -------------------- Packet 10: Car Damage --------------------
-
 class CarDamageData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ('m_tyresWear', c_float * 4),
         ('m_tyresDamage', c_uint8 * 4),
         ('m_brakesDamage', c_uint8 * 4),
+        ('m_tyreBlisters', c_uint8 * 4),      # <-- added in F1 24
         ('m_frontLeftWingDamage', c_uint8),
         ('m_frontRightWingDamage', c_uint8),
         ('m_rearWingDamage', c_uint8),
@@ -527,16 +527,16 @@ class CarDamageData(LittleEndianStructure):
         ('m_ersFault', c_uint8),
         ('m_gearBoxDamage', c_uint8),
         ('m_engineDamage', c_uint8),
-        ('m_engineMGUKWear', c_uint8),
+        ('m_engineMGUHWear', c_uint8),
         ('m_engineESWear', c_uint8),
         ('m_engineCEWear', c_uint8),
         ('m_engineICEWear', c_uint8),
-        ('m_engineMGUHWear', c_uint8),
+        ('m_engineMGUKWear', c_uint8),
         ('m_engineTCWear', c_uint8),
         ('m_engineBlown', c_uint8),
         ('m_engineSeized', c_uint8),
     ]
-
+    
 class PacketCarDamageData(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
