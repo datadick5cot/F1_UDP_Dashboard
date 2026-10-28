@@ -12,7 +12,7 @@ class BorderlessBrowser(QMainWindow):
 
         # Remove window frame and make it full screen
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.showMaximized()
+        self.showFullScreen()
         
         menu = self.menuBar()
         
