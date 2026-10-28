@@ -117,472 +117,179 @@
             align-items: center;
         }
         
-                                #bat_bloc {
-        
-                                    display: block;
-        
-                                    position: relative; /* Establish positioning context for absolute children */
-        
-                                    width: 12.375em; /* 198px / 16px */
-        
-                                    height: 12.375em; /* 198px / 16px */
+        #bat_bloc {
+            display: block;
+            position: relative; /* Establish positioning context for absolute children */
+            width: 12.375em; /* 198px / 16px */ 
+            height: 12.375em; /* 198px / 16px */
         
                                 } 
         
                         
         
-                                #ers-store-circle {
-        
-                                    width: 12.375em;
-        
-                                    height: 12.375em;
-        
-                                    border-radius: 50%;
-        
-                                    background: conic-gradient(
-        
-                                        #ffeb3b 0%, 
-        
-                                        #ffeb3b var(--ers-store-percent, 0%), 
-        
-                                        #333 var(--ers-store-percent, 0%), 
-        
-                                        #333 100%
-        
-                                    );
-        
-                                    position: absolute;
-        
-                                    top: 0;
-        
-                                    left: 0;
-        
-                                    transition: box-shadow 0.2s;
-        
-                                }
-        
-                        
-        
-                                #ers-deployed-circle {
-        
-                                    width: 10.125em; /* 162px / 16px */
-        
-                                    height: 10.125em; /* 162px / 16px */
-        
-                                    border-radius: 50%;
-        
-                                    background: conic-gradient(
-        
-                                        #00ff00 0%, 
-        
-                                        #00ff00 var(--ers-deployed-percent, 0%), 
-        
-                                        #333 var(--ers-deployed-percent, 0%), 
-        
-                                        #333 100%
-        
-                                    );
-        
-                                    position: absolute;
-        
-                                    top: 1.125em; /* 18px / 16px */
-        
-                                    left: 1.125em; /* 18px / 16px */
-        
-                                    transition: box-shadow 0.2s;
-        
-                                }
-        
-                        
-        
-                            #polohole{
-        
-                                position: absolute;
-        
-                                top: 2.25em; /* 36px / 16px */
-        
-                                left: 2.25em; /* 36px / 16px */
-        
-                                width: 7.875em; /* 126px / 16px */
-        
-                                height: 7.875em; /* 126px / 16px */
-        
-                                background: var(--display-glass);
-        
-                                border-radius: 50%;
-        
-                            }
-        
-                        
-        
-                                        #ers-battery-text {
-        
-                        
-        
-                                            font-size: 2.7em; /* 43.2px / 16px */
-        
-                        
-        
-                                            font-weight: bold;
-        
-                        
-        
-                                            color: white;
-        
-                        
-        
-                                            position: absolute; /* Center within bat_bloc */
-        
-                        
-        
-                                            top: 50%;
-        
-                        
-        
-                                            left: 50%;
-        
-                        
-        
-                                            transform: translate(-50%, -50%);
-        
-                        
-        
-                                            /* Removed margin-top as absolute positioning handles placement */
-        
-                        
-        
-                                        }
-        
-                        
-        
-                                
-        
-                        
-        
-        #tyre-wear-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 15px; /* Increased gap */
-            width: 100%; /* Fill the column */
-            margin-top: 20px; /* Add some space below ERS mode */
+        #ers-store-circle {
+        
+            width: 12.375em;
+
+            height: 12.375em;
+
+            border-radius: 50%;
+
+            background: conic-gradient(
+
+                #ffeb3b 0%, 
+
+                #ffeb3b var(--ers-store-percent, 0%), 
+
+                #333 var(--ers-store-percent, 0%), 
+
+                #333 100%
+
+            );
+
+            position: absolute;
+
+            top: 0;
+
+            left: 0;
+
+            transition: box-shadow 0.2s;
+
         }
+
+                        
+
+    #ers-deployed-circle {
+
+        width: 10.125em; /* 162px / 16px */
+
+        height: 10.125em; /* 162px / 16px */
+
+        border-radius: 50%;
+
+        background: conic-gradient(
+
+            #00ff00 0%, 
+
+            #00ff00 var(--ers-deployed-percent, 0%), 
+
+            #333 var(--ers-deployed-percent, 0%), 
+
+            #333 100%
+
+        );
+
+        position: absolute;
+
+        top: 1.125em; /* 18px / 16px */
+
+        left: 1.125em; /* 18px / 16px */
+
+        transition: box-shadow 0.2s;
+
+    }
+
+
+
+    #polohole{
+
+        position: absolute;
+
+        top: 2.25em; /* 36px / 16px */
+
+        left: 2.25em; /* 36px / 16px */
+
+        width: 7.875em; /* 126px / 16px */
+
+        height: 7.875em; /* 126px / 16px */
+
+        background: var(--display-glass);
+
+        border-radius: 50%;
+
+    }
+
+                        
+
+    #ers-battery-text {
+        font-size: 2.7em; /* 43.2px / 16px */
+        font-weight: bold;
+        color: white;
+        position: absolute; /* Center within bat_bloc */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        /* Removed margin-top as absolute positioning handles placement */
+    }
+
+
+    
+    #tyre-wear-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 15px; /* Increased gap */
+        width: 100%; /* Fill the column */
+        margin-top: 20px; /* Add some space below ERS mode */
+    }
+              
+    
+    .tyre-wear-item {
+        padding-top: 20px;
+        display: flex;
+        align-items: center;
+
+    }
         
                         
         
                                 
-        
-                        
-        
-                                        .tyre-wear-item {
-        
-                        
-        
-                                            display: flex;
-        
-                        
-        
-                                            align-items: center;
-        
-                        
-        
-                                        }
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                .tyre-label {
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    font-size: 20px; /* Increased font size */
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    font-weight: bold;
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    width: 40px; /* Increased width */
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                }
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                .wear-bar-container {
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    flex-grow: 1;
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    height: 25px; /* Increased height */
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    background-color: #333;
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    border-radius: 3px;
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    overflow: hidden;
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                }
-        
-                        
-        
-                                
-        
-                        
-        
-                                        .wear-bar {
-        
-                        
-        
-                                            height: 100%;
-        
-                        
-        
-                                            width: 0%;
-        
-                        
-        
-                                            background-color: green;
-        
-                        
-        
-                                            transition: width 0.1s, background-color 0.1s;
-        
-                        
-        
-                                        }
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                .wear-value {
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    font-size: 20px; /* Increased font size */
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    font-weight: bold;
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    width: 60px; /* Increased width */
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                    text-align: right;
-        
-                        
-        
-                                
-        
-                        
-        
-                                                
-        
-                        
-        
-                                
-        
-                        
-        
-                                                                                }
-        
-                        
-        
-                                
+
+
+
+    .tyre-label {
+        font-size: 30px; /* Increased font size */
+        font-weight: bold;
+        width: 40px; /* Increased width */
+        }
+
+
+    .wear-bar-container {
+
+        flex-grow: 1;
+        height: 25px; /* Increased height */
+
+        background-color: #333;
+
+        border-radius: 3px;
+
+        overflow: hidden;
+
+}
+
+
+    .wear-bar {
+        height: 100%;
+        width: 0%;
+        background-color: green;
+        transition: width 0.1s, background-color 0.1s;
+
+    }
+
+                        
+                        
+    .wear-value {  
+
+        font-size: 30px; /* Increased font size */
+
+        font-weight: bold;
+
+        width: 60px; /* Increased width */
+
+        text-align: right;
+
+    }
+
 
 
         .gear-num {
@@ -593,6 +300,7 @@
         }
 
         .speed-display {
+            padding-top: 20px;
             font-size: 30px; /* Smaller than gear-num */
             font-weight: bold;
             text-align: center;
@@ -685,6 +393,7 @@
                     <div class="value" id="ers-mode">None</div>
                     <div class="label">ERS Mode</div>
                 </div>
+
                 <div id="tyre-wear-container">
                     <div class="tyre-wear-item">
                         <span class="tyre-label">FL</span>
