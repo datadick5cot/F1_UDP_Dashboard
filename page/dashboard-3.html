@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a111b;--panel:#111b29;--line:#213349;--text:#e9f1fa;--dim:#7f93ab;
+--amber:#ffb000;--ice:#5ad1ff;--red:#ff4a3d;--go:#3ddc84;--yel:#ffe14a}
+*{box-sizing:border-box;cursor:none!important;user-select:none;-webkit-user-select:none}
+html{font-size:min(2.083vw,3.5vh)}
+body{margin:0;height:100vh;overflow:hidden;background:var(--bg);color:var(--text);
+font-family:'Orbitron','Segoe UI',sans-serif;display:grid;
+grid-template-rows:2.4rem 1fr 5.6rem;gap:.5rem;padding:.5rem}
+.lbl{font:.62rem/1 system-ui,'Segoe UI',sans-serif;color:var(--dim)}
+.v{font-weight:900;font-size:1.9rem;line-height:1.1}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:.7rem;padding:.5rem .7rem;min-height:0}
+
+/* rev bar */
+#rev{display:grid;grid-template-columns:repeat(15,1fr);gap:.3rem}
+#rev i{background:var(--line);border-radius:.2rem;transition:background .05s}
+.shift #rev i{background:var(--ice)!important;animation:fl .12s infinite alternate}
+@keyframes fl{to{opacity:.25}}
+
+/* flag banner */
+#flag{display:none;position:fixed;top:.5rem;left:50%;transform:translateX(-50%);z-index:9;
+padding:.3rem 1.4rem;border-radius:.4rem;font-weight:900;font-size:1.1rem;color:#000}
+
+main{display:grid;grid-template-columns:1fr 1.25fr 1.1fr;gap:.5rem;min-height:0}
+
+/* left: speed + lap/pos */
+#left{display:flex;flex-direction:column;justify-content:space-between}
+#speed{font-weight:900;font-size:5.4rem;line-height:1;color:var(--text)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+#lap{color:var(--amber)}
+.sub{font:.55rem system-ui,sans-serif;color:var(--dim);margin-top:.2rem}
+
+/* centre: gear + pedals */
+#mid{display:grid;grid-template-columns:1.1rem 1fr 1.1rem;gap:.6rem}
+.pedal{position:relative;background:var(--line);border-radius:.4rem;overflow:hidden}
+.pedal b{position:absolute;left:0;right:0;bottom:0;height:var(--v,0%)}
+#gw{display:flex;align-items:center;justify-content:center}
+#gear{font-weight:900;font-size:10rem;line-height:1;text-shadow:0 0 1.6rem #5ad1ff44}
+.shift #gear{color:var(--red)}
+
+/* right: tyres */
+#tyres{display:flex;flex-direction:column;gap:.4rem}
+.grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:.4rem;min-height:0}
+.tyre{position:relative;overflow:hidden;border-radius:.55rem;background:var(--line);
+display:flex;flex-direction:column;align-items:center;justify-content:center}
+.tyre::before{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--w,0%);
+background:var(--c,#3ddc84);opacity:.5;transition:height .2s}
+.tyre>*{position:relative}
+.tyre .n{font:.6rem system-ui,sans-serif;color:var(--dim)}
+.tyre b{font-size:1.4rem;font-weight:900}
+.tyre .t{font:.6rem system-ui,sans-serif;color:var(--text)}
+
+/* footer */
+footer{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr .8fr;gap:.5rem;min-height:0}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+#ersm{font-size:.8rem;font-weight:900}
+.bar{position:relative;height:1.1rem;background:var(--line);border-radius:.3rem;overflow:hidden;margin-top:.3rem}
+.bar i{position:absolute;inset:0 auto 0 0;width:0;background:var(--amber);transition:width .1s}
+.bar.d i{background:var(--go)}
+.bar span{position:absolute;inset:0;display:flex;align-items:center;padding-left:.4rem;font:.55rem system-ui,sans-serif;color:#fff;text-shadow:0 0 3px #000}
+.sm{font-size:1.15rem}
+#drs{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--line);margin:.4rem auto 0;transition:all .2s}
+#drs.a{background:var(--ice);box-shadow:0 0 .9rem var(--ice)}
+#drs.on{background:var(--go);box-shadow:0 0 .9rem var(--go)}
+
+#link{position:fixed;right:.3rem;bottom:.2rem;width:.45rem;height:.45rem;border-radius:50%;background:var(--red)}
+#link.on{background:var(--go)}
+</style>
+</head>
+<body>
+<div id="flag"></div>
+<div id="rev"></div>
+
+<main>
+  <section class="panel" id="left">
+    <div><div class="lbl">Speed</div><div id="speed">0</div><div class="lbl" id="unit">MPH</div></div>
+    <div class="two">
+      <div><div class="lbl">Lap</div><div class="v" id="lap">0</div></div>
+      <div><div class="lbl">Position</div><div class="v" id="pos">0</div><div class="sub">Rejoin P<span id="rej">0</span></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="mid">
+    <div class="pedal"><b id="brk" style="background:var(--red)"></b></div>
+    <div id="gw"><div id="gear">N</div></div>
+    <div class="pedal"><b id="thr" style="background:var(--go)"></b></div>
+  </section>
+
+  <section class="panel" id="tyres">
+    <div class="lbl">Tyre wear and surface temp</div>
+    <div class="grid">
+      <div class="tyre" id="fl"><span class="n">Front left</span><b id="flw">0%</b><span class="t" id="flt">0°</span></div>
+      <div class="tyre" id="fr"><span class="n">Front right</span><b id="frw">0%</b><span class="t" id="frt">0°</span></div>
+      <div class="tyre" id="rl"><span class="n">Rear left</span><b id="rlw">0%</b><span class="t" id="rlt">0°</span></div>
+      <div class="tyre" id="rr"><span class="n">Rear right</span><b id="rrw">0%</b><span class="t" id="rrt">0°</span></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="panel">
+    <div class="row"><span class="lbl">ERS</span><span id="ersm">None</span></div>
+    <div class="bar"><i id="ers-s"></i><span id="ers-st">Store 0%</span></div>
+    <div class="bar d"><i id="ers-d"></i><span id="ers-dt">Deploy left 0%</span></div>
+  </div>
+  <div class="panel"><div class="lbl">Fuel laps</div><div class="v" id="fuel">0.0</div></div>
+  <div class="panel"><div class="lbl">Brake bias</div><div class="v" id="bias">0%</div></div>
+  <div class="panel"><div class="lbl">Lap time</div><div class="v sm" id="cur">-:--.---</div><div class="sub">Last <span id="last">-:--.---</span></div></div>
+  <div class="panel"><div class="lbl">DRS</div><div id="drs"></div></div>
+</footer>
+<div id="link"></div>
+
+<script>
+const UNIT = 'MPH';          // label only: change to KPH if your game sends km/h
+const MAX_ERS = 4000000;
+const $ = id => document.getElementById(id);
+$('unit').textContent = UNIT;
+
+const rev = $('rev');
+for (let i = 0; i < 15; i++) rev.appendChild(document.createElement('i'));
+const segs = [...rev.children];
+
+const GEAR = {'-1': 'R', '0': 'N'};
+const FLAGS = {1: ['Green flag', '#3ddc84'], 2: ['Blue flag', '#5ad1ff'], 3: ['Yellow flag', '#ffe14a'], 4: ['Red flag', '#ff4a3d']};
+const ERS = [['None', '#e9f1fa'], ['Medium', '#ffd580'], ['Hotlap', '#ffb000'], ['Overtake', '#ff4a3d']];
+const TY = {fl: 2, fr: 3, rl: 0, rr: 1};   // wear arrays are [RL, RR, FL, FR]
+
+const fmt = ms => {
+  if (!ms) return '-:--.---';
+  const m = Math.floor(ms / 60000), s = (ms % 60000) / 1000;
+  return m + ':' + s.toFixed(3).padStart(6, '0');
+};
+const set = (id, t) => { const e = $(id); t = String(t); if (e.textContent !== t) e.textContent = t; };
+const pct = v => Math.max(0, Math.min(100, v || 0));
+
+function update(d) {
+  const p = d.player_car_data || {}, g = d.global_data || {};
+
+  const f = FLAGS[p.m_vehicleFiaFlags], fb = $('flag');
+  if (f) { fb.textContent = f[0]; fb.style.background = f[1]; fb.style.display = 'block'; }
+  else fb.style.display = 'none';
+
+  const r = p.m_revLightsPercent || 0;
+  segs.forEach((s, i) => {
+    s.style.background = r > (i / 15) * 100 ? (i < 5 ? '#3ddc84' : i < 10 ? '#ffe14a' : '#ff4a3d') : '';
+  });
+  document.body.classList.toggle('shift', r > 90 && p.m_gear !== 8);
+
+  set('gear', GEAR[p.m_gear] ?? p.m_gear ?? 'N');
+  set('speed', Math.round(p.m_speed || 0));
+  $('thr').style.setProperty('--v', pct((p.m_throttle || 0) * 100) + '%');
+  $('brk').style.setProperty('--v', pct((p.m_brake || 0) * 100) + '%');
+
+  const cur = p.m_currentLapNum, tot = p.m_totalLaps;
+  set('lap', tot > 0 ? cur + '/' + tot : (cur ?? 0));
+  const n = g.m_numActiveCars;
+  set('pos', n > 0 ? (p.m_carPosition ?? 0) + '/' + n : (p.m_carPosition ?? 0));
+  set('rej', p.m_pitStopRejoinPosition ?? 0);
+
+  const w = p.m_tyresWear || [], t = p.m_tyresSurfaceTemperature || [];
+  for (const k in TY) {
+    const v = pct(w[TY[k]]), el = $(k);
+    el.style.setProperty('--w', v + '%');
+    el.style.setProperty('--c', v >= 75 ? '#ff4a3d' : v >= 50 ? '#ffe14a' : '#3ddc84');
+    set(k + 'w', Math.round(v) + '%');
+    set(k + 't', (t[TY[k]] ?? 0) + '°');
+  }
+
+  const st = pct((p.m_ersStoreEnergy || 0) / MAX_ERS * 100);
+  const dp = pct(100 - (p.m_ersDeployedThisLap || 0) / MAX_ERS * 100);
+  $('ers-s').style.width = st + '%';
+  $('ers-d').style.width = dp + '%';
+  set('ers-st', 'Store ' + Math.round(st) + '%');
+  set('ers-dt', 'Deploy left ' + Math.round(dp) + '%');
+  const em = ERS[p.m_ersDeployMode] || ERS[0];
+  set('ersm', em[0]); $('ersm').style.color = em[1];
+
+  const fuel = p.m_fuelRemainingLaps || 0;
+  set('fuel', fuel.toFixed(1));
+  $('fuel').style.color = fuel < 1 ? '#ff4a3d' : fuel < 3 ? '#ffb000' : '';
+  set('bias', (p.m_brakeBias ?? 0) + '%');
+  set('cur', fmt(p.m_currentLapTime));
+  set('last', fmt(p.m_lastLapTimeInMS));
+
+  $('drs').className = p.m_drs === 1 ? 'on' : (p.m_drsAllowed === 1 ? 'a' : '');
+}
+
+async function tick() {
+  let ok = false;
+  try {
+    const c = new AbortController(), to = setTimeout(() => c.abort(), 800);
+    const res = await fetch('/telemetry', {signal: c.signal});
+    clearTimeout(to);
+    update(await res.json());
+    ok = true;
+  } catch (e) { /* keep last values, show red link dot */ }
+  $('link').className = ok ? 'on' : '';
+  setTimeout(tick, 100);
+}
+tick();
+</script>
+</body>
+</html>

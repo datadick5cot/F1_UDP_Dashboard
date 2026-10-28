@@ -30,21 +30,21 @@ if __name__ == "__main__":
     c.load_config()
     # Set current ip address and save to config file
     c.save_config()
-    
+
     # Start UDP telemetry collection
     start_udp_background()
 
     # Start FastAPI server in background thread
     server_thread = threading.Thread(target=server.run, daemon=True)
     server_thread.start()
-         
+
     # Start PyQt application
     app = QApplication(sys.argv)
-   
+
     current_path = os.path.dirname(os.path.realpath(__file__))
-    
+
     pixmap = QPixmap(f"{BASE_DIR}/UI/DDD_Splash.png")
-    
+
     if pixmap.isNull():
         print("Splash image not found!")
 

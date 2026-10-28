@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        :root {
+            --bg-deep: #0a0a0a;
+            --display-glass: rgba(20, 20, 20, 0.95);
+            --f1-red: #e10600;
+            --f1-green: #00ff00;
+            --f1-amber: #FFBF00;
+        }
+
+        body {
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            color: white;
+        }
+
+        .dash-frame {
+            width: 90%;
+            height: 80%;
+            background: #222;
+            border-radius: 40px;
+            padding: 25px;
+            border: 4px solid #444;
+            box-shadow: 0 0 100px rgba(0,0,0,1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rev-strip {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 8px;
+            height: 30px;
+        }
+
+        .led {
+            background: #333;
+            border-radius: 3px;
+            box-shadow: none;
+            transition: background-color 0.05s, box-shadow 0.05s;
+        }
+
+        .screen {
+            background: var(--display-glass);
+            height: 100%;
+            border-radius: 15px;
+            border: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .data-grid {
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .data-block {
+            text-align: center;
+        }
+
+        .label {
+            color: #666;
+            font-size: 20px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-size: 60px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .gear-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-top: 20px;
+        }
+
+        .display-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        #ers-mode-container {
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #ers-mode-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #bat_bloc {
+            display: block;
+            position: relative;
+            width: 12.375em;
+            height: 12.375em;
+        }
+
+        #ers-store-circle {
+            width: 12.375em;
+            height: 12.375em;
+            border-radius: 50%;
+            background: conic-gradient(
+                #ffeb3b 0%,
+                #ffeb3b var(--ers-store-percent, 0%),
+                #333 var(--ers-store-percent, 0%),
+                #333 100%
+            );
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: box-shadow 0.2s;
+        }
+
+        #ers-deployed-circle {
+            width: 10.125em;
+            height: 10.125em;
+            border-radius: 50%;
+            background: conic-gradient(
+                #00ff00 0%,
+                #00ff00 var(--ers-deployed-percent, 0%),
+                #333 var(--ers-deployed-percent, 0%),
+                #333 100%
+            );
+            position: absolute;
+            top: 1.125em;
+            left: 1.125em;
+            transition: box-shadow 0.2s;
+        }
+
+        #polohole {
+            position: absolute;
+            top: 2.25em;
+            left: 2.25em;
+            width: 7.875em;
+            height: 7.875em;
+            background: var(--display-glass);
+            border-radius: 50%;
+        }
+
+        #ers-battery-text {
+            font-size: 2.7em;
+            font-weight: bold;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #tyre-wear-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .tyre-wear-item {
+            padding-top: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tyre-label {
+            font-size: 30px;
+            font-weight: bold;
+            width: 40px;
+        }
+
+        .wear-bar-container {
+            flex-grow: 1;
+            height: 25px;
+            background-color: #333;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        /* Bar now shows REMAINING tyre life, so it starts full */
+        .wear-bar {
+            height: 100%;
+            width: 100%;
+            background-color: lime;
+            transition: width 0.1s, background-color 0.1s;
+        }
+
+        /* Wider so "100%" fits without spilling into the next tyre */
+        .wear-value {
+            font-size: 26px;
+            font-weight: bold;
+            width: 95px;
+            text-align: right;
+        }
+
+        .gear-num {
+            font-size: 200px;
+            font-weight: 900;
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .speed-display {
+            padding-top: 20px;
+            font-size: 30px;
+            font-weight: bold;
+            text-align: center;
+            color: #888;
+            margin-top: -30px;
+        }
+
+        .leds {
+            --size: 40px;
+            --border-width: 4px;
+            width: var(--size);
+            height: var(--size);
+            border-radius: 50%;
+            border: var(--border-width) solid #000;
+            box-sizing: border-box;
+            background: radial-gradient(circle at 30% 30%, #e6e6e6 0%, #bdbdbd 40%, #6b6b6b 100%);
+            box-shadow: inset -12px -14px 22px rgba(0,0,0,0.55), inset 8px 10px 18px rgba(255,255,255,0.15), 0 10px 24px rgba(0,0,0,0.4);
+            transition: all 300ms ease;
+            margin: 0 auto;
+        }
+
+        .leds.on.green {
+            background: radial-gradient(circle at 40% 35%, #e0f7fa 0%, #29f629 40%, #1fce5c 100%);
+            box-shadow: inset -6px -8px 18px rgba(0,0,0,0.35), inset 6px 8px 12px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.45), 0 0 28px 8px rgba(113, 246, 41, 0.75);
+        }
+
+        .leds.on.blue {
+            background: radial-gradient(circle at 40% 35%, #e0f7fa 0%, #29b6f6 40%, #1f82ce 100%);
+            box-shadow: inset -6px -8px 18px rgba(0,0,0,0.35), inset 6px 8px 12px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.45), 0 0 28px 8px rgba(41, 182, 246, 0.75);
+        }
+
+        .shift-flash {
+            animation: flash 0.1s infinite;
+        }
+
+        #flag-alert {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: yellow;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 1000;
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+
+        /* Slow full-screen yellow blink while the pit limiter is on */
+        #pit-limiter-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #ffd800;
+            pointer-events: none; /* taps still reach the menu and page */
+            z-index: 900;         /* above the dashboard, below the flag alert */
+            opacity: 0;
+        }
+
+        #pit-limiter-overlay.active {
+            display: block;
+            animation: pit-blink 1.6s ease-in-out infinite;
+        }
+
+        @keyframes pit-blink {
+            0%, 100% { opacity: 0; }
+            50%      { opacity: 0.4; }
+        }
+
+        #lap-info {
+            color: var(--f1-amber);
+        }
+
+        @keyframes flash {
+            from { background: white; }
+            to { background: var(--f1-red); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="flag-alert"></div>
+<div id="pit-limiter-overlay"></div>
+
+<div class="dash-frame" id="dash-frame">
+    <div class="rev-strip" id="rev-strip"></div>
+    <div class="screen" style="margin-top: 20px;">
+        <div class="data-grid" style="justify-content: space-between;">
+            <div class="data-block" id="lap-info-block"><div class="label">Lap</div><div class="value" id="lap-info">0/0</div></div>
+            <div class="data-block" id="fuel-laps-block"><div class="label">Fuel Laps</div><div class="value" id="fuel-laps">0.0</div></div>
+            <div class="data-block" id="pos-block"><div class="label">Position</div><div class="value" id="position">0/0</div></div>
+            <div class="data-block" id="rejoin-pos-block"><div class="label">Rejoin Pos</div><div class="value" id="rejoin-pos">0</div></div>
+            <div class="data-block" id="brake-bias-block"><div class="label">Brake Bias</div><div class="value" id="brake-bias">0%</div></div>
+            <div class="data-block" id="drs-block"><div class="label">DRS</div><div class="leds" id="drs-led"></div></div>
+        </div>
+
+        <div class="gear-display">
+            <div class="display-column">
+                <div id="ers-mode-block">
+                    <div class="value" id="ers-mode">None</div>
+                    <div class="label">ERS Mode</div>
+                </div>
+
+                <div id="tyre-wear-container">
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">FL</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="fl-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="fl-wear-value">100%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">FR</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="fr-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="fr-wear-value">100%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">RL</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="rl-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="rl-wear-value">100%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label">RR</span>
+                        <div class="wear-bar-container">
+                            <div class="wear-bar" id="rr-wear-bar"></div>
+                        </div>
+                        <span class="wear-value" id="rr-wear-value">100%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="display-column">
+                <div class="gear-num" id="gear">N</div>
+                <div class="speed-display" id="speed">000 MPH</div>
+            </div>
+            <div class="display-column">
+                <div id="ers-battery-container">
+                    <div id="bat_bloc">
+                        <div id="ers-store-circle"></div>
+                        <div id="ers-deployed-circle"></div>
+                        <div id="polohole"></div>
+                        <div id="ers-battery-text">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let telemetryState = {};
+
+    const gearEl = document.getElementById('gear');
+    const brakeBiasEl = document.getElementById('brake-bias');
+    const drsLedEl = document.getElementById('drs-led');
+    const lapInfoEl = document.getElementById('lap-info');
+    const positionEl = document.getElementById('position');
+    const ersModeEl = document.getElementById('ers-mode');
+    const fuelLapsEl = document.getElementById('fuel-laps');
+    const rejoinPosEl = document.getElementById('rejoin-pos');
+    const speedEl = document.getElementById('speed');
+    const revStrip = document.getElementById('rev-strip');
+    const dashFrame = document.getElementById('dash-frame');
+    const flagAlertEl = document.getElementById('flag-alert');
+    const pitOverlayEl = document.getElementById('pit-limiter-overlay');
+    const ersDeployedCircleEl = document.getElementById('ers-deployed-circle');
+    const ersStoreCircleEl = document.getElementById('ers-store-circle');
+    const ersBatteryTextEl = document.getElementById('ers-battery-text');
+
+    const flWearBarEl = document.getElementById('fl-wear-bar');
+    const frWearBarEl = document.getElementById('fr-wear-bar');
+    const rlWearBarEl = document.getElementById('rl-wear-bar');
+    const rrWearBarEl = document.getElementById('rr-wear-bar');
+    const flWearValueEl = document.getElementById('fl-wear-value');
+    const frWearValueEl = document.getElementById('fr-wear-value');
+    const rlWearValueEl = document.getElementById('rl-wear-value');
+    const rrWearValueEl = document.getElementById('rr-wear-value');
+
+    for(let i=0; i<15; i++) {
+        const led = document.createElement('div');
+        led.className = 'led';
+        revStrip.appendChild(led);
+    }
+    const leds = Array.from(revStrip.children);
+
+    const gearMap = {
+        '-1': 'R',
+        '0': 'N',
+        '1': '1',
+        '2': '2',
+        '3': '3',
+        '4': '4',
+        '5': '5',
+        '6': '6',
+        '7': '7',
+        '8': '8'
+    };
+
+    const flagMap = {
+        1: {text: 'GREEN FLAG', color: 'green'},
+        2: {text: 'BLUE FLAG', color: 'blue'},
+        3: {text: 'YELLOW FLAG', color: 'yellow'},
+        4: {text: 'RED FLAG', color: 'red'}
+    };
+
+    const ersModeMap = {
+        0: { text: 'None', color: '#FFFFFF' },
+        1: { text: 'Medium', color: '#FFD580' },
+        2: { text: 'Hotlap', color: '#FFA500' },
+        3: { text: 'Overtake', color: '#ff3300' }
+    };
+
+
+    async function fetchTelemetry() {
+        try {
+            const res = await fetch("http://localhost:8000/telemetry");
+            telemetryState = await res.json();
+        } catch (err) {
+            console.error("Failed to fetch telemetry:", err);
+        }
+    }
+
+
+    function updateDashboard() {
+        if (!telemetryState || Object.keys(telemetryState).length === 0) return;
+
+        // Safely access player_car_data and global_data
+        const playerCarData = telemetryState.player_car_data || {};
+        const globalData = telemetryState.global_data || {};
+
+        const flagValue = playerCarData.m_vehicleFiaFlags;
+        const flagInfo = flagMap[flagValue];
+        const rpmPercent = playerCarData.m_revLightsPercent;
+
+        // Update Flag Alert
+        if (flagInfo) {
+            flagAlertEl.innerText = flagInfo.text;
+            flagAlertEl.style.backgroundColor = flagInfo.color;
+            flagAlertEl.style.display = 'block';
+        } else {
+            flagAlertEl.style.display = 'none';
+        }
+
+        // Pit limiter: slow yellow blink while the limiter is on
+        pitOverlayEl.classList.toggle('active', playerCarData.m_pitLimiterStatus === 1);
+
+        // Update Gear
+        if (playerCarData.m_gear !== undefined) {
+            const gearValue = playerCarData.m_gear;
+            gearEl.innerText = gearMap[gearValue] || gearValue;
+        }
+
+        // Update Speed
+        if (playerCarData.m_speed !== undefined) {
+            speedEl.innerText = `${Math.round(playerCarData.m_speed)} MPH`;
+        }
+
+        // Update Brake Bias
+        if (playerCarData.m_brakeBias !== undefined) {
+            const brakeBiasValue = playerCarData.m_brakeBias;
+            brakeBiasEl.innerText = `${brakeBiasValue}%`;
+        }
+
+        // Update ERS Mode
+        if (playerCarData.m_ersDeployMode !== undefined) {
+            const ersMode = playerCarData.m_ersDeployMode;
+            const ersInfo = ersModeMap[ersMode];
+            if (ersInfo) {
+                ersModeEl.innerText = ersInfo.text;
+                ersModeEl.style.color = ersInfo.color;
+            }
+        }
+
+        // Update ERS Store (Yellow)
+        if (playerCarData.m_ersStoreEnergy !== undefined) {
+            const MAX_ERS_STORE = 4000000;
+            const ersEnergy = playerCarData.m_ersStoreEnergy;
+            const ersStorePercent = (ersEnergy / MAX_ERS_STORE) * 100;
+
+            ersBatteryTextEl.innerText = `${Math.round(ersStorePercent)}%`;
+            ersStoreCircleEl.style.setProperty('--ers-store-percent', `${ersStorePercent}%`);
+
+            const glowIntensity = ersStorePercent / 100;
+            const glowColor = `rgba(255, 235, 59, ${glowIntensity * 0.8})`;
+            ersStoreCircleEl.style.boxShadow = `0 0 ${15 * glowIntensity}px ${glowColor}`;
+        }
+
+        // Update ERS Deployed This Lap (Green) - represents AVAILABLE deployment
+        if (playerCarData.m_ersDeployedThisLap !== undefined) {
+            const MAX_ERS_DEPLOY_LAP = 4000000;
+            const ersDeployed = playerCarData.m_ersDeployedThisLap;
+            const ersDeployedPercent = (ersDeployed / MAX_ERS_DEPLOY_LAP) * 100;
+            const ersAvailablePercent = 100 - ersDeployedPercent;
+
+            ersDeployedCircleEl.style.setProperty('--ers-deployed-percent', `${ersAvailablePercent}%`);
+        }
+
+        // Update Fuel Laps
+        if (playerCarData.m_fuelRemainingLaps !== undefined) {
+            const fuelLaps = playerCarData.m_fuelRemainingLaps;
+            fuelLapsEl.innerText = fuelLaps.toFixed(2);
+            if (fuelLaps < 0) {
+                fuelLapsEl.style.color = 'red';
+            } else {
+                fuelLapsEl.style.color = '#24fe07';
+            }
+        }
+
+        // Update Rejoin Position
+        if (playerCarData.m_pitStopRejoinPosition !== undefined) {
+            rejoinPosEl.innerText = playerCarData.m_pitStopRejoinPosition;
+        }
+
+        // Update DRS
+        if (playerCarData.m_drs !== undefined && playerCarData.m_drsAllowed !== undefined) {
+            const drsValue = playerCarData.m_drs;
+            const drsAllowedValue = playerCarData.m_drsAllowed;
+            drsLedEl.classList.remove('on', 'green', 'blue');
+            if (drsValue === 1) {
+                drsLedEl.classList.add('on', 'green');
+            } else if (drsAllowedValue === 1) {
+                drsLedEl.classList.add('on', 'blue');
+            }
+        }
+
+        // Update Lap Info
+        if (playerCarData.m_currentLapNum !== undefined && playerCarData.m_totalLaps !== undefined && playerCarData.m_totalLaps > 0) {
+            const remainingLaps = playerCarData.m_totalLaps - playerCarData.m_currentLapNum;
+            lapInfoEl.innerText = `${remainingLaps}`;
+        } else if (playerCarData.m_currentLapNum !== undefined) {
+            lapInfoEl.innerText = `${playerCarData.m_currentLapNum}`;
+        }
+
+        // Update Tyre Wear (shown as remaining tyre life: starts at 100%, drains as it wears)
+        if (playerCarData.m_tyresWear) {
+            const wears = playerCarData.m_tyresWear; // [RL, RR, FL, FR] wear %
+            const wearElements = [
+                { bar: rlWearBarEl, value: rlWearValueEl, wear: wears[0] },
+                { bar: rrWearBarEl, value: rrWearValueEl, wear: wears[1] },
+                { bar: flWearBarEl, value: flWearValueEl, wear: wears[2] },
+                { bar: frWearBarEl, value: frWearValueEl, wear: wears[3] }
+            ];
+
+            wearElements.forEach(elem => {
+                const remaining = Math.max(0, Math.min(100, 100 - elem.wear));
+                elem.bar.style.width = `${remaining}%`;
+                elem.value.innerText = `${Math.round(remaining)}%`;
+
+                if (remaining <= 25) {
+                    elem.bar.style.backgroundColor = 'red';      // same as 75% worn
+                } else if (remaining <= 50) {
+                    elem.bar.style.backgroundColor = 'yellow';   // same as 50% worn
+                } else {
+                    elem.bar.style.backgroundColor = 'lime';
+                }
+            });
+        }
+
+        // Update Position
+        if (playerCarData.m_carPosition !== undefined && globalData.m_numActiveCars !== undefined && globalData.m_numActiveCars > 0) {
+            positionEl.innerText = `${playerCarData.m_carPosition}/${globalData.m_numActiveCars}`;
+        } else if (playerCarData.m_carPosition !== undefined) {
+            positionEl.innerText = `${playerCarData.m_carPosition}`;
+        }
+
+        // Update Rev Lights and dash background
+        if (rpmPercent !== undefined) {
+            leds.forEach((led, index) => {
+                const threshold = (index / leds.length) * 100;
+                if (rpmPercent > threshold) {
+                    if (index < 5) led.style.background = '#4caf50'; // Green
+                    else if (index < 10) led.style.background = '#ffeb3b'; // Yellow
+                    else led.style.background = '#f44336'; // Red
+                    led.style.boxShadow = '0 0 10px ' + led.style.background;
+                } else {
+                    led.style.background = '#333';
+                    led.style.boxShadow = 'none';
+                }
+            });
+
+            // Handle dash frame background and shift flash
+            const isShiftFlash = (rpmPercent !== undefined && rpmPercent > 90) && playerCarData.m_gear !== 8;
+
+            if (isShiftFlash) {
+                dashFrame.classList.add('shift-flash');
+                dashFrame.style.backgroundColor = '';
+            } else {
+                dashFrame.classList.remove('shift-flash');
+                if (flagInfo) {
+                    dashFrame.style.backgroundColor = flagInfo.color;
+                } else {
+                    dashFrame.style.backgroundColor = '#222';
+                }
+            }
+        }
+    }
+
+    setInterval(async () => {
+        await fetchTelemetry();
+        updateDashboard();
+    }, 100);
+</script>
+
+</body>
+</html>

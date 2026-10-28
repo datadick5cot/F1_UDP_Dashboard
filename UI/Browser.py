@@ -2,25 +2,29 @@ from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QMessageBox, QApplication
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtGui import QAction
+import os
 import subprocess
 
 
 
 class BorderlessBrowser(QMainWindow):
+
+
     def __init__(self):
         super().__init__()
 
         # Remove window frame and make it full screen
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.showFullScreen()
-        
+
         menu = self.menuBar()
-        
+
+        # File menu
         file_menu = menu.addMenu("&File")
-        
+
         shutdown = QAction("Shutdown Pi", self)
         shutdown.triggered.connect(self.shutdown_pi)
-        
+
         quit_app = QAction("Quit App", self)
         quit_app.triggered.connect(self.quit_app)
 
@@ -28,33 +32,40 @@ class BorderlessBrowser(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(shutdown)
 
-        #Dashboard Options
+        # Dashboard Options menu
         option_menu = menu.addMenu("&Options")
-        
-        Button1 = QAction("Dashboard 1", self)
-        Button1.triggered.connect(lambda: self.load_page("dashboard-1"))
-        
-        
-        Button2 = QAction("Dashboard 2", self)
-        Button2.triggered.connect(lambda: self.load_page("dashboard-2"))
-        
-        
-        Telemetry = QAction("Telemetry", self)
-        Telemetry.triggered.connect(lambda: self.load_page("telemetry"))
-        
-        Settings = QAction("Settings", self)
-        Settings.triggered.connect(lambda: self.load_page("settings"))
-        
-        
-        rivalsdashboard = QAction("Rival Dashboard", self)
-        rivalsdashboard.triggered.connect(lambda: self.load_page("rival"))
-        
-        option_menu.addAction(Button1)
-        option_menu.addAction(Button2)
-        option_menu.addSeparator()
-        option_menu.addAction(Telemetry)
-        option_menu.addAction(Settings)
-        option_menu.addAction(rivalsdashboard)
+
+        # Folder containing your HTML pages
+        self.page_folder = os.path.expanduser(
+            "~/Documents/F1_UDP_Dashboard/page"
+        )
+
+        # Find HTML files and create a menu action for each one
+        try:
+            html_files = sorted(
+                file for file in os.listdir(self.page_folder)
+                if file.lower().endswith(".html")
+                and os.path.isfile(os.path.join(self.page_folder, file))
+            )
+
+            for file in html_files:
+                # Use the filename without .html as the page name
+                page_name = os.path.splitext(file)[0]
+
+                # Turn the filename into a readable menu label
+                label = page_name.replace("-", " ").replace("_", " ").title()
+
+                action = QAction(label, self)
+                action.triggered.connect(
+                    lambda checked=False, name=page_name:
+                        self.load_page(name)
+                )
+
+                option_menu.addAction(action)
+
+        except OSError as error:
+            print(f"Could not read HTML folder: {error}")
+
 
         self.apply_touch_styles()
         
