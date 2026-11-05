@@ -959,11 +959,24 @@ PACKET_HANDLERS = {
     },
 
     10: lambda pkt, hdr: (
-        # Damage data
-        lambda car_damage : {'player_car_data': {'m_tyresWear' : list(car_damage.m_tyresWear)}}
-        )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
-        
-
+        lambda cd: {'player_car_data': {
+            'm_tyresWear': list(cd.m_tyresWear),
+            'm_tyresDamage': list(cd.m_tyresDamage),
+            'm_brakesDamage': list(cd.m_brakesDamage),
+            'm_frontLeftWingDamage': cd.m_frontLeftWingDamage,
+            'm_frontRightWingDamage': cd.m_frontRightWingDamage,
+            'm_rearWingDamage': cd.m_rearWingDamage,
+            'm_floorDamage': cd.m_floorDamage,
+            'm_diffuserDamage': cd.m_diffuserDamage,
+            'm_sidepodDamage': cd.m_sidepodDamage,
+            'm_drsFault': cd.m_drsFault,
+            'm_ersFault': cd.m_ersFault,
+            'm_gearBoxDamage': cd.m_gearBoxDamage,
+            'm_engineDamage': cd.m_engineDamage,
+            'm_engineBlown': cd.m_engineBlown,
+            'm_engineSeized': cd.m_engineSeized,
+        }}
+    )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
 
     11: lambda pkt, hdr: {
         # Session history
