@@ -1,10 +1,18 @@
-# 🏎️ Raspberry Pi UDP Telemetry Reader for 🏁 F1 Games
+# 🏎️ Raspberry Pi UDP Telemetry Reader for 🏁 Sim Racing
 
-Welcome to the **UDP Telemetry Reader** project — a lightweight and powerful tool designed to run on a **Raspberry Pi 🍓**, built to capture and process real-time telemetry data from the **F1 🏎️** game series using the **UDP** data stream!  
+Reading the UDP signals sent over the Wifi network this is a lightweight cheap tool designed to run a a raspberry pi 4 to capture real-time telemetry data. Designed to work with F1 2025 
 
-This project lets you tap into your favorite racing simulator’s live data — like speed, throttle, brake, and lap times — to create your own dashboards, LEDs, or motion setups for ultimate immersion!  
+**Hardward required**
 
----
+[Raspberry pi model 4](https://thepihut.com/products/raspberry-pi-4-model-b)
+
+[6.25 display screen](https://thepihut.com/products/6-25-ips-dsi-capacitive-touch-display-720-x-1560?variant=53795331506561)
+
+[Mini Fan](https://thepihut.com/products/argon-mini-fan?variant=37788085584067)
+
+This project lets you tap into full immersion without a massive cost
+
+-------------------------------------------------------------------------------------------------------------------------------------
 
 ## 🚀 Features
 
@@ -20,23 +28,4 @@ This project lets you tap into your favorite racing simulator’s live data — 
 
 The **F1 🏎️** game broadcasts live telemetry data over **UDP**.  
 Your **Raspberry Pi 🍓** listens to these packets, decodes them using **Python 🐍**, and processes the data for use in your own applications (e.g., dashboards, LEDs, or web overlays).
-
-
----
-
-## 🛠️ Requirements
-
-- **Raspberry Pi** (any model with network support)  
-- **Python 🐍 3.8+**  
-- Installed dependencies:
-  bash
-  pip install struct socket json
-
-
-
-## Run app
-
-python app.py
-  
-
 
