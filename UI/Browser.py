@@ -87,13 +87,15 @@ class BorderlessBrowser(QMainWindow):
         self.webview.load(QUrl("http://localhost:8000/dashboard/dashboard-1.html"))
 
     def apply_touch_styles(self):
-        # Scale sizes from screen height so it works on any display
         screen_h = QApplication.primaryScreen().availableGeometry().height()
-        bar_h = max(70, int(screen_h * 0.10))     # menu bar height
-        font_px = int(bar_h * 0.40)               # text size
-        pad_v = int(bar_h * 0.20)
-        pad_h = int(bar_h * 0.60)
-    
+        base_h = max(70, int(screen_h * 0.10))      # the size the menu was before
+        bar_h = int(base_h * 0.75)                  # menu bar height: 3/4 of before
+        font_px = int(base_h * 0.40)                # text size unchanged
+        pad_h = int(base_h * 0.60)                  # button width unchanged
+        pad_v = max(2, int(base_h * 0.135 - 4))     # trimmed so the buttons fit the shorter bar
+        drop_pad_v = int(base_h * 0.20)
+
+
         self.menuBar().setFixedHeight(bar_h)
         self.setStyleSheet(f"""
             QMenuBar {{
