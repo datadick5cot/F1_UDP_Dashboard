@@ -1,5 +1,5 @@
 import asyncio
-
+import time
 
 from ctypes import LittleEndianStructure, Union, c_uint8, c_int8
 from ctypes import c_uint16, c_int16, c_uint32, c_uint64, c_float, c_double, c_char
@@ -21,23 +21,6 @@ class PacketHeader(LittleEndianStructure):
         ('m_playerCarIndex', c_uint8),
         ('m_secondaryPlayerCarIndex', c_uint8),
     ]
-
-# class PacketHeader(LittleEndianStructure):
-#     _pack_ = 1
-#     _fields_ = [
-#         ("m_packetFormat", c_uint16),
-#         ("m_gameYear", c_uint8),
-#         ("m_gameMajorVersion", c_uint8),
-#         ("m_gameMinorVersion", c_uint8),
-#         ("m_packetVersion", c_uint8),
-#         ("m_packetId", c_uint8),
-#         ("m_sessionUID", c_uint64),
-#         ("m_sessionTime", c_float),
-#         ("m_frameIdentifier", c_uint32),
-#         ("m_overallFrameIdentifier", c_uint32),
-#         ("m_playerCarIndex", c_uint8),
-#         ("m_secondaryPlayerCarIndex", c_uint8),
-#     ]
 
 # -------------------- Packet 0: Motion --------------------
 class CarMotionData(LittleEndianStructure):
@@ -324,7 +307,6 @@ class PacketEventData(LittleEndianStructure):
         ('m_eventDetails', EventDataDetails),
     ]
 
-# -------------------- Packet 4: Participants --------------------
 # -------------------- Packet 4: Participants (F1 25) --------------------
 class LiveryColour(LittleEndianStructure):
     _pack_ = 1
@@ -852,10 +834,10 @@ def deep_merge(dict1, dict2):
 PACKET_HANDLERS = {
         0: lambda pkt, hdr: {
         # Motion
-        
+
     },
-    
-    
+
+
     1: lambda pkt, hdr: {
         'global_data': {
             'm_weather': pkt.m_weather,
@@ -863,6 +845,7 @@ PACKET_HANDLERS = {
             'm_airTemperature': pkt.m_airTemperature,
             'm_sessionTimeLeft': pkt.m_sessionTimeLeft,
             'm_sessionDuration': pkt.m_sessionDuration,
+            'm_gamePaused': pkt.m_gamePaused,
         },
         'player_car_data': {
             'm_pitStopRejoinPosition': pkt.m_pitStopRejoinPosition,
@@ -906,7 +889,8 @@ PACKET_HANDLERS = {
 
     6: lambda pkt, hdr: (
         lambda player_idx, rival_idx: {
-            'player_car_data': {
+            'last_live': time.time(),
+             'player_car_data': {
                 'm_speed': pkt.m_carTelemetryData[player_idx].m_speed,
                 'm_throttle': pkt.m_carTelemetryData[player_idx].m_throttle,
                 'm_brake': pkt.m_carTelemetryData[player_idx].m_brake,
@@ -993,8 +977,7 @@ PACKET_HANDLERS = {
             "m_wheelSpeed": list(pkt.m_wheelSpeed),
         }
         ),
-        
-    
+
     14: lambda pkt, hdr: {
         'global_data': { # These are "global" bests, not specific to current car data
             'player_session_best_data': packet_to_dict(pkt.m_playerSessionBestDataSet),
@@ -1092,11 +1075,9 @@ if __name__ == "__main__":
 
     while True:
         data = get_latest_data()
-        
-        
+
         # if data is not None skip
         try:
-            
             print(f"Brakes : {data['m_brake']}")
             print(f"Throttle : {data['m_throttle']}")
             print(f"gear : {data['m_gear']}")
@@ -1105,7 +1086,6 @@ if __name__ == "__main__":
             print(f"REVS = {data['m_revLightsPercent']}")
         except:
             pass
-        
 
 
 

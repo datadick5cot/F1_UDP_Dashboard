@@ -340,6 +340,14 @@
         #damage-list .amber { color: #ffb000; }
         #damage-list .red { color: #ff2d1f; font-weight: bold; }
         #damage-list .more { color: #6b7684; justify-content: flex-end; }
+
+/* Blank everything when telemetry is stale */
+body.stale .dash-frame,
+body.stale #damage-panel,
+body.stale #flag-alert,
+body.stale #pit-limiter-overlay { display: none !important; }
+
+
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
 </head>
@@ -423,6 +431,30 @@
 </aside>
 </div>
 <script>
+    const STALE_MS = 2000;          // blank after this long with no new telemetry
+    let lastLive = null;
+    let lastLiveChange = Date.now();
+    let fetchOk = true;
+
+    function checkStale() {
+        const live = telemetryState.last_live;
+        if (live !== lastLive) { lastLive = live; lastLiveChange = Date.now(); }
+
+        const paused = telemetryState.global_data?.m_gamePaused === 1;
+        const stale = !fetchOk
+                   || live === undefined
+                   || (Date.now() - lastLiveChange) > STALE_MS
+                   || paused;
+
+        document.body.classList.toggle('stale', stale);
+        return stale;
+    }
+
+    setInterval(async () => {
+        await fetchTelemetry();
+        if (!checkStale()) updateDashboard();
+    }, 100);
+
     let telemetryState = {};
 
     const gearEl = document.getElementById('gear');
@@ -486,14 +518,19 @@
     };
 
 
+
+
     async function fetchTelemetry() {
         try {
             const res = await fetch("http://localhost:8000/telemetry");
             telemetryState = await res.json();
+            fetchOk = true;
         } catch (err) {
+            fetchOk = false;
             console.error("Failed to fetch telemetry:", err);
         }
     }
+
 
 
     function updateDashboard() {
@@ -683,8 +720,6 @@
         ['floor', 'Floor', p => p.m_floorDamage],
         ['side', 'Sidepods', p => p.m_sidepodDamage],
         ['diff', 'Diffuser', p => p.m_diffuserDamage],
-        ['gear', 'Gearbox', p => p.m_gearBoxDamage],
-        ['eng', 'Engine', p => (p.m_engineBlown || p.m_engineSeized) ? 100 : p.m_engineDamage]
     ];
     for (const k in IDX) {
         ZONES.push(['t' + IDX[k], 'Tyre ' + k, p => (p.m_tyresDamage || [])[IDX[k]]]);
