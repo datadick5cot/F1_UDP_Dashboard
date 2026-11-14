@@ -794,10 +794,7 @@ body.stale #pit-limiter-overlay { display: none !important; }
         stageEl.classList.toggle('has-damage', found.length > 0);
     }
 
-    setInterval(async () => {
-        await fetchTelemetry();
-        updateDashboard();
-    }, 100);
+
 </script>
 
 </body>
