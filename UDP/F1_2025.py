@@ -845,6 +845,7 @@ PACKET_HANDLERS = {
             'm_airTemperature': pkt.m_airTemperature,
             'm_sessionTimeLeft': pkt.m_sessionTimeLeft,
             'm_sessionDuration': pkt.m_sessionDuration,
+            'm_safetyCarStatus': pkt.m_safetyCarStatus,
             'm_gamePaused': pkt.m_gamePaused,
         },
         'player_car_data': {
@@ -865,6 +866,7 @@ PACKET_HANDLERS = {
             "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
             "m_deltaToRaceLeaderMinutesPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMinutesPart,
             "m_deltaToRaceLeaderMSPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMSPart,
+            'm_safetyCarDelta': pkt.m_lapData[hdr.m_playerCarIndex].m_safetyCarDelta,
         },
         'global_data': {
             'm_timeTrialRivalCarIdx': pkt.m_timeTrialRivalCarIdx,
@@ -882,6 +884,7 @@ PACKET_HANDLERS = {
     5: lambda pkt, hdr: {
         'player_car_data': {
             'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
+            'last_live': time.time(),
         },
     },
 
