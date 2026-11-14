@@ -315,7 +315,26 @@
             to { background: var(--f1-red); }
         }
 
+        
+        .wear-bar-container {
+            flex-grow: 1;
+            height: 31px;                 /* 25px bar + 3px border top and bottom */
+            box-sizing: border-box;
+            border: 3px solid #333;       /* colour set from surface temp */
+            background-color: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        
+        .wear-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #333;       /* colour set from inner temp */
+            transition: width 0.1s, background-color 0.3s;
+        }
 
+        
         /* ---- Damage side panel (only visible when something is damaged) ---- */
         #stage { position: relative; width: calc(90% + 58px); height: calc(80% + 58px); }
         .has-damage .dash-frame { transform: translateY(13%) scale(0.74); }
@@ -531,7 +550,26 @@ body.stale #pit-limiter-overlay { display: none !important; }
         }
     }
 
+    // [temperature °C, hue] stops. Colour blends smoothly between them.
+    // 220 = blue, 120 = green, 30 = orange, 0 = red.
+    // Tune the temperatures to taste; they are starting guesses.
+    const TEMP_STOPS = {
+        surface: [[70, 220], [85, 120], [105, 120], [115, 30], [125, 0]],
+        inner:   [[75, 220], [90, 120], [105, 120], [115, 30], [125, 0]]
+    };
 
+    function tempColour(t, stops) {
+        if (t <= stops[0][0]) return 'hsl(' + stops[0][1] + ' 90% 50%)';
+        for (let i = 1; i < stops.length; i++) {
+            if (t <= stops[i][0]) {
+                const [t0, h0] = stops[i - 1];
+                const [t1, h1] = stops[i];
+                const h = h0 + (h1 - h0) * ((t - t0) / (t1 - t0));
+                return 'hsl(' + h.toFixed(0) + ' 90% 50%)';
+            }
+        }
+        return 'hsl(' + stops[stops.length - 1][1] + ' 90% 50%)';
+    }
 
     function updateDashboard() {
         if (!telemetryState || Object.keys(telemetryState).length === 0) return;
@@ -643,14 +681,16 @@ body.stale #pit-limiter-overlay { display: none !important; }
             lapInfoEl.innerText = `${playerCarData.m_currentLapNum}`;
         }
 
-        // Update Tyre Wear (shown as remaining tyre life: starts at 100%, drains as it wears)
+
         if (playerCarData.m_tyresWear) {
-            const wears = playerCarData.m_tyresWear; // [RL, RR, FL, FR] wear %
+            const wears = playerCarData.m_tyresWear;                      // [RL, RR, FL, FR]
+            const surf  = playerCarData.m_tyresSurfaceTemperature || [];
+            const inner = playerCarData.m_tyresInnerTemperature || [];
             const wearElements = [
-                { bar: rlWearBarEl, value: rlWearValueEl, wear: wears[0] },
-                { bar: rrWearBarEl, value: rrWearValueEl, wear: wears[1] },
-                { bar: flWearBarEl, value: flWearValueEl, wear: wears[2] },
-                { bar: frWearBarEl, value: frWearValueEl, wear: wears[3] }
+                { bar: rlWearBarEl, value: rlWearValueEl, wear: wears[0], surf: surf[0], inner: inner[0] },
+                { bar: rrWearBarEl, value: rrWearValueEl, wear: wears[1], surf: surf[1], inner: inner[1] },
+                { bar: flWearBarEl, value: flWearValueEl, wear: wears[2], surf: surf[2], inner: inner[2] },
+                { bar: frWearBarEl, value: frWearValueEl, wear: wears[3], surf: surf[3], inner: inner[3] }
             ];
 
             wearElements.forEach(elem => {
@@ -658,15 +698,13 @@ body.stale #pit-limiter-overlay { display: none !important; }
                 elem.bar.style.width = `${remaining}%`;
                 elem.value.innerText = `${Math.round(remaining)}%`;
 
-                if (remaining <= 25) {
-                    elem.bar.style.backgroundColor = 'red';      // same as 75% worn
-                } else if (remaining <= 50) {
-                    elem.bar.style.backgroundColor = 'yellow';   // same as 50% worn
-                } else {
-                    elem.bar.style.backgroundColor = 'lime';
-                }
+                if (elem.inner !== undefined)
+                    elem.bar.style.backgroundColor = tempColour(elem.inner, TEMP_STOPS.inner);
+                if (elem.surf !== undefined)
+                    elem.bar.parentElement.style.borderColor = tempColour(elem.surf, TEMP_STOPS.surface);
             });
         }
+
 
         try { updateDamage(playerCarData); } catch (e) { console.error('damage view:', e); }
 
