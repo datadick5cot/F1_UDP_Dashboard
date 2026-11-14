@@ -598,6 +598,16 @@ body.stale #pit-limiter-overlay { display: none !important; }
             flagAlertEl.style.display = 'none';
         }
 
+        // Race events: show each new one once
+        const evSeq = telemetryState.m_eventSeq;
+        if (evSeq !== undefined && evSeq !== lastEventSeq) {
+            if (lastEventSeq !== null) {   // don't replay an old event when the page first loads
+                showEvent(telemetryState.m_eventStringCode, telemetryState.m_eventDetails, telemetryState.m_eventPlayerIdx);
+            }
+            lastEventSeq = evSeq;
+        }
+
+        
         // Safety car / VSC banner: only while one is out (status 1 = SC, 2 = VSC)
         const scStatus = globalData.m_safetyCarStatus ?? playerCarData.m_safetyCarStatus ?? telemetryState.m_safetyCarStatus;
         const scDelta  = playerCarData.m_safetyCarDelta ?? globalData.m_safetyCarDelta ?? telemetryState.m_safetyCarDelta;
