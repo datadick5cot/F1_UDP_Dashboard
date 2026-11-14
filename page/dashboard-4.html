@@ -317,10 +317,29 @@
             from { background: white; }
             to { background: var(--f1-red); }
         }
-
     
-
+        #sc-banner {
+        display: none;
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;                       /* above the flag alert */
+        gap: 20px;
+        align-items: baseline;
+        background: #FFBF00;
+        color: #000;
+        padding: 8px 28px;
+        border-radius: 8px;
+        font-weight: 900;
+        text-transform: uppercase;
+        }
+        #sc-label { font-size: 28px; }
+        #sc-delta { font-size: 44px; font-family: monospace; background: #000; padding: 0 14px; border-radius: 5px; }
+        body.sc-active #sc-banner { display: flex; }
+        body.sc-active #flag-alert { top: 85px; }   /* keep the flag banner below it */
         
+                
         /* ---- Damage side panel (only visible when something is damaged) ---- */
         #stage { position: relative; width: calc(90% + 58px); height: calc(80% + 58px); }
         .has-damage .dash-frame { transform: translateY(13%) scale(0.74); }
@@ -350,14 +369,14 @@
 body.stale .dash-frame,
 body.stale #damage-panel,
 body.stale #flag-alert,
+body.stale #sc-banner,
 body.stale #pit-limiter-overlay { display: none !important; }
-
-
+        
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
 </head>
 <body>
-
+<div id="sc-banner"><span id="sc-label">SAFETY CAR</span><span id="sc-delta">+0.000</span></div>
 <div id="flag-alert"></div>
 <div id="pit-limiter-overlay"></div>
 
@@ -440,6 +459,9 @@ body.stale #pit-limiter-overlay { display: none !important; }
     let lastLive = null;
     let lastLiveChange = Date.now();
     let fetchOk = true;
+
+    const scLabelEl = document.getElementById('sc-label');
+    const scDeltaEl = document.getElementById('sc-delta');
 
     function checkStale() {
         const live = telemetryState.last_live;
@@ -563,7 +585,6 @@ body.stale #pit-limiter-overlay { display: none !important; }
         // Safely access player_car_data and global_data
         const playerCarData = telemetryState.player_car_data || {};
         const globalData = telemetryState.global_data || {};
-
         const flagValue = playerCarData.m_vehicleFiaFlags;
         const flagInfo = flagMap[flagValue];
         const rpmPercent = playerCarData.m_revLightsPercent;
@@ -575,6 +596,19 @@ body.stale #pit-limiter-overlay { display: none !important; }
             flagAlertEl.style.display = 'block';
         } else {
             flagAlertEl.style.display = 'none';
+        }
+
+        // Safety car / VSC banner: only while one is out (status 1 = SC, 2 = VSC)
+        const scStatus = globalData.m_safetyCarStatus ?? playerCarData.m_safetyCarStatus ?? telemetryState.m_safetyCarStatus;
+        const scDelta  = playerCarData.m_safetyCarDelta ?? globalData.m_safetyCarDelta ?? telemetryState.m_safetyCarDelta;
+        const scOut = scStatus === 1 || scStatus === 2;
+        document.body.classList.toggle('sc-active', scOut);
+        if (scOut) {
+            scLabelEl.innerText = scStatus === 2 ? 'VSC' : 'Safety Car';
+            if (scDelta !== undefined) {
+                scDeltaEl.innerText = (scDelta >= 0 ? '+' : '') + scDelta.toFixed(3);
+                scDeltaEl.style.color = scDelta >= 0 ? '#24fe07' : '#ff3b30';
+            }
         }
 
         // Pit limiter: slow yellow blink while the limiter is on
