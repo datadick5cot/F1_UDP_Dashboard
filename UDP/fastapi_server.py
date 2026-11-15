@@ -34,7 +34,7 @@ class TelemetryServer:
         folders = [
             ("/dashboards", "dashboards"),
             ("/settings", "settings"),
-            ("/dashboard", "page"),     # old location; remove once nothing uses it
+
         ]
         for url, folder in folders:
             path = self.base_dir / folder
