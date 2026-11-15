@@ -22,16 +22,3 @@ EventCodes = {'SSTA': 'Session Started',
 
 
 
-
-tyre_compound_dict = {16 : ['soft', 'assets/tyres/red.webp'], 
-                    17 : ['medium', 'assets/tyres/yellow.webp'], 
-                    18 : ['hard', 'assets/tyres/white.webp'], 
-                    7 : ['inter', 'assets/tyres/green.webp'], 
-                    8 : ['wet', 'assets/tyres/blue.webp']}
-
-
-
-tyres_style = {'position': 'absolute',
-                'width': '120px',
-                'height': '120px'}
-
