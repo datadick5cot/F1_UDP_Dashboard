@@ -31,12 +31,18 @@ class TelemetryServer:
         )
 
     def _setup_static_files(self):
-        html_dir = self.base_dir / "page"
-        self.app.mount(
-            "/dashboard",
-            StaticFiles(directory=str(html_dir), html=True),
-            name="dashboard"
-        )
+        folders = [
+            ("/dashboards", "dashboards"),
+            ("/settings", "settings"),
+            ("/dashboard", "page"),     # old location; remove once nothing uses it
+        ]
+        for url, folder in folders:
+            path = self.base_dir / folder
+            if path.is_dir():
+                self.app.mount(url, StaticFiles(directory=str(path), html=True), name=folder)
+            else:
+                print(f"Static folder not found, not served: {path}")
+                
 
     def _setup_routes(self):
         @self.app.get("/telemetry")
