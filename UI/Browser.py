@@ -33,10 +33,8 @@ class BorderlessBrowser(QMainWindow):
         # Dashboard Options menu
         option_menu = menu.addMenu("&Options")
 
-        # Folder containing your HTML pages
-        self.page_folder = os.path.expanduser(
-            "~/Documents/F1_UDP_Dashboard/dashboards"
-        )
+        # Folder containing your HTML page
+        self.page_folder = str(Path(__file__).resolve().parent.parent / "dashboards")
 
         # Find HTML files and create a menu action for each one
         try:
