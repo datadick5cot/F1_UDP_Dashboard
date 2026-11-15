@@ -366,22 +366,48 @@
         #damage-list .more { color: #6b7684; justify-content: flex-end; }
 
 /* Blank everything when telemetry is stale */
-body.stale .dash-frame,
+/* Stale: keep the structure, hide the live values */
+
+/* Overlays and the damage panel still disappear */
 body.stale #damage-panel,
 body.stale #flag-alert,
 body.stale #sc-banner,
 body.stale #pit-limiter-overlay { display: none !important; }
 
+/* Text values: invisible but still take up space, so the layout doesn't shift */
+body.stale .value,
+body.stale .gear-num,
+body.stale .speed-display,
+body.stale .wear-value,
+body.stale #ers-battery-text,
+body.stale .wear-bar { visibility: hidden; }
 
-#standby {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    background: #111 url('../UI/DDD_Splash.png') center / contain no-repeat;
-    /* use 'cover' instead of 'contain' to fill the screen and crop edges */
+/* Rev lights back to off */
+body.stale .led {
+    background: #333 !important;
+    box-shadow: none !important;
 }
-body.stale #standby { display: block; }
+
+/* ERS rings back to empty */
+body.stale #ers-store-circle,
+body.stale #ers-deployed-circle {
+    background: #333 !important;
+    box-shadow: none !important;
+}
+
+/* DRS light back to grey */
+body.stale .leds {
+    background: radial-gradient(circle at 30% 30%, #e6e6e6 0%, #bdbdbd 40%, #6b6b6b 100%) !important;
+    box-shadow: none !important;
+}
+
+/* Cancel shift flash, flag colour, and the damage-shrink transform */
+body.stale .dash-frame {
+    animation: none !important;
+    background: #222 !important;
+    transform: none !important;
+}
+body.stale .wear-bar-container { border-color: #333 !important; }
         
         
     </style>
