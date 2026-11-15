@@ -3,7 +3,7 @@ import socket
 import random
 
 
-from F1_2024 import (
+from F1_2025 import (
     PacketMotionData,
     PacketSessionData,
     PacketLapData,
