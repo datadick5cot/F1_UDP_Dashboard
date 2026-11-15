@@ -1,8 +1,9 @@
-# 🏎️ Raspberry Pi UDP Telemetry Reader for 🏁 Sim Racing
+# 🏎️ SIM Raspberry Pi Dashboard 
 
-Reading the UDP signals sent over the Wifi network this is a lightweight cheap tool designed to run a a raspberry pi 4 to capture real-time telemetry data. Designed to work with F1 2025 
+Using a cheap Raspberry Pi to visualise a Dashboard for sim racing. UDP signals sent over the Wifi network this is a lightweight cheap tool designed to run a a raspberry pi 4 to capture real-time telemetry data. Designed to work with F1 game 
 
 **Hardward required**
+Although the project was built to utilise a the small screen I'm sure it will run on other screen
 
 [Raspberry pi model 4](https://thepihut.com/products/raspberry-pi-4-model-b)
 
@@ -17,15 +18,8 @@ This project lets you tap into full immersion without a massive cost
 ## 🚀 Features
 
 ✅ Reads **UDP** telemetry packets from **F1 🏎️** (by Codemasters / EA Sports)  
-✅ Lightweight and runs smoothly on **Raspberry Pi 🍓**  
-✅ Built entirely in **Python 🐍**  
+  can be adapted to run on other sim racing games
+✅ Lightweight and runs smoothly on Raspberry Pi
+✅ Built entirely in **Python 🐍 and HTML 
 ✅ Modular design for easy customization  
 ✅ Real-time data visualization and logging support  
-
----
-
-## 🧠 How It Works
-
-The **F1 🏎️** game broadcasts live telemetry data over **UDP**.  
-Your **Raspberry Pi 🍓** listens to these packets, decodes them using **Python 🐍**, and processes the data for use in your own applications (e.g., dashboards, LEDs, or web overlays).
-
