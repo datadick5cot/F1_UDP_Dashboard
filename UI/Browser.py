@@ -6,9 +6,7 @@ import os
 import subprocess
 
 
-
 class BorderlessBrowser(QMainWindow):
-
 
     def __init__(self):
         super().__init__()
@@ -37,7 +35,7 @@ class BorderlessBrowser(QMainWindow):
 
         # Folder containing your HTML pages
         self.page_folder = os.path.expanduser(
-            "~/Documents/F1_UDP_Dashboard/page"
+            "~/Documents/F1_UDP_Dashboard/dashboards"
         )
 
         # Find HTML files and create a menu action for each one
@@ -63,10 +61,18 @@ class BorderlessBrowser(QMainWindow):
 
                 option_menu.addAction(action)
 
+
+
         except OSError as error:
             print(f"Could not read HTML folder: {error}")
 
-
+        option_menu.addSeparator()
+        settings_action = QAction("Settings", self)
+        settings_action.triggered.connect(
+            lambda: self.webview.load(QUrl("http://localhost:8000/settings"))
+        )
+        option_menu.addAction(settings_action)
+        
         self.apply_touch_styles()
         
 
@@ -84,7 +90,7 @@ class BorderlessBrowser(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Load HTML served from FastAPI
-        self.webview.load(QUrl("http://localhost:8000/dashboard/dashboard-1.html"))
+        self.webview.load(QUrl("http://localhost:8000/dashboards/dashboard-1.html"))
 
     def apply_touch_styles(self):
         screen_h = QApplication.primaryScreen().availableGeometry().height()
