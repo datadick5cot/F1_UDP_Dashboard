@@ -4,6 +4,7 @@ from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtGui import QAction
 import os
 import subprocess
+from pathlib import Path
 
 
 class BorderlessBrowser(QMainWindow):
