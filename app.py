@@ -1,14 +1,12 @@
 import sys
 import os
 import threading
-# from UDP.fastapi_server import run_listening
 from UDP.fastapi_server import TelemetryServer
 from UDP.F1_2024 import start_udp_background
 from UI.Browser import BorderlessBrowser
 from PyQt6.QtWidgets import QApplication
 from variables.settings_variables import ConfigureVariables
 from PyQt6.QtGui import QPixmap
-from fastapi.responses import FileResponse
 import sys
 from PyQt6.QtWidgets import QSplashScreen
 from PyQt6.QtCore import Qt
@@ -21,12 +19,6 @@ import time
 BASE_DIR = Path(__file__).resolve().parent
 
 server = TelemetryServer(BASE_DIR)
-
-
-
-@self.app.get("/settings")
-def settings_page():
-    return FileResponse(self.base_dir / "settings" / "settings.html")
 
 # ------------------ MAIN ENTRY POINT ------------------
 if __name__ == "__main__":
