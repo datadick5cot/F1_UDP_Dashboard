@@ -371,11 +371,24 @@ body.stale #damage-panel,
 body.stale #flag-alert,
 body.stale #sc-banner,
 body.stale #pit-limiter-overlay { display: none !important; }
+
+
+#standby {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: #111 url(''../UI/DDD_Splash.png') center / contain no-repeat;
+    /* use 'cover' instead of 'contain' to fill the screen and crop edges */
+}
+body.stale #standby { display: block; }
+        
         
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
 </head>
 <body>
+<div id="standby"></div>
 <div id="sc-banner"><span id="sc-label">SAFETY CAR</span><span id="sc-delta">+0.000</span></div>
 <div id="flag-alert"></div>
 <div id="pit-limiter-overlay"></div>
