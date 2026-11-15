@@ -179,6 +179,6 @@ class BorderlessBrowser(QMainWindow):
 
 
     def load_page(self, page_name):
-        url = f"http://localhost:8000/dashboard/{page_name}.html"
+        url = f"http://localhost:8000/dashboards/{page_name}.html"
         self.webview.load(QUrl(url))
 
