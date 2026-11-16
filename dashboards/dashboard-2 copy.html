@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F1 Dashboard 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+</head>
+<body class="stale">
+
+<div id="pit-limiter-overlay"></div>
+<div id="event-toast"></div>
+
+<div id="stage">
+    <div id="sc-banner"><span id="sc-label">SAFETY CAR</span><span id="sc-delta">+0.000</span></div>
+    <div id="flag-alert"></div>
+<div class="dash-frame2" id="dash-frame2">
+    <div class="rev-strip" id="rev-strip"></div>
+    <div class="screen2" style="margin-top: 20px;">
+
+        <div class="data-grid">
+            <div class="data-block"><div class="label2">Lap</div><div class="value" id="lap-info">0/0</div></div>
+            <div class="data-block"><div class="label2">Fuel Laps</div><div class="value" id="fuel-laps">0.0</div></div>
+            <div class="data-block"><div class="label2">Position</div><div class="value" id="position">0/0</div></div>
+            <div class="data-block"><div class="label2">Rejoin Pos</div><div class="value" id="rejoin-pos">0</div></div>
+            <div class="data-block"><div class="label2">Brake Bias</div><div class="value" id="brake-bias">0%</div></div>
+            <div class="data-block"><div class="label2">DRS</div><div class="leds" id="drs-led">--</div></div>
+
+
+        </div>
+
+        <div class="gear-display">
+            <div class="display-column">
+                <div id="ers-mode-block">
+                    <div class="value" id="ers-mode">None</div>
+                    <div class="label2">ERS Mode</div>
+                </div>
+                <div id="tyre-wear-container">
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label2">FL</span>
+                        <div class="wear-bar-container"><div class="wear-bar" id="fl-wear-bar"></div></div>
+                        <span class="wear-value" id="fl-wear-value">100%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label2">FR</span>
+                        <div class="wear-bar-container"><div class="wear-bar" id="fr-wear-bar"></div></div>
+                        <span class="wear-value" id="fr-wear-value">100%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label2">RL</span>
+                        <div class="wear-bar-container"><div class="wear-bar" id="rl-wear-bar"></div></div>
+                        <span class="wear-value" id="rl-wear-value">100%</span>
+                    </div>
+                    <div class="tyre-wear-item">
+                        <span class="tyre-label2">RR</span>
+                        <div class="wear-bar-container"><div class="wear-bar" id="rr-wear-bar"></div></div>
+                        <span class="wear-value" id="rr-wear-value">100%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="display-column">
+                <div class="gear-num" id="gear">N</div>
+                <div class="speed-display" id="speed">000 MPH</div>
+            </div>
+            <div class="display-column">
+                <div id="bat_bloc">
+                    <div id="ers-store-circle"></div>
+                    <div id="ers-deployed-circle"></div>
+                    <div id="polohole"></div>
+                    <div id="ers-battery-text">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-row">
+            <div class="data-block"><div class="label2">Session</div><div class="value" id="session-name">--</div></div>
+            
+            <div class="data-block">
+                <div class="label2">Weather</div>
+                <div class="wx-row">
+                    <span class="wx-icon" id="wx-now">-</span>
+                    <span class="wx-arrow">→</span>
+                    <span class="wx-icon" id="wx-next">-</span>
+                    <span class="wx-time" id="wx-time"></span>
+                </div>
+            </div>
+            <div class="data-block">
+                <div class="label2">Gap Ahead</div>
+                <div class="value" id="gap-ahead">--</div>
+            </div>
+            <div class="data-block">
+                <div class="label2">Gap Behind</div>
+                <div class="value" id="gap-behind">--</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<aside id="damage-panel">
+    <div class="dp-title">Damage</div>
+    <!-- Simplified car outline. Zone ids (data-z) match the script, so you can
+         swap in your detailed SVG as long as it keeps the same data-z values. -->
+    <svg id="car" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+        <path class="outline" d="M100 8 L112 40 L118 120 L122 140 L122 300 L128 340 L128 372 L72 372 L72 340 L78 300 L78 140 L82 120 L88 40 Z"/>
+        <rect class="z" data-z="fwl" x="18" y="14" width="76" height="22" rx="3"/>
+        <rect class="z" data-z="fwr" x="106" y="14" width="76" height="22" rx="3"/>
+        <rect class="z" data-z="t2" x="10" y="52" width="28" height="54" rx="6"/>
+        <rect class="z" data-z="t3" x="162" y="52" width="28" height="54" rx="6"/>
+        <rect class="z thin" data-z="b2" x="40" y="68" width="6" height="22"/>
+        <rect class="z thin" data-z="b3" x="154" y="68" width="6" height="22"/>
+        <rect class="z" data-z="eng" x="86" y="150" width="28" height="110" rx="8"/>
+        <rect class="z" data-z="side" x="56" y="150" width="28" height="110" rx="4"/>
+        <rect class="z" data-z="side" x="116" y="150" width="28" height="110" rx="4"/>
+        <rect class="z" data-z="floor" x="44" y="130" width="10" height="170" rx="2"/>
+        <rect class="z" data-z="floor" x="146" y="130" width="10" height="170" rx="2"/>
+        <rect class="z" data-z="gear" x="88" y="268" width="24" height="38" rx="3"/>
+        <rect class="z" data-z="t0" x="8" y="282" width="32" height="62" rx="6"/>
+        <rect class="z" data-z="t1" x="160" y="282" width="32" height="62" rx="6"/>
+        <rect class="z thin" data-z="b0" x="42" y="300" width="6" height="26"/>
+        <rect class="z thin" data-z="b1" x="152" y="300" width="6" height="26"/>
+        <rect class="z" data-z="diff" x="72" y="332" width="56" height="18" rx="3"/>
+        <rect class="z" data-z="rw" x="40" y="356" width="120" height="24" rx="3"/>
+    </svg>
+    <div id="damage-list"></div>
+</aside>
+</div>
+
+
+<script src="dashboard_scripts.js"></script>
+
+</body>
+</html>
