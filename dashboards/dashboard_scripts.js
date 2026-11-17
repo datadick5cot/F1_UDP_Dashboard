@@ -28,6 +28,19 @@ const rlWearBarEl = $('rl-wear-bar'), rrWearBarEl = $('rr-wear-bar');
 const flWearValueEl = $('fl-wear-value'), frWearValueEl = $('fr-wear-value');
 const rlWearValueEl = $('rl-wear-value'), rrWearValueEl = $('rr-wear-value');
 
+
+const DESIGN_W = 1734, DESIGN_H = 800;
+function fitToScreen() {
+    const w = document.documentElement.clientWidth;
+    const h = document.documentElement.clientHeight;
+    const s = Math.min(w / DESIGN_W, h / DESIGN_H);
+    $('stage').style.setProperty('--fit', s);
+}
+window.addEventListener('resize', fitToScreen);
+window.addEventListener('load', fitToScreen);
+setInterval(fitToScreen, 1000);   // catches rotation or fullscreen changes that don't fire resize
+fitToScreen();
+
 for (let i = 0; i < 15; i++) {
     const led = document.createElement('div');
     led.className = 'led';
@@ -376,3 +389,5 @@ function updateDamage(p) {
     // Panel only appears (and the dashboard only shrinks) while there is damage
     stageEl.classList.toggle('has-damage', found.length > 0);
 }
+
+
