@@ -1,0 +1,267 @@
+:root {
+    --display-glass: rgba(20, 20, 20, 0.95);
+    --f1-red: #e10600;
+    --f1-amber: #FFBF00;
+}
+
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+    background-color: #111;
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    color: white;
+}
+
+#stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1734px;     /* design size, same shape as 1560x720 */
+    height: 800px;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) scale(var(--fit, 1));
+}
+
+
+.dash-frame {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    transition: transform 0.35s ease;
+    background: #222;
+    border-radius: 40px;
+    padding: 25px;
+    border: 4px solid #444;
+    box-shadow: 0 0 100px rgba(0,0,0,1);
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+
+.dash-frame2 {
+    width: 100%;
+    height: calc(100% - 50px);
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    top: 50px;
+    transform-origin: 0 0;
+    transition: transform 0.35s ease;
+    background: #222;
+    border-radius: 40px;
+    padding: 25px;
+    border: 4px solid #f6ff00;
+    box-shadow: 0 0 100px rgba(0,0,0,1);
+    display: flex;
+    flex-direction: column;
+}
+
+.rev-strip { display: grid; grid-template-columns: repeat(15, 1fr); gap: 8px; height: 30px; }
+.led { background: #333; border-radius: 3px; transition: background-color 0.05s, box-shadow 0.05s; }
+
+.screen {
+    background: var(--display-glass);
+    height: 100%;
+    border-radius: 15px;
+    border: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.screen2 {
+    background: var(--display-glass);
+    height: 100%;
+    border-radius: 15px;
+    border: 2px solid #f6ff00;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.data-grid {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+.data-block { text-align: center; }
+.label { color: #666; font-size: 20px; text-transform: uppercase; margin-bottom: 5px; }
+
+.label2 { color: #f6ff00; font-size: 20px; text-transform: uppercase; margin-bottom: 5px; }
+
+.value { font-size: 60px; font-weight: bold; font-family: monospace; }
+
+.gear-display { display: flex; justify-content: space-between; align-items: flex-start; padding-top: 20px; }
+.display-column { display: flex; flex-direction: column; align-items: center; flex: 1; }
+#ers-mode-block { display: flex; flex-direction: column; align-items: center; }
+
+/* ERS rings */
+#bat_bloc { display: block; position: relative; width: 12.375em; height: 12.375em; }
+#ers-store-circle {
+    width: 12.375em; height: 12.375em; border-radius: 50%;
+    background: conic-gradient(#ffeb3b 0%, #ffeb3b var(--ers-store-percent, 0%), #333 var(--ers-store-percent, 0%), #333 100%);
+    position: absolute; top: 0; left: 0; transition: box-shadow 0.2s;
+}
+#ers-deployed-circle {
+    width: 10.125em; height: 10.125em; border-radius: 50%;
+    background: conic-gradient(#00ff00 0%, #00ff00 var(--ers-deployed-percent, 0%), #333 var(--ers-deployed-percent, 0%), #333 100%);
+    position: absolute; top: 1.125em; left: 1.125em; transition: box-shadow 0.2s;
+}
+#polohole { position: absolute; top: 2.25em; left: 2.25em; width: 7.875em; height: 7.875em; background: var(--display-glass); border-radius: 50%; }
+#ers-battery-text { font-size: 2.7em; font-weight: bold; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Tyres */
+#tyre-wear-container { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15px; width: 100%; margin-top: 10px; padding-bottom: 10px;}
+.tyre-wear-item { padding-top: 20px; display: flex; align-items: center; }
+
+.tyre-label { font-size: 25px; font-weight: bold; width: 40px; }
+.tyre-label2 { font-size: 25px; font-weight: bold; width: 40px; color: #f6ff00; font-size: 18px;}
+
+
+.wear-value { font-size: 26px; font-weight: bold; width: 95px; text-align: right; }
+.wear-bar-container {
+    flex-grow: 1; height: 31px; box-sizing: border-box;
+    border: 3px solid #333; background-color: #333; border-radius: 5px;
+    overflow: hidden; transition: border-color 0.3s;
+}
+.wear-bar { height: 100%; width: 100%; background-color: #777; transition: width 0.1s, background-color 0.3s; }
+
+.gear-num { font-size: 200px; font-weight: 900; line-height: 1; text-shadow: 0 0 30px rgba(255,255,255,0.2); }
+.speed-display { padding-top: 20px; font-size: 30px; font-weight: bold; text-align: center; color: #888; margin-top: -30px; }
+
+/* DRS light */
+.leds {
+    --size: 40px;
+    width: var(--size); height: var(--size);
+    border-radius: 50%;
+    border: 4px solid #000;
+    box-sizing: border-box;
+    background: radial-gradient(circle at 30% 30%, #e6e6e6 0%, #bdbdbd 40%, #6b6b6b 100%);
+    box-shadow: inset -12px -14px 22px rgba(0,0,0,0.55), inset 8px 10px 18px rgba(255,255,255,0.15), 0 10px 24px rgba(0,0,0,0.4);
+    transition: all 300ms ease;
+    margin: 0 auto;
+}
+.leds.on.green {
+    background: radial-gradient(circle at 40% 35%, #e0f7fa 0%, #29f629 40%, #1fce5c 100%);
+    box-shadow: inset -6px -8px 18px rgba(0,0,0,0.35), inset 6px 8px 12px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.45), 0 0 28px 8px rgba(113,246,41,0.75);
+}
+.leds.on.blue {
+    background: radial-gradient(circle at 40% 35%, #e0f7fa 0%, #29b6f6 40%, #1f82ce 100%);
+    box-shadow: inset -6px -8px 18px rgba(0,0,0,0.35), inset 6px 8px 12px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.45), 0 0 28px 8px rgba(41,182,246,0.75);
+}
+
+.shift-flash { animation: flash 0.1s infinite; }
+@keyframes flash { from { background: white; } to { background: var(--f1-red); } }
+
+#lap-info { color: var(--f1-amber); }
+
+/* New: session name + bottom row */
+#session-name { font-size: 44px; }
+.bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    border-top: 1px solid #333;
+    padding-top: 10px;
+}
+.wx-row { display: flex; align-items: center; gap: 12px; }
+.wx-icon { font-size: 56px; line-height: 1; }
+.wx-arrow { font-size: 30px; color: #666; }
+.wx-time { font-size: 20px; color: #666; }
+#gap-ahead { color: var(--f1-amber); }
+
+/* Banners */
+#flag-alert {
+    display: none; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    background-color: yellow; color: black; padding: 10px 20px; border-radius: 5px;
+    font-weight: bold; text-align: center; z-index: 1000; font-size: 20px; text-transform: uppercase;
+}
+#pit-limiter-overlay {
+    display: none; position: fixed; inset: 0; background: #ffd800;
+    pointer-events: none; z-index: 900; opacity: 0;
+}
+#pit-limiter-overlay.active { display: block; animation: pit-blink 1.6s ease-in-out infinite; }
+@keyframes pit-blink { 0%, 100% { opacity: 0; } 50% { opacity: 0.4; } }
+
+#sc-banner {
+    display: none; position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+    z-index: 1001; gap: 20px; align-items: baseline;
+    background: #FFBF00; color: #000; padding: 8px 28px; border-radius: 8px;
+    font-weight: 900; text-transform: uppercase;
+}
+#sc-label { font-size: 28px; }
+#sc-delta { font-size: 44px; font-family: monospace; background: #000; padding: 0 14px; border-radius: 5px; }
+body.sc-active #sc-banner { display: flex; }
+body.sc-active #flag-alert { top: 85px; }
+
+#event-toast {
+    display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 1002; background: #fff; color: #000; padding: 8px 24px; border-radius: 8px;
+    font-weight: 900; font-size: 24px;
+}
+
+/* Damage side panel (only visible when something is damaged) */
+
+.has-damage .dash-frame { transform: translateY(13%) scale(0.74); }
+
+#damage-panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 25%;
+    box-sizing: border-box; background: #222; border: 4px solid #444; border-radius: 28px;
+    box-shadow: 0 0 100px rgba(0,0,0,1); padding: 12px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+}
+.has-damage #damage-panel { opacity: 1; visibility: visible; }
+.dp-title { color: #666; font-size: 16px; text-transform: uppercase; }
+#car { flex: 1; min-height: 0; width: 100%; }
+#car .outline { fill: none; stroke: #6f839c; stroke-width: 1px; vector-effect: non-scaling-stroke; }
+#car .z { fill: rgba(255,255,255,0.04); stroke: #6f839c; stroke-width: 1px; vector-effect: non-scaling-stroke; transition: fill 0.3s, stroke 0.3s; }
+#car .z.thin { stroke-width: 2px; }
+#car .z.amber { fill: rgba(255,176,0,0.7); stroke: #ffb000; }
+#car .z.red { fill: rgba(255,45,31,0.8); stroke: #ff2d1f; }
+#car .z.thin.amber, #car .z.thin.red { stroke-width: 4px; }
+#damage-list { width: 100%; font-size: 13px; line-height: 1.4; }
+#damage-list .row { display: flex; justify-content: space-between; }
+#damage-list .amber { color: #ffb000; }
+#damage-list .red { color: #ff2d1f; font-weight: bold; }
+#damage-list .more { color: #6b7684; justify-content: flex-end; }
+
+/* ---- Stale (no telemetry / paused): keep the structure, hide live values ---- */
+body.stale #damage-panel,
+body.stale #flag-alert,
+body.stale #sc-banner,
+body.stale #event-toast,
+body.stale #pit-limiter-overlay { display: none !important; }
+
+body.stale .value,
+body.stale .gear-num,
+body.stale .speed-display,
+body.stale .wear-value,
+body.stale #ers-battery-text,
+body.stale .wear-bar,
+body.stale .wx-icon,
+body.stale .wx-arrow,
+body.stale .wx-time { visibility: hidden; }
+
+body.stale .led { background: #333 !important; box-shadow: none !important; }
+body.stale #ers-store-circle,
+body.stale #ers-deployed-circle { background: #333 !important; box-shadow: none !important; }
+body.stale .leds {
+    background: radial-gradient(circle at 30% 30%, #e6e6e6 0%, #bdbdbd 40%, #6b6b6b 100%) !important;
+    box-shadow: none !important;
+}
+body.stale .dash-frame { animation: none !important; background: #222 !important; transform: none !important; }
+body.stale .wear-bar-container { border-color: #333 !important; }
