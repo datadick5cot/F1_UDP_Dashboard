@@ -147,11 +147,30 @@ function updateExtras(p, g) {
     if (now !== undefined) wxNowEl.innerText = WEATHER_ICONS[now] || '-';
 
     const samples = g.m_weatherForecastSamples ?? telemetryState.m_weatherForecastSamples ?? [];
+    
+    if (samples.length) {
+        const next = samples.find(s => s.m_timeOffset >= FORECAST_MINUTES) || samples[samples.length - 1];
+        wxNextEl.innerText = WEATHER_ICONS[next.m_weather] || '-';
+        wxTimeEl.innerText = '+' + next.m_timeOffset + 'm';
+
+        // Rain chance for that forecast point (0-100)
+        const rain = next.m_rainPercentage;
+        if (rain !== undefined) {
+            wxRainEl.innerText = rain + '%';
+            wxRainEl.style.color = rain >= 70 ? '#29b6f6' : rain >= 30 ? '#FFBF00' : '#fff';
+        } else {
+            wxRainEl.innerText = '--';
+        }
+    }
+
     if (samples.length) {
         const next = samples.find(s => s.m_timeOffset >= FORECAST_MINUTES) || samples[samples.length - 1];
         wxNextEl.innerText = WEATHER_ICONS[next.m_weather] || '-';
         wxTimeEl.innerText = '+' + next.m_timeOffset + 'm';
     }
+    
+
+
 
     // Gaps in ms. Gap behind needs the backend to supply it (see notes).
     const ahead  = p.m_deltaToCarInFrontInMS ?? p.m_deltaToCarInFront ?? p.m_gapAhead;
@@ -211,24 +230,7 @@ function updateDashboard() {
         speedEl.innerText = `${Math.round(playerCarData.m_speed)} MPH`;
     }
 
-    if (samples.length) {
-        const next = samples.find(s => s.m_timeOffset >= FORECAST_MINUTES) || samples[samples.length - 1];
-        wxNextEl.innerText = WEATHER_ICONS[next.m_weather] || '-';
-        wxTimeEl.innerText = '+' + next.m_timeOffset + 'm';
-
-        // Rain chance for that forecast point (0-100)
-        const rain = next.m_rainPercentage;
-        if (rain !== undefined) {
-            wxRainEl.innerText = rain + '%';
-            wxRainEl.style.color = rain >= 70 ? '#29b6f6' : rain >= 30 ? '#FFBF00' : '#666';
-        } else {
-            wxRainEl.innerText = '';
-        }
-    }
-
-
-    if (rainpercetage)
-
+    
     // Brake bias
     if (playerCarData.m_brakeBias !== undefined) {
         brakeBiasEl.innerText = `${playerCarData.m_brakeBias}%`;
