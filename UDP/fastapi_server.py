@@ -34,6 +34,7 @@ class TelemetryServer:
         folders = [
             ("/dashboards", "dashboards"),
             ("/settings", "settings"),
+            ("/assets", "assets"),
 
         ]
         for url, folder in folders:

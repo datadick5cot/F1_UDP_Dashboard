@@ -342,11 +342,12 @@ function updateDashboard() {
         }
     }
 }
-
 // ---- Car damage ----
-const AMBER_AT = 20;     // damage % that turns a part amber
+const AMBER_AT = 30;     // damage % that turns a part amber
 const RED_AT = 50;       // damage % that turns a part red
-const IDX = { RL: 0, RR: 1, FL: 2, FR: 3 };   // game arrays are [RL, RR, FL, FR]
+const SWIPE_PX = 40;     // drag distance that counts as a swipe
+const TAP_PX = 10;       // movement under this counts as a tap
+
 const ZONES = [
     ['fwl', 'Front wing L', p => p.m_frontLeftWingDamage],
     ['fwr', 'Front wing R', p => p.m_frontRightWingDamage],
@@ -356,16 +357,26 @@ const ZONES = [
     ['diff', 'Diffuser', p => p.m_diffuserDamage],
     ['gear', 'Gearbox', p => p.m_gearBoxDamage],
     ['eng', 'Engine', p => p.m_engineDamage],
+    // Faults: only do anything if the SVG has data-z="drs" / data-z="ers" elements
+    ['drs', 'DRS fault', p => (p.m_drsFault === 1 ? 100 : 0)],
+    ['ers', 'ERS fault', p => (p.m_ersFault === 1 ? 100 : 0)],
 ];
-for (const k in IDX) {
-    ZONES.push(['t' + IDX[k], 'Tyre ' + k, p => (p.m_tyresDamage || [])[IDX[k]]]);
-    ZONES.push(['b' + IDX[k], 'Brake ' + k, p => (p.m_brakesDamage || [])[IDX[k]]]);
+// Tyres removed. Brakes kept; indices are [RL, RR, FL, FR]
+const BRAKE_IDX = { RL: 0, RR: 1, FL: 2, FR: 3 };
+for (const k in BRAKE_IDX) {
+    ZONES.push(['b' + BRAKE_IDX[k], 'Brake ' + k, p => (p.m_brakesDamage || [])[BRAKE_IDX[k]]]);
 }
+
 const zoneEls = {};
 ZONES.forEach(z => { zoneEls[z[0]] = Array.from(document.querySelectorAll('#car [data-z="' + z[0] + '"]')); });
 const stageEl = $('stage');
-const damageListEl = $('damage-list');
-let lastList = '';
+const carEl = $('car');
+
+// Dismiss state
+let panelHidden = false;
+let dismissedSeen = new Map();   // zone id -> severity (1 amber, 2 red) when dismissed
+let currentFound = [];
+const sev = f => (f.cls === 'red' ? 2 : 1);
 
 function updateDamage(p) {
     const found = [];
@@ -376,20 +387,46 @@ function updateDamage(p) {
             el.classList.remove('amber', 'red');
             if (cls) el.classList.add(cls);
         });
-        if (cls) found.push({ v, label, cls });
+        // Only count zones that actually exist on the SVG, so the panel never shows an uncoloured car
+        if (cls && zoneEls[id].length) found.push({ id, cls });
     });
-    if (p.m_drsFault === 1) found.push({ v: 100, label: 'DRS fault', cls: 'red', fault: true });
-    if (p.m_ersFault === 1) found.push({ v: 100, label: 'ERS fault', cls: 'red', fault: true });
-    found.sort((a, b) => b.v - a.v);
+    currentFound = found;
 
-    const rows = found.slice(0, 6).map(f =>
-        '<div class="row ' + f.cls + '"><span>' + f.label + '</span>' + (f.fault ? '' : '<b>' + f.v + '%</b>') + '</div>');
-    if (found.length > 6) rows.push('<div class="row more">+' + (found.length - 6) + ' more</div>');
-    const list = rows.join('');
-    if (list !== lastList) { damageListEl.innerHTML = list; lastList = list; }
+    // Damage fully repaired / new session: forget any dismissal
+    if (found.length === 0) {
+        panelHidden = false;
+        dismissedSeen.clear();
+    }
 
-    // Panel only appears (and the dashboard only shrinks) while there is damage
-    stageEl.classList.toggle('has-damage', found.length > 0);
+    // If dismissed, bring the panel back only for NEW damage or a part getting worse (amber -> red)
+    if (panelHidden && found.some(f => (dismissedSeen.get(f.id) || 0) < sev(f))) {
+        panelHidden = false;
+    }
+
+    // Panel only appears (and the dashboard only shrinks) while there is undismissed damage
+    stageEl.classList.toggle('has-damage', found.length > 0 && !panelHidden);
 }
 
+function dismissDamage() {
+    panelHidden = true;
+    dismissedSeen = new Map(currentFound.map(f => [f.id, sev(f)]));
+    stageEl.classList.remove('has-damage');
+}
 
+// Tap or swipe the car to dismiss the panel
+(function setupDismiss() {
+    const panelEl = carEl;   // change to the panel's container if it has its own id
+    panelEl.style.touchAction = 'none';
+    let sx = 0, sy = 0, tracking = false;
+
+    panelEl.addEventListener('pointerdown', e => {
+        sx = e.clientX; sy = e.clientY; tracking = true;
+    });
+    panelEl.addEventListener('pointerup', e => {
+        if (!tracking) return;
+        tracking = false;
+        const move = Math.max(Math.abs(e.clientX - sx), Math.abs(e.clientY - sy));
+        if (move >= SWIPE_PX || move < TAP_PX) dismissDamage();
+    });
+    panelEl.addEventListener('pointercancel', () => { tracking = false; });
+})();
