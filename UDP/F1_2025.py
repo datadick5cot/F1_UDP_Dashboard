@@ -713,8 +713,17 @@ EventCodes = {'SSTA': 'Session Started',
 
 
 
+# Events that fire constantly or for every car; not worth a toast. Edit to taste.
+IGNORED_EVENTS = {'BUTN', 'SPTP', 'OVTK', 'COLL'}
+_event_seq = 0   # bumps once per shown event so the dashboard can tell a new one from a repeat
+
+
 def decode_event(pkt):
-    code = bytes(pkt.m_eventStringCode).decode("utf-8").strip("\x00")
+    global _event_seq
+    code = bytes(pkt.m_eventStringCode).decode("utf-8", errors="ignore").strip("\x00")
+    if code in IGNORED_EVENTS:
+        return None   # nothing queued, so the previous event stays as it was
+    _event_seq += 1
     details = {}
 
     if code == "FTLP":
@@ -729,7 +738,9 @@ def decode_event(pkt):
     # add others as needed
 
     return {
+        "m_eventSeq": _event_seq,
         "m_eventStringCode": code,
+        "m_eventName": EventCodes.get(code, code),
         "m_eventDetails": details
     }
 
@@ -797,6 +808,8 @@ latest_data = {
         'm_airTemperature': 0, # From Packet 1
         'm_sessionTimeLeft': 0, # From Packet 1
         'm_sessionDuration': 0, # From Packet 1
+        'm_sessionType': 0, # From Packet 1
+        'm_weatherForecastSamples': [], # From Packet 1 (already trimmed to the real samples)
     },
     'm_playerSessionBestDataSet': {}, # Time trial data can remain top level
     'm_personalBestDataSet': {},
@@ -831,6 +844,35 @@ def deep_merge(dict1, dict2):
             dict1[k] = v
     return dict1
 
+
+def _lap_delta_ms(lap):
+    """Delta to the car in front, in ms (F1 25 splits it into minutes + ms parts)."""
+    return lap.m_deltaToCarInFrontMinutesPart * 60000 + lap.m_deltaToCarInFrontMSPart
+
+
+def lap_gaps(pkt, hdr):
+    """Gap ahead / behind the player, in ms.
+
+    The game only reports 'delta to car in front' per car, so the gap BEHIND the
+    player is the 'delta to car in front' of whichever car is one position back.
+    """
+    me = pkt.m_lapData[hdr.m_playerCarIndex]
+    ahead = _lap_delta_ms(me) if me.m_carPosition > 1 else 0   # P1 has nobody ahead
+
+    behind = 0
+    for lap in pkt.m_lapData:
+        # resultStatus 2 = active; skips empty / retired slots
+        if lap.m_resultStatus == 2 and lap.m_carPosition == me.m_carPosition + 1:
+            behind = _lap_delta_ms(lap)
+            break
+    return {'m_deltaToCarInFrontInMS': ahead, 'm_deltaToCarBehindInMS': behind}
+
+
+def forecast_samples(pkt):
+    """The session packet always carries 64 forecast slots; only the first N are real."""
+    n = min(pkt.m_numWeatherForecastSamples, 64)
+    return [packet_to_dict(pkt.m_weatherForecastSamples[i]) for i in range(n)]
+
 PACKET_HANDLERS = {
         0: lambda pkt, hdr: {
         # Motion
@@ -847,6 +889,9 @@ PACKET_HANDLERS = {
             'm_sessionDuration': pkt.m_sessionDuration,
             'm_safetyCarStatus': pkt.m_safetyCarStatus,
             'm_gamePaused': pkt.m_gamePaused,
+            'm_sessionType': pkt.m_sessionType,
+            'm_numWeatherForecastSamples': pkt.m_numWeatherForecastSamples,
+            'm_weatherForecastSamples': forecast_samples(pkt),
         },
         'player_car_data': {
             'm_pitStopRejoinPosition': pkt.m_pitStopRejoinPosition,
@@ -867,6 +912,7 @@ PACKET_HANDLERS = {
             "m_deltaToRaceLeaderMinutesPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMinutesPart,
             "m_deltaToRaceLeaderMSPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMSPart,
             'm_safetyCarDelta': pkt.m_lapData[hdr.m_playerCarIndex].m_safetyCarDelta,
+            **lap_gaps(pkt, hdr),
         },
         'global_data': {
             'm_timeTrialRivalCarIdx': pkt.m_timeTrialRivalCarIdx,
@@ -1110,3 +1156,1117 @@ if __name__ == "__main__":
 # | 12 | Tyre Sets            |
 # | 13 | Motion Ex            |
 # | 14 | Time Trial           |
+
+
+# import asyncio
+# import time
+
+# from ctypes import LittleEndianStructure, Union, c_uint8, c_int8
+# from ctypes import c_uint16, c_int16, c_uint32, c_uint64, c_float, c_double, c_char
+
+# # -------------------- Packet Header --------------------
+# class PacketHeader(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_packetFormat', c_uint16),
+#         ('m_gameYear', c_uint8),
+#         ('m_gameMajorVersion', c_uint8),
+#         ('m_gameMinorVersion', c_uint8),
+#         ('m_packetVersion', c_uint8),
+#         ('m_packetId', c_uint8),
+#         ('m_sessionUID', c_uint64),
+#         ('m_sessionTime', c_float),
+#         ('m_frameIdentifier', c_uint32),
+#         ('m_overallFrameIdentifier', c_uint32),
+#         ('m_playerCarIndex', c_uint8),
+#         ('m_secondaryPlayerCarIndex', c_uint8),
+#     ]
+
+# # -------------------- Packet 0: Motion --------------------
+# class CarMotionData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_worldPositionX', c_float),
+#         ('m_worldPositionY', c_float),
+#         ('m_worldPositionZ', c_float),
+#         ('m_worldVelocityX', c_float),
+#         ('m_worldVelocityY', c_float),
+#         ('m_worldVelocityZ', c_float),
+#         ('m_worldForwardDirX', c_int16),
+#         ('m_worldForwardDirY', c_int16),
+#         ('m_worldForwardDirZ', c_int16),
+#         ('m_worldRightDirX', c_int16),
+#         ('m_worldRightDirY', c_int16),
+#         ('m_worldRightDirZ', c_int16),
+#         ('m_gForceLateral', c_float),
+#         ('m_gForceLongitudinal', c_float),
+#         ('m_gForceVertical', c_float),
+#         ('m_yaw', c_float),
+#         ('m_pitch', c_float),
+#         ('m_roll', c_float),
+#     ]
+
+# class PacketMotionData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_carMotionData', CarMotionData * 22),
+#     ]
+
+# # -------------------- Packet 1: Session --------------------
+# class MarshalZone(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_zoneStart', c_float),
+#         ('m_zoneFlag', c_int8),
+#     ]
+
+# class WeatherForecastSample(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_sessionType', c_uint8),
+#         ('m_timeOffset', c_uint8),
+#         ('m_weather', c_uint8),
+#         ('m_trackTemperature', c_int8),
+#         ('m_trackTemperatureChange', c_int8),
+#         ('m_airTemperature', c_int8),
+#         ('m_airTemperatureChange', c_int8),
+#         ('m_rainPercentage', c_uint8),
+#     ]
+
+# class PacketSessionData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_weather', c_uint8),
+#         ('m_trackTemperature', c_int8),
+#         ('m_airTemperature', c_int8),
+#         ('m_totalLaps', c_uint8),
+#         ('m_trackLength', c_uint16),
+#         ('m_sessionType', c_uint8),
+#         ('m_trackId', c_int8),
+#         ('m_formula', c_uint8),
+#         ('m_sessionTimeLeft', c_uint16),
+#         ('m_sessionDuration', c_uint16),
+#         ('m_pitSpeedLimit', c_uint8),
+#         ('m_gamePaused', c_uint8),
+#         ('m_isSpectating', c_uint8),
+#         ('m_spectatorCarIndex', c_uint8),
+#         ('m_sliProNativeSupport', c_uint8),
+#         ('m_numMarshalZones', c_uint8),
+#         ('m_marshalZones', MarshalZone * 21),
+#         ('m_safetyCarStatus', c_uint8),
+#         ('m_networkGame', c_uint8),
+#         ('m_numWeatherForecastSamples', c_uint8),
+#         ('m_weatherForecastSamples', WeatherForecastSample * 64),
+#         ('m_forecastAccuracy', c_uint8),
+#         ('m_aiDifficulty', c_uint8),
+#         ('m_seasonLinkIdentifier', c_uint32),
+#         ('m_weekendLinkIdentifier', c_uint32),
+#         ('m_sessionLinkIdentifier', c_uint32),
+#         ('m_pitStopWindowIdealLap', c_uint8),
+#         ('m_pitStopWindowLatestLap', c_uint8),
+#         ('m_pitStopRejoinPosition', c_uint8),
+#         ('m_steeringAssist', c_uint8),
+#         ('m_brakingAssist', c_uint8),
+#         ('m_gearboxAssist', c_uint8),
+#         ('m_pitAssist', c_uint8),
+#         ('m_pitReleaseAssist', c_uint8),
+#         ('m_ERSAssist', c_uint8),
+#         ('m_DRSAssist', c_uint8),
+#         ('m_dynamicRacingLine', c_uint8),
+#         ('m_dynamicRacingLineType', c_uint8),
+#         ('m_gameMode', c_uint8),
+#         ('m_ruleSet', c_uint8),
+#         ('m_timeOfDay', c_uint32),
+#         ('m_sessionLength', c_uint8),
+#         ('m_speedUnitsLeadPlayer', c_uint8),
+#         ('m_temperatureUnitsLeadPlayer', c_uint8),
+#         ('m_speedUnitsSecondaryPlayer', c_uint8),
+#         ('m_temperatureUnitsSecondaryPlayer', c_uint8),
+#         ('m_numSafetyCarPeriods', c_uint8),
+#         ('m_numVirtualSafetyCarPeriods', c_uint8),
+#         ('m_numRedFlagPeriods', c_uint8),
+#         ('m_equalCarPerformance', c_uint8),
+#         ('m_recoveryMode', c_uint8),
+#         ('m_flashbackLimit', c_uint8),
+#         ('m_surfaceType', c_uint8),
+#         ('m_lowFuelMode', c_uint8),
+#         ('m_raceStarts', c_uint8),
+#         ('m_tyreTemperature', c_uint8),
+#         ('m_pitLaneTyreSim', c_uint8),
+#         ('m_carDamage', c_uint8),
+#         ('m_carDamageRate', c_uint8),
+#         ('m_collisions', c_uint8),
+#         ('m_collisionsOffForFirstLapOnly', c_uint8),
+#         ('m_mpUnsafePitRelease', c_uint8),
+#         ('m_mpOffForGriefing', c_uint8),
+#         ('m_cornerCuttingStringency', c_uint8),
+#         ('m_parcFermeRules', c_uint8),
+#         ('m_pitStopExperience', c_uint8),
+#         ('m_safetyCar', c_uint8),
+#         ('m_safetyCarExperience', c_uint8),
+#         ('m_formationLap', c_uint8),
+#         ('m_formationLapExperience', c_uint8),
+#         ('m_redFlags', c_uint8),
+#         ('m_affectsLicenceLevelSolo', c_uint8),
+#         ('m_affectsLicenceLevelMP', c_uint8),
+#         ('m_numSessionsInWeekend', c_uint8),
+#         ('m_weekendStructure', c_uint8 * 12),
+#         ('m_sector2LapDistanceStart', c_float),
+#         ('m_sector3LapDistanceStart', c_float),
+#     ]
+
+
+# # -------------------- Packet 2: Lap Data --------------------
+# class LapData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_lastLapTimeInMS', c_uint32),
+#         ('m_currentLapTimeInMS', c_uint32),
+#         ('m_sector1TimeMSPart', c_uint16),
+#         ('m_sector1TimeMinutesPart', c_uint8),
+#         ('m_sector2TimeMSPart', c_uint16),
+#         ('m_sector2TimeMinutesPart', c_uint8),
+#         ('m_deltaToCarInFrontMSPart', c_uint16),
+#         ('m_deltaToCarInFrontMinutesPart', c_uint8),
+#         ('m_deltaToRaceLeaderMSPart', c_uint16),
+#         ('m_deltaToRaceLeaderMinutesPart', c_uint8),
+#         ('m_lapDistance', c_float),
+#         ('m_totalDistance', c_float),
+#         ('m_safetyCarDelta', c_float),
+#         ('m_carPosition', c_uint8),
+#         ('m_currentLapNum', c_uint8),
+#         ('m_pitStatus', c_uint8),
+#         ('m_numPitStops', c_uint8),
+#         ('m_sector', c_uint8),
+#         ('m_currentLapInvalid', c_uint8),
+#         ('m_penalties', c_uint8),
+#         ('m_totalWarnings', c_uint8),
+#         ('m_cornerCuttingWarnings', c_uint8),
+#         ('m_numUnservedDriveThroughPens', c_uint8),
+#         ('m_numUnservedStopGoPens', c_uint8),
+#         ('m_gridPosition', c_uint8),
+#         ('m_driverStatus', c_uint8),
+#         ('m_resultStatus', c_uint8),
+#         ('m_pitLaneTimerActive', c_uint8),
+#         ('m_pitLaneTimeInLaneInMS', c_uint16),
+#         ('m_pitStopTimerInMS', c_uint16),
+#         ('m_pitStopShouldServePen', c_uint8),
+#         ('m_speedTrapFastestSpeed', c_float),
+#         ('m_speedTrapFastestLap', c_uint8),
+#     ]
+
+# class PacketLapData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_lapData', LapData * 22),
+#         ('m_timeTrialPBCarIdx', c_uint8),
+#         ('m_timeTrialRivalCarIdx', c_uint8),
+#     ]
+
+# # -------------------- Packet 3: Event Data --------------------
+# class FastestLap(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('vehicleIdx', c_uint8), ('lapTime', c_float)]
+
+# class Retirement(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('vehicleIdx', c_uint8)]
+
+# class TeamMateInPits(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('vehicleIdx', c_uint8)]
+
+# class RaceWinner(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('vehicleIdx', c_uint8)]
+
+# class Penalty(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('penaltyType', c_uint8),
+#         ('infringementType', c_uint8),
+#         ('vehicleIdx', c_uint8),
+#         ('otherVehicleIdx', c_uint8),
+#         ('time', c_uint8),
+#         ('lapNum', c_uint8),
+#         ('placesGained', c_uint8),
+#     ]
+
+# class SpeedTrap(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('vehicleIdx', c_uint8),
+#         ('speed', c_float),
+#         ('isOverallFastestInSession', c_uint8),
+#         ('isDriverFastestInSession', c_uint8),
+#         ('fastestVehicleIdxInSession', c_uint8),
+#         ('fastestSpeedInSession', c_float),
+#     ]
+
+# class StartLights(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('numLights', c_uint8)]
+
+# class DriveThroughPenaltyServed(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('vehicleIdx', c_uint8)]
+
+# class StopGoPenaltyServed(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('vehicleIdx', c_uint8)]
+
+# class Flashback(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('flashbackFrameIdentifier', c_uint32), ('flashbackSessionTime', c_float)]
+
+# class Buttons(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('buttonStatus', c_uint32)]
+
+# class Overtake(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('overtakingVehicleIdx', c_uint8), ('beingOvertakenVehicleIdx', c_uint8)]
+
+# class SafetyCar(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('safetyCarType', c_uint8), ('eventType', c_uint8)]
+
+# class Collision(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [('vehicle1Idx', c_uint8), ('vehicle2Idx', c_uint8)]
+
+# class EventDataDetails(Union):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('FastestLap', FastestLap),
+#         ('Retirement', Retirement),
+#         ('TeamMateInPits', TeamMateInPits),
+#         ('RaceWinner', RaceWinner),
+#         ('Penalty', Penalty),
+#         ('SpeedTrap', SpeedTrap),
+#         ('StartLights', StartLights),
+#         ('DriveThroughPenaltyServed', DriveThroughPenaltyServed),
+#         ('StopGoPenaltyServed', StopGoPenaltyServed),
+#         ('Flashback', Flashback),
+#         ('Buttons', Buttons),
+#         ('Overtake', Overtake),
+#         ('SafetyCar', SafetyCar),
+#         ('Collision', Collision),
+#     ]
+
+
+
+# class PacketEventData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_eventStringCode', c_uint8 * 4),
+#         ('m_eventDetails', EventDataDetails),
+#     ]
+
+# # -------------------- Packet 4: Participants (F1 25) --------------------
+# class LiveryColour(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('red', c_uint8),
+#         ('green', c_uint8),
+#         ('blue', c_uint8),
+#     ]
+
+# class ParticipantData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_aiControlled', c_uint8),
+#         ('m_driverId', c_uint8),
+#         ('m_networkId', c_uint8),
+#         ('m_teamId', c_uint8),
+#         ('m_myTeam', c_uint8),
+#         ('m_raceNumber', c_uint8),
+#         ('m_nationality', c_uint8),
+#         ('m_name', c_char * 32),
+#         ('m_yourTelemetry', c_uint8),
+#         ('m_showOnlineNames', c_uint8),
+#         ('m_techLevel', c_uint16),
+#         ('m_platform', c_uint8),
+#         ('m_numColours', c_uint8),
+#         ('m_liveryColours', LiveryColour * 4),
+#     ]
+
+# class PacketParticipantsData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_numActiveCars', c_uint8),
+#         ('m_participants', ParticipantData * 22),
+#     ]
+
+# # -------------------- Packet 5: Car Setup --------------------
+# class CarSetupData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_frontWing', c_uint8),
+#         ('m_rearWing', c_uint8),
+#         ('m_onThrottle', c_uint8),
+#         ('m_offThrottle', c_uint8),
+#         ('m_frontCamber', c_float),
+#         ('m_rearCamber', c_float),
+#         ('m_frontToe', c_float),
+#         ('m_rearToe', c_float),
+#         ('m_frontSuspension', c_uint8),
+#         ('m_rearSuspension', c_uint8),
+#         ('m_frontAntiRollBar', c_uint8),
+#         ('m_rearAntiRollBar', c_uint8),
+#         ('m_frontSuspensionHeight', c_uint8),
+#         ('m_rearSuspensionHeight', c_uint8),
+#         ('m_brakePressure', c_uint8),
+#         ('m_brakeBias', c_uint8),
+#         ('m_engineBraking', c_uint8),
+#         ('m_rearLeftTyrePressure', c_float),
+#         ('m_rearRightTyrePressure', c_float),
+#         ('m_frontLeftTyrePressure', c_float),
+#         ('m_frontRightTyrePressure', c_float),
+#         ('m_ballast', c_uint8),
+#         ('m_fuelLoad', c_float),
+#     ]
+
+# class PacketCarSetupData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_carSetups', CarSetupData * 22),
+#         ('m_nextFrontWingValue', c_float),
+#     ]
+
+# # -------------------- Packet 6: Car Telemetry --------------------
+# class CarTelemetryData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_speed', c_uint16),
+#         ('m_throttle', c_float),
+#         ('m_steer', c_float),
+#         ('m_brake', c_float),
+#         ('m_clutch', c_uint8),
+#         ('m_gear', c_int8),
+#         ('m_engineRPM', c_uint16),
+#         ('m_drs', c_uint8),
+#         ('m_revLightsPercent', c_uint8),
+#         ('m_revLightsBitValue', c_uint16),
+#         ('m_brakesTemperature', c_uint16 * 4),
+#         ('m_tyresSurfaceTemperature', c_uint8 * 4),
+#         ('m_tyresInnerTemperature', c_uint8 * 4),
+#         ('m_engineTemperature', c_uint16),
+#         ('m_tyresPressure', c_float * 4),
+#         ('m_surfaceType', c_uint8 * 4),
+#     ]
+
+# class PacketCarTelemetryData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_carTelemetryData', CarTelemetryData * 22),
+#         ('m_mfdPanelIndex', c_uint8),
+#         ('m_mfdPanelIndexSecondaryPlayer', c_uint8),
+#         ('m_suggestedGear', c_int8),
+#     ]
+
+# # -------------------- Packet 7: Car Status --------------------
+# class CarStatusData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_tractionControl', c_uint8),
+#         ('m_antiLockBrakes', c_uint8),
+#         ('m_fuelMix', c_uint8),
+#         ('m_frontBrakeBias', c_uint8),
+#         ('m_pitLimiterStatus', c_uint8),
+#         ('m_fuelInTank', c_float),
+#         ('m_fuelCapacity', c_float),
+#         ('m_fuelRemainingLaps', c_float),
+#         ('m_maxRPM', c_uint16),
+#         ('m_idleRPM', c_uint16),
+#         ('m_maxGears', c_uint8),
+#         ('m_drsAllowed', c_uint8),
+#         ('m_drsActivationDistance', c_uint16),
+#         ('m_actualTyreCompound', c_uint8),
+#         ('m_visualTyreCompound', c_uint8),
+#         ('m_tyresAgeLaps', c_uint8),
+#         ('m_vehicleFiaFlags', c_int8),
+#         ('m_enginePowerICE', c_float),
+#         ('m_enginePowerMGUK', c_float),
+#         ('m_ersStoreEnergy', c_float),
+#         ('m_ersDeployMode', c_uint8),
+#         ('m_ersHarvestedThisLapMGUK', c_float),
+#         ('m_ersHarvestedThisLapMGUH', c_float),
+#         ('m_ersDeployedThisLap', c_float),
+#         ('m_networkPaused', c_uint8),
+#     ]
+
+# class PacketCarStatusData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_carStatusData', CarStatusData * 22),
+#     ]
+
+# # -------------------- Packet 8: Final Classification --------------------
+# class FinalClassificationData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_position', c_uint8),
+#         ('m_numLaps', c_uint8),
+#         ('m_gridPosition', c_uint8),
+#         ('m_points', c_uint8),
+#         ('m_numPitStops', c_uint8),
+#         ('m_resultStatus', c_uint8),
+#         ('m_bestLapTimeInMS', c_uint32),
+#         ('m_totalRaceTime', c_double),
+#         ('m_penaltiesTime', c_uint8),
+#         ('m_numPenalties', c_uint8),
+#         ('m_numTyreStints', c_uint8),
+#         ('m_tyreStintsActual', c_uint8 * 8),
+#         ('m_tyreStintsVisual', c_uint8 * 8),
+#         ('m_tyreStintsEndLaps', c_uint8 * 8),
+#     ]
+
+# class PacketFinalClassificationData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_numCars', c_uint8),
+#         ('m_classificationData', FinalClassificationData * 22),
+#     ]
+
+# # -------------------- Packet 9: Lobby Info --------------------
+# class LobbyInfoData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_aiControlled', c_uint8),
+#         ('m_teamId', c_uint8),
+#         ('m_nationality', c_uint8),
+#         ('m_platform', c_uint8),
+#         ('m_name', c_char * 48),
+#         ('m_carNumber', c_uint8),
+#         ('m_yourTelemetry', c_uint8),
+#         ('m_showOnlineNames', c_uint8),
+#         ('m_techLevel', c_uint16),
+#         ('m_readyStatus', c_uint8),
+#     ]
+
+# class PacketLobbyInfoData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_numPlayers', c_uint8),
+#         ('m_lobbyPlayers', LobbyInfoData * 22),
+#     ]
+
+# # -------------------- Packet 10: Car Damage --------------------
+# class CarDamageData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_tyresWear', c_float * 4),
+#         ('m_tyresDamage', c_uint8 * 4),
+#         ('m_brakesDamage', c_uint8 * 4),
+#         ('m_tyreBlisters', c_uint8 * 4),      # <-- added in F1 24
+#         ('m_frontLeftWingDamage', c_uint8),
+#         ('m_frontRightWingDamage', c_uint8),
+#         ('m_rearWingDamage', c_uint8),
+#         ('m_floorDamage', c_uint8),
+#         ('m_diffuserDamage', c_uint8),
+#         ('m_sidepodDamage', c_uint8),
+#         ('m_drsFault', c_uint8),
+#         ('m_ersFault', c_uint8),
+#         ('m_gearBoxDamage', c_uint8),
+#         ('m_engineDamage', c_uint8),
+#         ('m_engineMGUHWear', c_uint8),
+#         ('m_engineESWear', c_uint8),
+#         ('m_engineCEWear', c_uint8),
+#         ('m_engineICEWear', c_uint8),
+#         ('m_engineMGUKWear', c_uint8),
+#         ('m_engineTCWear', c_uint8),
+#         ('m_engineBlown', c_uint8),
+#         ('m_engineSeized', c_uint8),
+#     ]
+    
+# class PacketCarDamageData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_carDamageData', CarDamageData * 22),
+#     ]
+
+
+# # -------------------- Packet 11:  Session History --------------------
+# class LapHistoryData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_lapTimeInMS', c_uint32),
+#         ('m_sector1TimeMSPart', c_uint16),
+#         ('m_sector1TimeMinutesPart', c_uint8),
+#         ('m_sector2TimeMSPart', c_uint16),
+#         ('m_sector2TimeMinutesPart', c_uint8),
+#         ('m_sector3TimeMSPart', c_uint16),
+#         ('m_sector3TimeMinutesPart', c_uint8),
+#         ('m_lapValidBitFlags', c_uint8),
+#     ]
+    
+# class TyreStintHistoryData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_endLap', c_uint8),
+#         ('m_tyreActualCompound', c_uint8),
+#         ('m_tyreVisualCompound', c_uint8),
+#     ]
+
+# class PacketSessionHistoryData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_carIdx', c_uint8),
+#         ('m_numLaps', c_uint8),
+#         ('m_numTyreStints', c_uint8),
+#         ('m_bestLapTimeLapNum', c_uint8),
+#         ('m_bestSector1LapNum', c_uint8),
+#         ('m_bestSector2LapNum', c_uint8),
+#         ('m_bestSector3LapNum', c_uint8),
+#         ('m_lapHistoryData', LapHistoryData * 100),
+#         ('m_tyreStintsHistoryData', TyreStintHistoryData * 8),
+#     ]
+
+
+# # -------------------- Packet 12: Tyre Sets--------------------
+
+
+# class TyreSetData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_actualTyreCompound', c_uint8),   # 1
+#         ('m_visualTyreCompound', c_uint8),   # 1
+#         ('m_wear', c_uint8),                 # 1
+#         ('m_available', c_uint8),            # 1
+#         ('m_recommendedSession', c_uint8),   # 1
+#         ('m_lifeSpan', c_uint8),             # 1
+#         ('m_usableLife', c_uint8),           # 1
+#         ('m_lapDeltaTime', c_int16),         # 2 (signed 16-bit)
+#         ('m_fitted', c_uint8),               # 1
+#     ]
+#     # total = 10 bytes per TyreSetData
+
+# class PacketTyreSetsData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),          # 29 bytes
+#         ('m_carIdx', c_uint8),               # 1
+#         ('m_tyreSetData', TyreSetData * 20), # 20 * 10 = 200
+#         ('m_fittedIdx', c_uint8),            # 1
+#     ]
+
+# # -------------------- Packet 13: Motion Ex --------------------
+# class PacketMotionExData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_suspensionPosition', c_float * 4),
+#         ('m_suspensionVelocity', c_float * 4),
+#         ('m_suspensionAcceleration', c_float * 4),
+#         ('m_wheelSpeed', c_float * 4),
+#         ('m_wheelSlipRatio', c_float * 4),
+#         ('m_wheelSlipAngle', c_float * 4),
+#         ('m_wheelLatForce', c_float * 4),
+#         ('m_wheelLongForce', c_float * 4),
+#         ('m_heightOfCOGAboveGround', c_float),
+#         ('m_localVelocityX', c_float),
+#         ('m_localVelocityY', c_float),
+#         ('m_localVelocityZ', c_float),
+#         ('m_angularVelocityX', c_float),
+#         ('m_angularVelocityY', c_float),
+#         ('m_angularVelocityZ', c_float),
+#         ('m_angularAccelerationX', c_float),
+#         ('m_angularAccelerationY', c_float),
+#         ('m_angularAccelerationZ', c_float),
+#         ('m_frontWheelsAngle', c_float),
+#         ('m_wheelVertForce', c_float * 4),
+#         ('m_frontAeroHeight', c_float),
+#         ('m_rearAeroHeight', c_float),
+#         ('m_frontRollAngle', c_float),
+#         ('m_rearRollAngle', c_float),
+#         ('m_chassisYaw', c_float),
+#         ('m_chassisPitch', c_float),
+#         ('m_wheelCamber', c_float * 4),
+#         ('m_wheelCamberGain', c_float * 4),
+#     ]
+# # -------------------- Packet 14:  Time Trial --------------------
+
+# class TimeTrialDataSet(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_carIdx', c_uint8),
+#         ('m_teamId', c_uint8),
+#         ('m_lapTimeInMS', c_uint32),
+#         ('m_sector1TimeInMS', c_uint32),
+#         ('m_sector2TimeInMS', c_uint32),
+#         ('m_sector3TimeInMS', c_uint32),
+#         ('m_tractionControl', c_uint8),
+#         ('m_gearboxAssist', c_uint8),
+#         ('m_antiLockBrakes', c_uint8),
+#         ('m_equalCarPerformance', c_uint8),
+#         ('m_customSetup', c_uint8),
+#         ('m_valid', c_uint8),
+#     ]
+
+# class PacketTimeTrialData(LittleEndianStructure):
+#     _pack_ = 1
+#     _fields_ = [
+#         ('m_header', PacketHeader),
+#         ('m_playerSessionBestDataSet', TimeTrialDataSet),
+#         ('m_personalBestDataSet', TimeTrialDataSet),
+#         ('m_rivalDataSet', TimeTrialDataSet),
+#     ]
+
+
+
+# # -------------------- Packet Registry --------------------
+# from ctypes import sizeof
+
+# PACKET_PARSERS = {  0:  PacketMotionData,
+#     1: PacketSessionData,
+#     2: PacketLapData,
+#     3: PacketEventData,
+#     4: PacketParticipantsData,
+#     5: PacketCarSetupData,
+#     6: PacketCarTelemetryData,
+#     7: PacketCarStatusData,
+#     8: PacketFinalClassificationData,
+#     9: PacketLobbyInfoData,
+#     10: PacketCarDamageData,
+#     11: PacketSessionHistoryData,
+#     12: PacketTyreSetsData,
+#     13: PacketMotionExData,
+#     14: PacketTimeTrialData}
+
+
+
+
+# EventCodes = {'SSTA': 'Session Started',
+#                 'SEND': 'Session Ended',
+#                 'FTLP': 'Fastest Lap',
+#                 'RTMT': 'Retirement',
+#                 'DRSE': 'DRS enabled',
+#                 'DRSD': 'DRS disabled',
+#                 'TMPT': 'Team mate in pits',
+#                 'CHQF': 'Chequered flag',
+#                 'RCWN': 'Race Winner',
+#                 'PENA': 'Penalty Issued',
+#                 'SPTP': 'Speed Trap Triggered',
+#                 'STLG': 'Start lights',
+#                 'LGOT': 'Lights out',
+#                 'DTSV': 'Drive through served',
+#                 'SGSV': 'Stop go served',
+#                 'FLBK': 'Flashback',
+#                 'BUTN': 'Button status',
+#                 'RDFL': 'Red Flag',
+#                 'OVTK': 'Overtake',
+#                 'SCAR': 'Safety Car',
+#                 'COLL': 'Collision'}
+
+
+
+# def decode_event(pkt):
+#     code = bytes(pkt.m_eventStringCode).decode("utf-8").strip("\x00")
+#     details = {}
+
+#     if code == "FTLP":
+#         details = {
+#             "vehicleIdx": pkt.m_eventDetails.FastestLap.vehicleIdx,
+#             "lapTime": pkt.m_eventDetails.FastestLap.lapTime,
+#         }
+#     elif code == "RCWN":
+#         details = {
+#             "vehicleIdx": pkt.m_eventDetails.RaceWinner.vehicleIdx
+#         }
+#     # add others as needed
+
+#     return {
+#         "m_eventStringCode": code,
+#         "m_eventDetails": details
+#     }
+
+
+
+# import asyncio
+# import threading
+# from ctypes import Structure, c_uint8  # example import; your F1 packet parser uses similar
+# # from your_f1_parser import PacketHeader, PACKET_PARSERS
+
+# UDP_IP = "0.0.0.0"
+# UDP_PORT = 20777
+
+# data_queue = asyncio.Queue(maxsize=100)
+# latest_data = {
+#     'player_car_data': {
+#         'm_speed': 0,
+#         'm_throttle': 0.0,
+#         'm_brake': 0.0,
+#         'm_steer': 0.0,
+#         'm_gear': 0,
+#         'm_drs': 0,
+#         'm_revLightsPercent': 0,
+#         'm_revLightsBitValue': 0,
+#         'm_brakesTemperature': [0, 0, 0, 0],
+#         'm_tyresSurfaceTemperature': [0, 0, 0, 0],
+#         'm_tyresInnerTemperature': [0, 0, 0, 0],
+#         'm_drsAllowed': 0,
+#         'm_brakeBias': 50,
+#         'm_ersDeployMode': 0,
+#         'm_ersStoreEnergy': 0.0,
+#         'm_ersDeployedThisLap': 0.0,
+#         'm_fuelRemainingLaps': 0.0,
+#         'm_tyresWear': [0, 0, 0, 0],
+#         'm_tyresAgeLaps': 0,
+#         'm_pitStopRejoinPosition': 0,
+#         'm_vehicleFiaFlags': 0,
+#         'm_currentLapTime': 0,
+#         'm_carPosition': 0,
+#         'm_lastLapTimeInMS' : 0,
+#         "m_lapDistance" : 0.0,
+#         "m_totalDistance" : 0.0,
+#         "m_pitStatus" : 0,
+#         "m_driverStatus" : 0,
+#         "m_currentLapNum" : 0,
+#         "m_deltaToRaceLeaderMinutesPart": 0,
+#         "m_deltaToRaceLeaderMSPart": 0,
+#         "m_totalLaps" : 0, # From Packet 1
+#     },
+#     'rival_car_data': {
+#         'm_speed': 0,
+#         'm_throttle': 0.0,
+#         'm_brake': 0.0,
+#         'm_steer': 0.0,
+#         'm_gear': 0,
+#         'm_drs': 0,
+#         'm_revLightsPercent': 0,
+#         'm_revLightsBitValue': 0,
+#     },
+#     'global_data': {
+#         'm_timeTrialRivalCarIdx': 255, # Keep global as it's an index for other packets
+#         'm_numActiveCars': 0,
+#         'm_weather': 0, # From Packet 1
+#         'm_trackTemperature': 0, # From Packet 1
+#         'm_airTemperature': 0, # From Packet 1
+#         'm_sessionTimeLeft': 0, # From Packet 1
+#         'm_sessionDuration': 0, # From Packet 1
+#     },
+#     'm_playerSessionBestDataSet': {}, # Time trial data can remain top level
+#     'm_personalBestDataSet': {},
+#     'm_rivalDataSet': {},
+#     'm_eventStringCode': '',
+#     'm_eventDetails': {},
+# }
+
+
+
+# def packet_to_dict(packet):
+#     # This function converts a ctypes Structure to a dictionary.
+#     # It handles nested structures by recursively calling itself.
+#     if isinstance(packet, LittleEndianStructure):
+#         result = {}
+#         for field_name, field_type in packet._fields_:
+#             value = getattr(packet, field_name)
+#             if isinstance(value, LittleEndianStructure):
+#                 result[field_name] = packet_to_dict(value)
+#             elif hasattr(value, '__len__') and not isinstance(value, (str, bytes)): # Handle arrays
+#                 result[field_name] = [packet_to_dict(item) if isinstance(item, LittleEndianStructure) else item for item in value]
+#             else:
+#                 result[field_name] = value
+#         return result
+#     return packet
+
+# def deep_merge(dict1, dict2):
+#     for k, v in dict2.items():
+#         if k in dict1 and isinstance(dict1[k], dict) and isinstance(v, dict):
+#             dict1[k] = deep_merge(dict1[k], v)
+#         else:
+#             dict1[k] = v
+#     return dict1
+
+# PACKET_HANDLERS = {
+#         0: lambda pkt, hdr: {
+#         # Motion
+
+#     },
+
+
+#     1: lambda pkt, hdr: {
+#         'global_data': {
+#             'm_weather': pkt.m_weather,
+#             'm_trackTemperature': pkt.m_trackTemperature,
+#             'm_airTemperature': pkt.m_airTemperature,
+#             'm_sessionTimeLeft': pkt.m_sessionTimeLeft,
+#             'm_sessionDuration': pkt.m_sessionDuration,
+#             'm_safetyCarStatus': pkt.m_safetyCarStatus,
+#             'm_gamePaused': pkt.m_gamePaused,
+#         },
+#         'player_car_data': {
+#             'm_pitStopRejoinPosition': pkt.m_pitStopRejoinPosition,
+#             'm_totalLaps': pkt.m_totalLaps,
+#         },
+#     },
+
+#     2: lambda pkt, hdr: { #Lap Data
+#         'player_car_data': {
+#             'm_currentLapTime': pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapTimeInMS,
+#             'm_carPosition': pkt.m_lapData[hdr.m_playerCarIndex].m_carPosition,
+#             'm_lastLapTimeInMS' : pkt.m_lapData[hdr.m_playerCarIndex].m_lastLapTimeInMS,
+#             "m_lapDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_lapDistance,
+#             "m_totalDistance" : pkt.m_lapData[hdr.m_playerCarIndex].m_totalDistance,
+#             "m_pitStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_pitStatus,
+#             "m_driverStatus" : pkt.m_lapData[hdr.m_playerCarIndex].m_driverStatus,
+#             "m_currentLapNum" : pkt.m_lapData[hdr.m_playerCarIndex].m_currentLapNum,
+#             "m_deltaToRaceLeaderMinutesPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMinutesPart,
+#             "m_deltaToRaceLeaderMSPart": pkt.m_lapData[hdr.m_playerCarIndex].m_deltaToRaceLeaderMSPart,
+#             'm_safetyCarDelta': pkt.m_lapData[hdr.m_playerCarIndex].m_safetyCarDelta,
+#         },
+#         'global_data': {
+#             'm_timeTrialRivalCarIdx': pkt.m_timeTrialRivalCarIdx,
+#         },
+#     },
+
+#    3: lambda pkt, hdr: decode_event(pkt),
+
+#     4: lambda pkt, hdr: {
+#         'global_data': {
+#             'm_numActiveCars': pkt.m_numActiveCars
+#         },
+#     },
+
+#     5: lambda pkt, hdr: {
+#         'player_car_data': {
+#             'm_brakeBias' : pkt.m_carSetups[hdr.m_playerCarIndex].m_brakeBias,
+#             'last_live': time.time(),
+#         },
+#     },
+
+
+
+#     6: lambda pkt, hdr: (
+#         lambda player_idx, rival_idx: {
+#             'last_live': time.time(),
+#              'player_car_data': {
+#                 'm_speed': pkt.m_carTelemetryData[player_idx].m_speed,
+#                 'm_throttle': pkt.m_carTelemetryData[player_idx].m_throttle,
+#                 'm_brake': pkt.m_carTelemetryData[player_idx].m_brake,
+#                 'm_steer': pkt.m_carTelemetryData[player_idx].m_steer,
+#                 'm_gear': pkt.m_carTelemetryData[player_idx].m_gear,
+#                 'm_drs': pkt.m_carTelemetryData[player_idx].m_drs,
+#                 'm_revLightsPercent': pkt.m_carTelemetryData[player_idx].m_revLightsPercent,
+#                 'm_revLightsBitValue' : pkt.m_carTelemetryData[player_idx].m_revLightsBitValue,
+#                 'm_brakesTemperature': list(pkt.m_carTelemetryData[player_idx].m_brakesTemperature),
+#                 'm_tyresSurfaceTemperature': list(pkt.m_carTelemetryData[player_idx].m_tyresSurfaceTemperature),
+#                 'm_tyresInnerTemperature': list(pkt.m_carTelemetryData[player_idx].m_tyresInnerTemperature),
+#             },
+#             'rival_car_data': {
+#                 'm_speed': pkt.m_carTelemetryData[rival_idx].m_speed,
+#                 'm_throttle': pkt.m_carTelemetryData[rival_idx].m_throttle,
+#                 'm_brake': pkt.m_carTelemetryData[rival_idx].m_brake,
+#                 'm_steer': pkt.m_carTelemetryData[rival_idx].m_steer,
+#                 'm_gear': pkt.m_carTelemetryData[rival_idx].m_gear,
+#                 'm_drs': pkt.m_carTelemetryData[rival_idx].m_drs,
+#             } if rival_idx != 255 and rival_idx < 22 else {} # Check bounds for rival_idx
+#         }
+#     )(hdr.m_playerCarIndex, latest_data['global_data'].get('m_timeTrialRivalCarIdx', 255)),
+
+
+#     7: lambda pkt, hdr: (
+#         # Car status data
+#         lambda car_status : {
+#             'player_car_data': {
+#                 "m_fuelMix": car_status.m_fuelMix,
+#                 "m_frontBrakeBias": car_status.m_frontBrakeBias,
+#                 "m_pitLimiterStatus": car_status.m_pitLimiterStatus,
+#                 "m_fuelRemainingLaps": car_status.m_fuelRemainingLaps,
+#                 "m_drsAllowed": car_status.m_drsAllowed,
+#                 "m_drsActivationDistance": car_status.m_drsActivationDistance,
+#                 "m_tyresAgeLaps": car_status.m_tyresAgeLaps,
+#                 "m_vehicleFiaFlags": car_status.m_vehicleFiaFlags,
+#                 "m_ersStoreEnergy": car_status.m_ersStoreEnergy,
+#                 "m_ersDeployMode": car_status.m_ersDeployMode,
+#                 "m_ersDeployedThisLap": car_status.m_ersDeployedThisLap,
+#             }
+#         }
+#     )(pkt.m_carStatusData[hdr.m_playerCarIndex]),
+
+#     8: lambda pkt, hdr: {
+#         # Final classification
+#     },
+
+#     9: lambda pkt, hdr: {
+#         # Lobby info
+#     },
+
+#     10: lambda pkt, hdr: (
+#         lambda cd: {'player_car_data': {
+#             'm_tyresWear': list(cd.m_tyresWear),
+#             'm_tyresDamage': list(cd.m_tyresDamage),
+#             'm_brakesDamage': list(cd.m_brakesDamage),
+#             'm_frontLeftWingDamage': cd.m_frontLeftWingDamage,
+#             'm_frontRightWingDamage': cd.m_frontRightWingDamage,
+#             'm_rearWingDamage': cd.m_rearWingDamage,
+#             'm_floorDamage': cd.m_floorDamage,
+#             'm_diffuserDamage': cd.m_diffuserDamage,
+#             'm_sidepodDamage': cd.m_sidepodDamage,
+#             'm_drsFault': cd.m_drsFault,
+#             'm_ersFault': cd.m_ersFault,
+#             'm_gearBoxDamage': cd.m_gearBoxDamage,
+#             'm_engineDamage': cd.m_engineDamage,
+#             'm_engineBlown': cd.m_engineBlown,
+#             'm_engineSeized': cd.m_engineSeized,
+#         }}
+#     )(pkt.m_carDamageData[hdr.m_playerCarIndex]),
+
+#     11: lambda pkt, hdr: {
+#         # Session history
+#     },
+
+#     12: lambda pkt, hdr: {
+#         # Tyre sets
+#     },
+
+#     13: lambda pkt, hdr: (
+#         {
+#             "m_wheelSlipAngle": list(pkt.m_wheelSlipAngle),
+#             "m_wheelSlipRatio": list(pkt.m_wheelSlipRatio),
+#             "m_wheelSpeed": list(pkt.m_wheelSpeed),
+#         }
+#         ),
+
+#     14: lambda pkt, hdr: {
+#         'global_data': { # These are "global" bests, not specific to current car data
+#             'player_session_best_data': packet_to_dict(pkt.m_playerSessionBestDataSet),
+#             'personal_best_data': packet_to_dict(pkt.m_personalBestDataSet),
+#             'rival_best_data': packet_to_dict(pkt.m_rivalDataSet),
+#         },
+#     },
+# }
+
+
+
+
+# def get_latest_data():
+#     """Return a copy of the most recent telemetry dictionary."""
+#     return dict(latest_data)
+
+
+# def handle_packet(packet_id, packet, header):
+#     handler = PACKET_HANDLERS.get(packet_id)
+#     processed_data = handler(packet, header) if handler else None
+#     return processed_data
+
+
+# def unpack_packet(data: bytes):
+#     try:
+#         header = PacketHeader.from_buffer_copy(data)
+#         packet_id = header.m_packetId
+#         parser_cls = PACKET_PARSERS.get(packet_id)
+#         if not parser_cls:
+#             return None
+#         packet = parser_cls.from_buffer_copy(data)
+#         return handle_packet(packet_id, packet, header)
+#     except Exception as e:
+#         print(f"Error unpacking packet: {e}")
+#         return None
+
+
+# class F1TelemetryProtocol(asyncio.DatagramProtocol):
+#     def datagram_received(self, data, addr):
+#         asyncio.create_task(self.handle_packet(data))
+
+#     async def handle_packet(self, data):
+#         parsed = unpack_packet(data)
+#         if parsed:
+#             if data_queue.full():
+#                 await data_queue.get()
+#             await data_queue.put(parsed)
+
+
+# async def udp_listener():
+#     """Asynchronous UDP listener."""
+#     loop = asyncio.get_running_loop()
+#     transport, _ = await loop.create_datagram_endpoint(
+#         lambda: F1TelemetryProtocol(),
+#         local_addr=(UDP_IP, UDP_PORT)
+#     )
+
+#     print(f"Listening asynchronously for UDP telemetry on {UDP_IP}:{UDP_PORT}")
+#     try:
+#         while True:
+#             await asyncio.sleep(3600)
+#     finally:
+#         transport.close()
+
+
+# async def dashboard_update_loop():
+#     """Continuously pull from queue and update latest_data by merging."""
+#     global latest_data
+#     while True:
+#         try:
+#             new_data = await asyncio.wait_for(data_queue.get(), timeout=0.05)
+#             if new_data: # Only merge if new_data is not None (i.e. handler returned something)
+#                 latest_data = deep_merge(latest_data, new_data) # Use deep merge
+#         except asyncio.TimeoutError:
+#             await asyncio.sleep(0.01)
+
+
+# def start_udp_background():
+#     """Launch asyncio loop in a background thread."""
+#     async def main():
+#         await asyncio.gather(udp_listener(), dashboard_update_loop())
+
+#     def runner():
+#         asyncio.run(main())
+
+#     thread = threading.Thread(target=runner, daemon=True)
+#     thread.start()
+#     print("UDP telemetry listener started in background.")
+
+
+
+# # Print Testing
+# if __name__ == "__main__":
+#     start_udp_background()
+
+#     while True:
+#         data = get_latest_data()
+
+#         # if data is not None skip
+#         try:
+#             print(f"Brakes : {data['m_brake']}")
+#             print(f"Throttle : {data['m_throttle']}")
+#             print(f"gear : {data['m_gear']}")
+#             print(f"drs = {data['m_drs']}")
+#             print(f"m_wheelSlipAngle : {data['m_wheelSlipAngle']}")
+#             print(f"REVS = {data['m_revLightsPercent']}")
+#         except:
+#             pass
+
+
+
+
+# # | ID | Packet Name          |
+# # | -- | -------------------- |
+# # | 0  | Motion               |
+# # | 1  | Session              |
+# # | 2  | Lap Data             |
+# # | 3  | Event                |
+# # | 4  | Participants         |
+# # | 5  | Car Setups           |
+# # | 6  | Car Telemetry        |
+# # | 7  | Car Status           |
+# # | 8  | Final Classification |
+# # | 9  | Lobby Info           |
+# # | 10 | Car Damage           |
+# # | 11 | Session History      |
+# # | 12 | Tyre Sets            |
+# # | 13 | Motion Ex            |
+# # | 14 | Time Trial           |
