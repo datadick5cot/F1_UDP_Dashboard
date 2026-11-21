@@ -23,3 +23,8 @@ This project lets you tap into full immersion without a massive cost
 ✅ Built entirely in **Python 🐍 and HTML 
 ✅ Modular design for easy customization  
 ✅ Real-time data visualization and logging support  
+
+Requirement:
+sudo apt install fonts-noto-color-emoji
+sudo apt install python3 python3-pip
+pip install -r requirements.txt
