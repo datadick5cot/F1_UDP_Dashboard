@@ -1,4 +1,3 @@
-
 const TELEMETRY_URL = "http://localhost:8000/telemetry";
 const STALE_MS = 2000;            // go blank after this long with no new telemetry
 const FORECAST_MINUTES = 10;      // how far ahead the "future" weather looks
@@ -21,7 +20,7 @@ const ersBatteryTextEl = $('ers-battery-text');
 const scLabelEl = $('sc-label'), scDeltaEl = $('sc-delta'), toastEl = $('event-toast');
 const sessionEl = $('session-name'), wxNowEl = $('wx-now'), wxNextEl = $('wx-next'), wxTimeEl = $('wx-time');
 const gapAheadEl = $('gap-ahead'), gapBehindEl = $('gap-behind');
-const wxRainEl = $('wx-rain');
+const wxRainEl = $('wx-rain') || $('.wx-rain');   // '.wx-rain' = id typo in older HTML copies
 
 const flWearBarEl = $('fl-wear-bar'), frWearBarEl = $('fr-wear-bar');
 const rlWearBarEl = $('rl-wear-bar'), rrWearBarEl = $('rr-wear-bar');
@@ -67,7 +66,8 @@ const ersModeMap = {
 const SESSION_NAMES = {
     1: 'P1', 2: 'P2', 3: 'P3', 4: 'SHORT P',
     5: 'Q1', 6: 'Q2', 7: 'Q3', 8: 'SHORT Q', 9: 'OSQ',
-    10: 'RACE', 11: 'RACE 2', 12: 'RACE 3', 13: 'TT'
+    10: 'SPRINT SQ1', 11: 'SPRINT SQ2', 12: 'SPRINT SQ3', 13: 'SHORT SQ', 14: 'OS SPRINT SQ',
+    15: 'RACE', 16: 'RACE 2', 17: 'RACE 3', 18: 'TT'
 };
 
 // 0 clear, 1 light cloud, 2 overcast, 3 light rain, 4 heavy rain, 5 storm
@@ -140,39 +140,36 @@ function showEvent(code) {
 function updateExtras(p, g) {
     // Session type
     const st = g.m_sessionType ?? telemetryState.m_sessionType;
-    if (st !== undefined) sessionEl.innerText = SESSION_NAMES[st] || '--';
+    if (st !== undefined) sessionEl.innerText = SESSION_NAMES[st] || (st ? 'S' + st : '--');
 
     // Weather now + forecast
     const now = g.m_weather ?? telemetryState.m_weather;
-    if (now !== undefined) wxNowEl.innerText = WEATHER_ICONS[now] || '-';
+    if (now !== undefined) wxNowEl.innerText = WEATHER_ICONS[now] ?? '-';
 
-    const samples = g.m_weatherForecastSamples ?? telemetryState.m_weatherForecastSamples ?? [];
-    
+    // Forecast: only samples for the current session, soonest first
+    const all = g.m_weatherForecastSamples ?? telemetryState.m_weatherForecastSamples ?? [];
+    const samples = all
+        .filter(s => st === undefined || s.m_sessionType === st)
+        .sort((a, b) => a.m_timeOffset - b.m_timeOffset);
+
     if (samples.length) {
         const next = samples.find(s => s.m_timeOffset >= FORECAST_MINUTES) || samples[samples.length - 1];
-        wxNextEl.innerText = WEATHER_ICONS[next.m_weather] || '-';
+        wxNextEl.innerText = WEATHER_ICONS[next.m_weather] ?? '-';
         wxTimeEl.innerText = '+' + next.m_timeOffset + 'm';
 
         // Rain chance for that forecast point (0-100)
         const rain = next.m_rainPercentage;
-        if (rain !== undefined) {
-            wxRainEl.innerText = rain + '%';
-            wxRainEl.style.color = rain >= 70 ? '#29b6f6' : rain >= 30 ? '#FFBF00' : '#fff';
-        } else {
-            wxRainEl.innerText = '--';
+        if (wxRainEl) {
+            if (rain !== undefined) {
+                wxRainEl.innerText = rain + '%';
+                wxRainEl.style.color = rain >= 70 ? '#29b6f6' : rain >= 30 ? '#FFBF00' : '#fff';
+            } else {
+                wxRainEl.innerText = '--';
+            }
         }
     }
 
-    if (samples.length) {
-        const next = samples.find(s => s.m_timeOffset >= FORECAST_MINUTES) || samples[samples.length - 1];
-        wxNextEl.innerText = WEATHER_ICONS[next.m_weather] || '-';
-        wxTimeEl.innerText = '+' + next.m_timeOffset + 'm';
-    }
-    
-
-
-
-    // Gaps in ms. Gap behind needs the backend to supply it (see notes).
+    // Gaps in ms (backend sends both, derived from the lap data packet).
     const ahead  = p.m_deltaToCarInFrontInMS ?? p.m_deltaToCarInFront ?? p.m_gapAhead;
     const behind = p.m_deltaToCarBehindInMS  ?? p.m_deltaToCarBehind  ?? p.m_gapBehind;
     gapAheadEl.innerText  = fmtGap(ahead);
@@ -199,7 +196,7 @@ function updateDashboard() {
     // Race events: show each new one once
     const evSeq = telemetryState.m_eventSeq;
     if (evSeq !== undefined && evSeq !== lastEventSeq) {
-        if (lastEventSeq !== null) showEvent(telemetryState.m_eventStringCode);
+        if (lastEventSeq !== null) showEvent(telemetryState.m_eventName || telemetryState.m_eventStringCode);
         lastEventSeq = evSeq;
     }
 
@@ -372,11 +369,26 @@ ZONES.forEach(z => { zoneEls[z[0]] = Array.from(document.querySelectorAll('#car 
 const stageEl = $('stage');
 const carEl = $('car');
 
-// Dismiss state
-let panelHidden = false;
-let dismissedSeen = new Map();   // zone id -> severity (1 amber, 2 red) when dismissed
-let currentFound = [];
+// Auto-hide state
+const DAMAGE_SHOW_MS = 5000;     // how long the panel stays up after damage is detected
+let panelHidden = true;
+let acknowledged = new Map();    // zone id -> highest severity (1 amber, 2 red) that has already had its turn on screen
+let damageTimer = null;
 const sev = f => (f.cls === 'red' ? 2 : 1);
+
+function hideDamage() {
+    clearTimeout(damageTimer);
+    damageTimer = null;
+    panelHidden = true;
+    stageEl.classList.remove('has-damage');
+}
+
+function showDamage() {
+    panelHidden = false;
+    stageEl.classList.add('has-damage');
+    clearTimeout(damageTimer);                        // new damage while visible restarts the 5s
+    damageTimer = setTimeout(hideDamage, DAMAGE_SHOW_MS);
+}
 
 function updateDamage(p) {
     const found = [];
@@ -390,27 +402,25 @@ function updateDamage(p) {
         // Only count zones that actually exist on the SVG, so the panel never shows an uncoloured car
         if (cls && zoneEls[id].length) found.push({ id, cls });
     });
-    currentFound = found;
 
-    // Damage fully repaired / new session: forget any dismissal
+    // Damage fully repaired / new session: forget what we've shown and make sure the panel is hidden
     if (found.length === 0) {
-        panelHidden = false;
-        dismissedSeen.clear();
+        acknowledged.clear();
+        if (!panelHidden) hideDamage();
+        return;
     }
 
-    // If dismissed, bring the panel back only for NEW damage or a part getting worse (amber -> red)
-    if (panelHidden && found.some(f => (dismissedSeen.get(f.id) || 0) < sev(f))) {
-        panelHidden = false;
+    // Show for 5s when a zone is damaged for the first time or gets worse (amber -> red).
+    // Damage that has already had its 5s stays hidden until it changes again.
+    const isNew = found.some(f => (acknowledged.get(f.id) || 0) < sev(f));
+    if (isNew) {
+        found.forEach(f => acknowledged.set(f.id, Math.max(acknowledged.get(f.id) || 0, sev(f))));
+        showDamage();
     }
-
-    // Panel only appears (and the dashboard only shrinks) while there is undismissed damage
-    stageEl.classList.toggle('has-damage', found.length > 0 && !panelHidden);
 }
 
-function dismissDamage() {
-    panelHidden = true;
-    dismissedSeen = new Map(currentFound.map(f => [f.id, sev(f)]));
-    stageEl.classList.remove('has-damage');
+function dismissDamage() {   // tap/swipe still closes it early
+    hideDamage();
 }
 
 // Tap or swipe the car to dismiss the panel
