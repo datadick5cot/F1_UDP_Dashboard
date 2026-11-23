@@ -17,7 +17,7 @@ const revStrip = $('rev-strip'), dashFrame = $('dash-frame');
 const flagAlertEl = $('flag-alert'), pitOverlayEl = $('pit-limiter-overlay');
 const ersDeployedCircleEl = $('ers-deployed-circle'), ersStoreCircleEl = $('ers-store-circle');
 const ersBatteryTextEl = $('ers-battery-text');
-const scLabelEl = $('sc-label'), scDeltaEl = $('sc-delta'), toastEl = $('event-toast');
+const scLabelEl = $('sc-label'), scDeltaEl = $('sc-delta'), noteEl = $('event-note');
 const sessionEl = $('session-name'), wxNowEl = $('wx-now'), wxNextEl = $('wx-next'), wxTimeEl = $('wx-time');
 const gapAheadEl = $('gap-ahead'), gapBehindEl = $('gap-behind');
 const wxRainEl = $('wx-rain') || $('.wx-rain');   // '.wx-rain' = id typo in older HTML copies
@@ -125,7 +125,11 @@ function fmtGap(ms) {
 
 async function fetchTelemetry() {
     try {
-        const res = await fetch(TELEMETRY_URL);
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 1500);   // never wait forever on the server
+        let res;
+        try { res = await fetch(TELEMETRY_URL, { signal: ctrl.signal }); }
+        finally { clearTimeout(timer); }
         telemetryState = await res.json();
         fetchOk = true;
     } catch (err) {
@@ -148,19 +152,30 @@ function checkStale() {
     return stale;
 }
 
-setInterval(async () => {
-    await fetchTelemetry();
-    if (!checkStale()) updateDashboard();
-}, 100);
+// One poll at a time: fetch, update, THEN schedule the next. (setInterval kept firing while a slow
+// device was still busy drawing, so updates piled up and made the slowdown worse.)
+const POLL_MS = 100;
+async function pollLoop() {
+    const t0 = performance.now();
+    try {
+        await fetchTelemetry();
+        if (!checkStale()) updateDashboard();
+    } catch (err) {
+        console.error('poll:', err);
+    }
+    // wait out the rest of the interval, but always leave at least 50ms for the browser to paint
+    setTimeout(pollLoop, Math.max(50, POLL_MS - (performance.now() - t0)));
+}
+pollLoop();
 
 // Race events: show the code briefly. Swap in nicer wording per event code if you like.
-let toastTimer = null;
+let noteTimer = null;
 function showEvent(code) {
-    if (!code) return;
-    toastEl.innerText = code;
-    toastEl.style.display = 'block';
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { toastEl.style.display = 'none'; }, 3000);
+    if (!code || !noteEl) return;
+    noteEl.innerText = code;
+    noteEl.style.display = 'block';
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { noteEl.style.display = 'none'; }, 3000);
 }
 
 function updateExtras(p, g) {
@@ -223,8 +238,12 @@ function updateDashboard() {
     // Race events: show each new one once
     const evSeq = telemetryState.m_eventSeq;
     if (evSeq !== undefined && evSeq !== lastEventSeq) {
-        if (lastEventSeq !== null) showEvent(telemetryState.m_eventName || telemetryState.m_eventStringCode);
-        lastEventSeq = evSeq;
+        const firstSeen = lastEventSeq === null;
+        lastEventSeq = evSeq;     // record first, so a failure below can't make this retry (and fail) every tick
+        if (!firstSeen) {
+            try { showEvent(telemetryState.m_eventName || telemetryState.m_eventStringCode); }
+            catch (e) { console.error('event note:', e); }
+        }
     }
 
     // Safety car / VSC banner (status 1 = SC, 2 = VSC)
@@ -346,8 +365,12 @@ function updateDashboard() {
     if (rpmPercent !== undefined) {
         leds.forEach((led, index) => {
             const threshold = (index / leds.length) * 100;
-            if (rpmPercent > threshold) {
-                const colour = index < 5 ? '#4caf50' : index < 10 ? '#ffeb3b' : '#f44336';
+            const colour = rpmPercent > threshold
+                ? (index < 5 ? '#4caf50' : index < 10 ? '#ffeb3b' : '#f44336')
+                : '';
+            if (led._colour === colour) return;      // unchanged: no style write, no repaint
+            led._colour = colour;
+            if (colour) {
                 led.style.background = colour;
                 led.style.boxShadow = '0 0 10px ' + colour;
             } else {
@@ -357,12 +380,16 @@ function updateDashboard() {
         });
 
         const isShiftFlash = rpmPercent > 90 && playerCarData.m_gear !== 8;
-        if (isShiftFlash) {
-            dashFrame.classList.add('shift-flash');
-            dashFrame.style.backgroundColor = '';
-        } else {
-            dashFrame.classList.remove('shift-flash');
-            dashFrame.style.backgroundColor = flagInfo ? flagInfo.color : '#222';
+        // NB: the HTML has id="dash-frame2", so dashFrame is null and this block is skipped (no flash, no
+        // flag-coloured frame). To switch it on, change the lookup at the top to $('dash-frame2').
+        if (dashFrame) {
+            if (isShiftFlash) {
+                dashFrame.classList.add('shift-flash');
+                dashFrame.style.backgroundColor = '';
+            } else {
+                dashFrame.classList.remove('shift-flash');
+                dashFrame.style.backgroundColor = flagInfo ? flagInfo.color : '#222';
+            }
         }
     }
 }
